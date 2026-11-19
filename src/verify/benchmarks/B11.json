@@ -1,0 +1,57 @@
+{
+  "id": "B11",
+  "number": 11,
+  "group": "Frames and trusses",
+  "title": "Classic 10-bar planar truss",
+  "description": "Two-bay cantilever truss with ten bars (the standard sizing-optimisation test geometry), loads P at the two lower free nodes. Compared against the independent dense reference solver.",
+  "source": "Independent reference solver (src/ref/refsolver.ts); geometry from Venkayya (1971)",
+  "builder": "tenBarTruss",
+  "params": {
+    "E": 68950000000.0,
+    "nu": 0.3,
+    "A": 0.0064516,
+    "a": 9.144,
+    "P": 444822
+  },
+  "checks": [
+    {
+      "label": "Tip deflection vs reference solver",
+      "quantity": "tipDeflection",
+      "tolerance": 1e-09,
+      "unit": "m",
+      "expected": {
+        "reference": "tipDeflection"
+      }
+    },
+    {
+      "label": "Largest displacement difference (relative)",
+      "quantity": "dispError",
+      "tolerance": 1e-06,
+      "unit": "",
+      "expected": {
+        "value": 0
+      },
+      "abs": 1e-09
+    },
+    {
+      "label": "Largest member-force difference (relative)",
+      "quantity": "axialError",
+      "tolerance": 1e-06,
+      "unit": "",
+      "expected": {
+        "value": 0
+      },
+      "abs": 1e-09
+    },
+    {
+      "label": "Equilibrium error (relative)",
+      "quantity": "equilibriumError",
+      "tolerance": 1e-06,
+      "unit": "",
+      "expected": {
+        "value": 0
+      },
+      "abs": 1e-10
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "id": "B19",
+  "number": 19,
+  "group": "Stability and dynamics",
+  "title": "Simply supported beam natural frequencies",
+  "description": "First three bending frequencies of a simply supported beam, consistent mass, 20 elements.",
+  "source": "f_n = (n^2 pi/2L^2) sqrt(EI/m) (Blevins)",
+  "builder": "vibration",
+  "params": {
+    "E": 210000000000.0,
+    "nu": 0.3,
+    "rho": 7850,
+    "A": 0.0025,
+    "I": 5.2083333e-07,
+    "J": 8.8e-07,
+    "L": 3,
+    "n": 20,
+    "bc": 1
+  },
+  "checks": [
+    {
+      "label": "Mode 1",
+      "quantity": "f1",
+      "tolerance": 0.001,
+      "unit": "Hz",
+      "expected": {
+        "formula": "1*pi/(2*L^2)*sqrt(E*I/(rho*A))"
+      }
+    },
+    {
+      "label": "Mode 2",
+      "quantity": "f2",
+      "tolerance": 0.001,
+      "unit": "Hz",
+      "expected": {
+        "formula": "4*pi/(2*L^2)*sqrt(E*I/(rho*A))"
+      }
+    },
+    {
+      "label": "Mode 3",
+      "quantity": "f3",
+      "tolerance": 0.001,
+      "unit": "Hz",
+      "expected": {
+        "formula": "9*pi/(2*L^2)*sqrt(E*I/(rho*A))"
+      }
+    },
+    {
+      "label": "Mode 1 with lumped mass",
+      "quantity": "f1",
+      "tolerance": 0.001,
+      "unit": "Hz",
+      "expected": {
+        "formula": "1*pi/(2*L^2)*sqrt(E*I/(rho*A))"
+      },
+      "params": {
+        "lumped": 1
+      }
+    }
+  ]
+}

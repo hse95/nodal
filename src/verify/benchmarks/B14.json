@@ -1,0 +1,57 @@
+{
+  "id": "B14",
+  "number": 14,
+  "group": "Frames and trusses",
+  "title": "3D space frame",
+  "description": "Irregular one-storey 3D frame with a pyramid roof, two truss braces, mixed supports, distributed and nodal loads including moments. Checked for equilibrium and against the reference solver.",
+  "source": "Independent reference solver (src/ref/refsolver.ts)",
+  "builder": "spaceFrame",
+  "params": {
+    "E": 210000000000.0,
+    "nu": 0.3,
+    "w": 8000,
+    "H": 20000
+  },
+  "checks": [
+    {
+      "label": "Largest displacement difference (relative)",
+      "quantity": "dispError",
+      "tolerance": 1e-06,
+      "unit": "",
+      "expected": {
+        "value": 0
+      },
+      "abs": 1e-08
+    },
+    {
+      "label": "Largest reaction difference (relative)",
+      "quantity": "reactionError",
+      "tolerance": 1e-06,
+      "unit": "",
+      "expected": {
+        "value": 0
+      },
+      "abs": 1e-08
+    },
+    {
+      "label": "Largest axial-force difference (relative)",
+      "quantity": "axialError",
+      "tolerance": 1e-06,
+      "unit": "",
+      "expected": {
+        "value": 0
+      },
+      "abs": 1e-08
+    },
+    {
+      "label": "Equilibrium error (relative)",
+      "quantity": "equilibriumError",
+      "tolerance": 1e-06,
+      "unit": "",
+      "expected": {
+        "value": 0
+      },
+      "abs": 1e-10
+    }
+  ]
+}

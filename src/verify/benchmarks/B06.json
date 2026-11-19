@@ -1,0 +1,41 @@
+{
+  "id": "B06",
+  "number": 6,
+  "group": "Frames and trusses",
+  "title": "Propped cantilever, uniform load",
+  "description": "Fixed at the left end, roller at the right end, uniform load w.",
+  "source": "Gere & Timoshenko, Mechanics of Materials (4th ed.), Appendix G, beam deflection tables",
+  "builder": "beam",
+  "params": {
+    "E": 210000000000.0,
+    "nu": 0.3,
+    "A": 0.005,
+    "I": 4e-05,
+    "J": 2e-06,
+    "L": 6,
+    "n": 4,
+    "left": 2,
+    "right": 1,
+    "w": 8000
+  },
+  "checks": [
+    {
+      "label": "Fixed-end moment wL^2/8",
+      "quantity": "baseMoment",
+      "tolerance": 1e-06,
+      "unit": "N m",
+      "expected": {
+        "formula": "w*L^2/8"
+      }
+    },
+    {
+      "label": "Reaction at the prop 3wL/8",
+      "quantity": "rightReaction",
+      "tolerance": 1e-06,
+      "unit": "N",
+      "expected": {
+        "formula": "3*w*L/8"
+      }
+    }
+  ]
+}

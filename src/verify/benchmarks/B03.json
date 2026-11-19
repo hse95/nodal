@@ -1,0 +1,50 @@
+{
+  "id": "B03",
+  "number": 3,
+  "group": "Frames and trusses",
+  "title": "Simply supported beam, uniform load",
+  "description": "Pin and roller supports, uniform load w.",
+  "source": "Gere & Timoshenko, Mechanics of Materials (4th ed.), Appendix G, beam deflection tables",
+  "builder": "beam",
+  "params": {
+    "E": 210000000000.0,
+    "nu": 0.3,
+    "A": 0.005,
+    "I": 4e-05,
+    "J": 2e-06,
+    "L": 6,
+    "n": 4,
+    "left": 1,
+    "right": 1,
+    "w": 8000
+  },
+  "checks": [
+    {
+      "label": "Midspan deflection 5wL^4/384EI",
+      "quantity": "midDeflection",
+      "tolerance": 1e-06,
+      "unit": "m",
+      "expected": {
+        "formula": "5*w*L^4/(384*E*I)"
+      }
+    },
+    {
+      "label": "Midspan moment wL^2/8",
+      "quantity": "midMoment",
+      "tolerance": 1e-06,
+      "unit": "N m",
+      "expected": {
+        "formula": "w*L^2/8"
+      }
+    },
+    {
+      "label": "Support reaction wL/2",
+      "quantity": "leftReaction",
+      "tolerance": 1e-06,
+      "unit": "N",
+      "expected": {
+        "formula": "w*L/2"
+      }
+    }
+  ]
+}

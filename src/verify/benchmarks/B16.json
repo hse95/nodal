@@ -1,0 +1,118 @@
+{
+  "id": "B16",
+  "number": 16,
+  "group": "Frames and trusses",
+  "title": "Rigid offset and end release",
+  "description": "(a) Cantilever whose tip node sits on a rigid arm of height e, loaded horizontally at that node: the load reaches the member as an axial force and an end moment He. (b) Beam with fixed supports at both ends but a moment release at the right end, which must behave as a propped cantilever.",
+  "source": "Hand calculation (statics and the cantilever formulas of benchmark 1)",
+  "builder": "rigidOffset",
+  "params": {
+    "E": 210000000000.0,
+    "nu": 0.3,
+    "A": 0.005,
+    "I": 4e-05,
+    "J": 2e-06,
+    "L": 3,
+    "e": 0.5,
+    "H": 20000
+  },
+  "checks": [
+    {
+      "label": "Offset: horizontal displacement HL/EA + He^2L/EI",
+      "quantity": "nodeHorizontal",
+      "tolerance": 1e-06,
+      "unit": "m",
+      "expected": {
+        "formula": "H*L/(E*A) + H*e^2*L/(E*I)"
+      }
+    },
+    {
+      "label": "Offset: vertical displacement -HeL^2/2EI",
+      "quantity": "nodeVertical",
+      "tolerance": 1e-06,
+      "unit": "m",
+      "expected": {
+        "formula": "-H*e*L^2/(2*E*I)"
+      }
+    },
+    {
+      "label": "Offset: base moment He",
+      "quantity": "baseMoment",
+      "tolerance": 1e-06,
+      "unit": "N m",
+      "expected": {
+        "formula": "H*e"
+      }
+    },
+    {
+      "label": "Release: fixed-end moment wL^2/8 (acts as a propped cantilever)",
+      "quantity": "baseMoment",
+      "tolerance": 1e-06,
+      "unit": "N m",
+      "expected": {
+        "formula": "w*L^2/8"
+      },
+      "builder": "beam",
+      "params": {
+        "E": 210000000000.0,
+        "nu": 0.3,
+        "A": 0.005,
+        "I": 4e-05,
+        "J": 2e-06,
+        "L": 6,
+        "n": 4,
+        "left": 2,
+        "right": 2,
+        "hingeRight": 1,
+        "w": 8000
+      }
+    },
+    {
+      "label": "Release: reaction at the released end 3wL/8",
+      "quantity": "rightReaction",
+      "tolerance": 1e-06,
+      "unit": "N",
+      "expected": {
+        "formula": "3*w*L/8"
+      },
+      "builder": "beam",
+      "params": {
+        "E": 210000000000.0,
+        "nu": 0.3,
+        "A": 0.005,
+        "I": 4e-05,
+        "J": 2e-06,
+        "L": 6,
+        "n": 4,
+        "left": 2,
+        "right": 2,
+        "hingeRight": 1,
+        "w": 8000
+      }
+    },
+    {
+      "label": "Release: moment at the released end (zero)",
+      "quantity": "endMomentRight",
+      "tolerance": 1e-06,
+      "abs": 1e-05,
+      "unit": "N m",
+      "expected": {
+        "value": 0
+      },
+      "builder": "beam",
+      "params": {
+        "E": 210000000000.0,
+        "nu": 0.3,
+        "A": 0.005,
+        "I": 4e-05,
+        "J": 2e-06,
+        "L": 6,
+        "n": 4,
+        "left": 2,
+        "right": 2,
+        "hingeRight": 1,
+        "w": 8000
+      }
+    }
+  ]
+}

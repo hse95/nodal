@@ -1,0 +1,61 @@
+{
+  "id": "B09",
+  "number": 9,
+  "group": "Frames and trusses",
+  "title": "Beam with an internal hinge",
+  "description": "Fixed at A (x = 0), roller at C (x = L), moment hinge at x = a, uniform load w. Statically determinate, so all values follow from statics alone.",
+  "source": "Statics (Gerber beam)",
+  "builder": "beam",
+  "params": {
+    "E": 210000000000.0,
+    "nu": 0.3,
+    "A": 0.005,
+    "I": 4e-05,
+    "J": 2e-06,
+    "L": 5,
+    "n": 5,
+    "left": 2,
+    "right": 1,
+    "hinge": 2,
+    "w": 6000
+  },
+  "checks": [
+    {
+      "label": "Roller reaction w(L-a)/2",
+      "quantity": "rightReaction",
+      "tolerance": 1e-06,
+      "unit": "N",
+      "expected": {
+        "formula": "w*(L-hinge)/2"
+      }
+    },
+    {
+      "label": "Fixed-end reaction wa + w(L-a)/2",
+      "quantity": "leftReaction",
+      "tolerance": 1e-06,
+      "unit": "N",
+      "expected": {
+        "formula": "w*hinge + w*(L-hinge)/2"
+      }
+    },
+    {
+      "label": "Fixed-end moment wa^2/2 + w(L-a)a/2",
+      "quantity": "baseMoment",
+      "tolerance": 1e-06,
+      "unit": "N m",
+      "expected": {
+        "formula": "w*hinge^2/2 + w*(L-hinge)*hinge/2"
+      }
+    },
+    {
+      "label": "Moment at the hinge (zero)",
+      "quantity": "hingeMoment",
+      "tolerance": 1e-06,
+      "unit": "N m",
+      "expected": {
+        "value": 0
+      },
+      "abs": 1e-05
+    }
+  ]
+}

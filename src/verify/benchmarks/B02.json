@@ -1,0 +1,41 @@
+{
+  "id": "B02",
+  "number": 2,
+  "group": "Frames and trusses",
+  "title": "Cantilever with uniform load",
+  "description": "Cantilever under a uniformly distributed load w.",
+  "source": "Gere & Timoshenko, Mechanics of Materials (4th ed.), Appendix G, beam deflection tables",
+  "builder": "beam",
+  "params": {
+    "E": 210000000000.0,
+    "nu": 0.3,
+    "A": 0.005,
+    "I": 4e-05,
+    "J": 2e-06,
+    "L": 3,
+    "n": 4,
+    "left": 2,
+    "right": 0,
+    "w": 5000
+  },
+  "checks": [
+    {
+      "label": "Tip deflection wL^4/8EI",
+      "quantity": "tipDeflection",
+      "tolerance": 1e-06,
+      "unit": "m",
+      "expected": {
+        "formula": "w*L^4/(8*E*I)"
+      }
+    },
+    {
+      "label": "Base moment wL^2/2",
+      "quantity": "baseMoment",
+      "tolerance": 1e-06,
+      "unit": "N m",
+      "expected": {
+        "formula": "w*L^2/2"
+      }
+    }
+  ]
+}

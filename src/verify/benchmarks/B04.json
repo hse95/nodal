@@ -1,0 +1,41 @@
+{
+  "id": "B04",
+  "number": 4,
+  "group": "Frames and trusses",
+  "title": "Simply supported beam, central point load",
+  "description": "Pin and roller supports, point load P at midspan.",
+  "source": "Gere & Timoshenko, Mechanics of Materials (4th ed.), Appendix G, beam deflection tables",
+  "builder": "beam",
+  "params": {
+    "E": 210000000000.0,
+    "nu": 0.3,
+    "A": 0.005,
+    "I": 4e-05,
+    "J": 2e-06,
+    "L": 6,
+    "n": 4,
+    "left": 1,
+    "right": 1,
+    "Pmid": 30000
+  },
+  "checks": [
+    {
+      "label": "Midspan deflection PL^3/48EI",
+      "quantity": "midDeflection",
+      "tolerance": 1e-06,
+      "unit": "m",
+      "expected": {
+        "formula": "Pmid*L^3/(48*E*I)"
+      }
+    },
+    {
+      "label": "Midspan moment PL/4",
+      "quantity": "midMoment",
+      "tolerance": 1e-06,
+      "unit": "N m",
+      "expected": {
+        "formula": "Pmid*L/4"
+      }
+    }
+  ]
+}

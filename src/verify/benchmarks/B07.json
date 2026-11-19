@@ -1,0 +1,51 @@
+{
+  "id": "B07",
+  "number": 7,
+  "group": "Frames and trusses",
+  "title": "Two-span continuous beam, uniform load",
+  "description": "Two equal spans L on three supports, uniform load w on both spans.",
+  "source": "Three-moment equation (Clapeyron); e.g. Hibbeler, Structural Analysis (10th ed.), chapter 10",
+  "builder": "beam",
+  "params": {
+    "E": 210000000000.0,
+    "nu": 0.3,
+    "A": 0.005,
+    "I": 4e-05,
+    "J": 2e-06,
+    "L": 5,
+    "n": 4,
+    "spans": 2,
+    "left": 1,
+    "right": 1,
+    "w": 8000
+  },
+  "checks": [
+    {
+      "label": "Interior support moment wL^2/8",
+      "quantity": "interiorMoment",
+      "tolerance": 1e-06,
+      "unit": "N m",
+      "expected": {
+        "formula": "w*L^2/8"
+      }
+    },
+    {
+      "label": "Interior reaction 5wL/4",
+      "quantity": "midReaction",
+      "tolerance": 1e-06,
+      "unit": "N",
+      "expected": {
+        "formula": "5*w*L/4"
+      }
+    },
+    {
+      "label": "End reaction 3wL/8",
+      "quantity": "leftReaction",
+      "tolerance": 1e-06,
+      "unit": "N",
+      "expected": {
+        "formula": "3*w*L/8"
+      }
+    }
+  ]
+}

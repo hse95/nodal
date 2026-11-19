@@ -1,0 +1,57 @@
+{
+  "id": "B10",
+  "number": 10,
+  "group": "Frames and trusses",
+  "title": "Triangular three-bar truss",
+  "description": "Pin at A, roller at B, apex C loaded by P. Member forces from the method of joints.",
+  "source": "Method of joints (hand calculation)",
+  "builder": "triangleTruss",
+  "params": {
+    "E": 210000000000.0,
+    "nu": 0.3,
+    "A": 0.005,
+    "I": 4e-05,
+    "J": 2e-06,
+    "L": 6,
+    "h": 4,
+    "P": 100000
+  },
+  "checks": [
+    {
+      "label": "Rafter force -P/(2 sin a)",
+      "quantity": "rafterForce",
+      "tolerance": 1e-06,
+      "unit": "N",
+      "expected": {
+        "formula": "-P/(2*sin(atan(2*h/L)))"
+      }
+    },
+    {
+      "label": "Tie force P L/(4 h)",
+      "quantity": "tieForce",
+      "tolerance": 1e-06,
+      "unit": "N",
+      "expected": {
+        "formula": "P*L/(4*h)"
+      }
+    },
+    {
+      "label": "Support reaction P/2",
+      "quantity": "leftReaction",
+      "tolerance": 1e-06,
+      "unit": "N",
+      "expected": {
+        "formula": "P/2"
+      }
+    },
+    {
+      "label": "Apex deflection (unit-load method)",
+      "quantity": "apexDeflection",
+      "tolerance": 1e-06,
+      "unit": "m",
+      "expected": {
+        "formula": "P*(L/2)^2*L/(4*h^2*E*A) + P*(sqrt((L/2)^2+h^2))^3/(2*h^2*E*A)"
+      }
+    }
+  ]
+}

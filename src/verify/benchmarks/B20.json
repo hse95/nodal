@@ -1,0 +1,52 @@
+{
+  "id": "B20",
+  "number": 20,
+  "group": "Stability and dynamics",
+  "title": "P-Delta amplification of a cantilever column",
+  "description": "Cantilever column with axial load P (about 31 % of the Euler load) and lateral tip load H, second-order analysis with 8 elements.",
+  "source": "Exact beam-column solution: Timoshenko & Gere, Theory of Elastic Stability, art. 1.4; approximate amplification factor 1/(1 - P/Pcr)",
+  "builder": "column",
+  "params": {
+    "E": 210000000000.0,
+    "nu": 0.3,
+    "A": 0.005,
+    "I": 4e-05,
+    "J": 2e-06,
+    "L": 4,
+    "n": 8,
+    "P": 400000,
+    "H": 10000,
+    "bc": 2,
+    "second": 1
+  },
+  "checks": [
+    {
+      "label": "Tip sway vs exact beam-column solution",
+      "quantity": "tipSway",
+      "tolerance": 0.001,
+      "unit": "m",
+      "expected": {
+        "reference": "tipSway"
+      }
+    },
+    {
+      "label": "Base moment vs exact beam-column solution",
+      "quantity": "baseMoment",
+      "tolerance": 0.001,
+      "unit": "N m",
+      "expected": {
+        "reference": "baseMoment"
+      }
+    },
+    {
+      "label": "Tip sway vs approximate factor 1/(1 - P/Pcr)",
+      "quantity": "tipSway",
+      "tolerance": 0.02,
+      "unit": "m",
+      "expected": {
+        "formula": "(H*L^3/(3*E*I))/(1 - P/(pi^2*E*I/(4*L^2)))"
+      },
+      "note": "The amplification factor is itself an approximation, so a difference of about 1 % is expected."
+    }
+  ]
+}

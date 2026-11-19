@@ -1,0 +1,111 @@
+{
+  "id": "B13",
+  "number": 13,
+  "group": "Frames and trusses",
+  "title": "Portal frame under lateral load",
+  "description": "Single-bay portal frame with a horizontal load H at beam level. Pinned bases are checked by statics, fixed bases by the classical rigid-frame formula and by the reference solver.",
+  "source": "Statics; Kleinlogel, Rigid Frame Formulas (1952), frame with fixed feet under a horizontal load at the girder; independent reference solver",
+  "builder": "portal",
+  "params": {
+    "E": 210000000000.0,
+    "nu": 0.3,
+    "A": 1,
+    "L": 6,
+    "h": 4,
+    "Ic": 8e-05,
+    "Ib": 0.00012,
+    "H": 50000,
+    "n": 2,
+    "base": 1
+  },
+  "checks": [
+    {
+      "label": "Pinned bases: base shear H/2",
+      "quantity": "baseShear",
+      "tolerance": 0.0001,
+      "unit": "N",
+      "expected": {
+        "formula": "H/2"
+      },
+      "note": "Exact only for an inextensible beam; the model area is very large, leaving a difference of a few parts per million."
+    },
+    {
+      "label": "Pinned bases: vertical reaction Hh/L",
+      "quantity": "upliftReaction",
+      "tolerance": 1e-06,
+      "unit": "N",
+      "expected": {
+        "formula": "H*h/L"
+      }
+    },
+    {
+      "label": "Pinned bases: knee moment Hh/2",
+      "quantity": "kneeMoment",
+      "tolerance": 0.0001,
+      "unit": "N m",
+      "expected": {
+        "formula": "H*h/2"
+      },
+      "note": "Exact only for an inextensible beam; the model area is very large, leaving a difference of a few parts per million."
+    },
+    {
+      "label": "Pinned bases: sway vs reference solver",
+      "quantity": "sway",
+      "tolerance": 1e-08,
+      "unit": "m",
+      "expected": {
+        "reference": "sway"
+      }
+    },
+    {
+      "label": "Fixed bases: base moment (Hh/2)(3k+1)/(6k+1)",
+      "quantity": "baseMoment",
+      "tolerance": 0.001,
+      "unit": "N m",
+      "expected": {
+        "formula": "(H*h/2)*(3*((Ib/L)/(Ic/h))+1)/(6*((Ib/L)/(Ic/h))+1)"
+      },
+      "params": {
+        "base": 2
+      },
+      "note": "The formula neglects axial deformation; the model has a very large area so the difference is negligible."
+    },
+    {
+      "label": "Fixed bases: knee moment (Hh/2)(3k)/(6k+1)",
+      "quantity": "kneeMoment",
+      "tolerance": 0.001,
+      "unit": "N m",
+      "expected": {
+        "formula": "(H*h/2)*(3*((Ib/L)/(Ic/h)))/(6*((Ib/L)/(Ic/h))+1)"
+      },
+      "params": {
+        "base": 2
+      }
+    },
+    {
+      "label": "Fixed bases: sway vs reference solver",
+      "quantity": "sway",
+      "tolerance": 1e-08,
+      "unit": "m",
+      "expected": {
+        "reference": "sway"
+      },
+      "params": {
+        "base": 2
+      }
+    },
+    {
+      "label": "Fixed bases: displacement difference vs reference (relative)",
+      "quantity": "dispError",
+      "tolerance": 1e-06,
+      "unit": "",
+      "expected": {
+        "value": 0
+      },
+      "abs": 1e-08,
+      "params": {
+        "base": 2
+      }
+    }
+  ]
+}

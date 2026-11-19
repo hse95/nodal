@@ -1,0 +1,46 @@
+{
+  "id": "B12",
+  "number": 12,
+  "group": "Frames and trusses",
+  "title": "Thermal load on a fixed-fixed bar",
+  "description": "Uniform temperature rise dT in a bar restrained at both ends, and a through-depth gradient gz in a fully fixed beam.",
+  "source": "Restrained thermal expansion: N = -EA alpha dT, M = EI alpha gz (Gere & Timoshenko, sections 2.5 and 9.13)",
+  "builder": "beam",
+  "params": {
+    "E": 210000000000.0,
+    "nu": 0.3,
+    "A": 0.005,
+    "I": 4e-05,
+    "J": 2e-06,
+    "alpha": 1.2e-05,
+    "L": 4,
+    "n": 2,
+    "left": 2,
+    "right": 2,
+    "dT": 40
+  },
+  "checks": [
+    {
+      "label": "Axial force -EA alpha dT",
+      "quantity": "axialForce",
+      "tolerance": 1e-06,
+      "unit": "N",
+      "expected": {
+        "formula": "-E*A*alpha*dT"
+      }
+    },
+    {
+      "label": "Restraint moment EI alpha gz",
+      "quantity": "midMoment",
+      "tolerance": 1e-06,
+      "unit": "N m",
+      "expected": {
+        "formula": "E*I*alpha*gz"
+      },
+      "params": {
+        "dT": 0,
+        "gz": 50
+      }
+    }
+  ]
+}

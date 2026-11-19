@@ -1,0 +1,50 @@
+{
+  "id": "B05",
+  "number": 5,
+  "group": "Frames and trusses",
+  "title": "Fixed-fixed beam, uniform load",
+  "description": "Both ends built in, uniform load w.",
+  "source": "Gere & Timoshenko, Mechanics of Materials (4th ed.), Appendix G, beam deflection tables",
+  "builder": "beam",
+  "params": {
+    "E": 210000000000.0,
+    "nu": 0.3,
+    "A": 0.005,
+    "I": 4e-05,
+    "J": 2e-06,
+    "L": 6,
+    "n": 4,
+    "left": 2,
+    "right": 2,
+    "w": 8000
+  },
+  "checks": [
+    {
+      "label": "End moment wL^2/12",
+      "quantity": "baseMoment",
+      "tolerance": 1e-06,
+      "unit": "N m",
+      "expected": {
+        "formula": "w*L^2/12"
+      }
+    },
+    {
+      "label": "Midspan deflection wL^4/384EI",
+      "quantity": "midDeflection",
+      "tolerance": 1e-06,
+      "unit": "m",
+      "expected": {
+        "formula": "w*L^4/(384*E*I)"
+      }
+    },
+    {
+      "label": "Midspan moment wL^2/24",
+      "quantity": "midMoment",
+      "tolerance": 1e-06,
+      "unit": "N m",
+      "expected": {
+        "formula": "w*L^2/24"
+      }
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "id": "B08",
+  "number": 8,
+  "group": "Frames and trusses",
+  "title": "Circular shaft in torsion",
+  "description": "Cantilever shaft with a torque T at the free end.",
+  "source": "St. Venant torsion: twist = TL/GJ (Gere & Timoshenko, chapter 3)",
+  "builder": "beam",
+  "params": {
+    "E": 210000000000.0,
+    "nu": 0.3,
+    "A": 0.005,
+    "I": 4e-05,
+    "J": 2e-06,
+    "L": 2,
+    "n": 3,
+    "left": 2,
+    "right": 0,
+    "T": 2000
+  },
+  "checks": [
+    {
+      "label": "Tip twist TL/GJ",
+      "quantity": "tipTwist",
+      "tolerance": 1e-06,
+      "unit": "rad",
+      "expected": {
+        "formula": "T*L/(E/(2*(1+nu))*J)"
+      }
+    }
+  ]
+}

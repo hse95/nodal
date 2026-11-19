@@ -1,0 +1,60 @@
+{
+  "id": "B18",
+  "number": 18,
+  "group": "Stability and dynamics",
+  "title": "Cantilever natural frequencies",
+  "description": "First three bending frequencies of a cantilever, consistent mass, 20 elements.",
+  "source": "Euler-Bernoulli beam theory: f = (bL)^2/(2 pi L^2) sqrt(EI/rho A), bL = 1.8751, 4.6941, 7.8548 (Blevins, Formulas for Natural Frequency and Mode Shape)",
+  "builder": "vibration",
+  "params": {
+    "E": 210000000000.0,
+    "nu": 0.3,
+    "rho": 7850,
+    "A": 0.0025,
+    "I": 5.2083333e-07,
+    "J": 8.8e-07,
+    "L": 3,
+    "n": 20,
+    "bc": 2
+  },
+  "checks": [
+    {
+      "label": "Mode 1 (bL = 1.8751)",
+      "quantity": "f1",
+      "tolerance": 0.001,
+      "unit": "Hz",
+      "expected": {
+        "formula": "1.875104069^2/(2*pi*L^2)*sqrt(E*I/(rho*A))"
+      }
+    },
+    {
+      "label": "Mode 2 (bL = 4.6941)",
+      "quantity": "f2",
+      "tolerance": 0.001,
+      "unit": "Hz",
+      "expected": {
+        "formula": "4.694091133^2/(2*pi*L^2)*sqrt(E*I/(rho*A))"
+      }
+    },
+    {
+      "label": "Mode 3 (bL = 7.8548)",
+      "quantity": "f3",
+      "tolerance": 0.001,
+      "unit": "Hz",
+      "expected": {
+        "formula": "7.854757438^2/(2*pi*L^2)*sqrt(E*I/(rho*A))"
+      }
+    }
+  ],
+  "convergence": {
+    "param": "n",
+    "values": [
+      2,
+      4,
+      8,
+      16,
+      32
+    ],
+    "check": 2
+  }
+}

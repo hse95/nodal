@@ -1,0 +1,43 @@
+{
+  "id": "B15",
+  "number": 15,
+  "group": "Frames and trusses",
+  "title": "Curved beam approximated by straight elements",
+  "description": "Quarter-circle cantilever of radius R, tip load P perpendicular to the tip tangent. The arc is replaced by n straight Euler-Bernoulli elements; the error falls as n grows.",
+  "source": "Castigliano's theorem with bending and axial strain energy: d = pi P R^3/(4EI) + pi P R/(4EA) (Roark's Formulas for Stress and Strain, curved beams)",
+  "builder": "curvedBeam",
+  "params": {
+    "E": 210000000000.0,
+    "nu": 0.3,
+    "A": 0.005,
+    "I": 4e-05,
+    "J": 2e-06,
+    "R": 2,
+    "P": 10000,
+    "n": 64
+  },
+  "checks": [
+    {
+      "label": "Tip deflection in the load direction (n = 64)",
+      "quantity": "tipDeflection",
+      "tolerance": 0.001,
+      "unit": "m",
+      "expected": {
+        "formula": "pi*P*R^3/(4*E*I) + pi*P*R/(4*E*A)"
+      }
+    }
+  ],
+  "convergence": {
+    "param": "n",
+    "values": [
+      2,
+      4,
+      8,
+      16,
+      32,
+      64,
+      128
+    ],
+    "check": 0
+  }
+}

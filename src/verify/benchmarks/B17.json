@@ -1,0 +1,79 @@
+{
+  "id": "B17",
+  "number": 17,
+  "group": "Stability and dynamics",
+  "title": "Euler buckling of columns",
+  "description": "Column of length L under axial load with the four classical end conditions. 16 elements; the convergence study refines the pinned-pinned case.",
+  "source": "Euler: Pcr = pi^2 EI/(KL)^2 with K = 1, 2, 0.6992, 0.5 (Timoshenko & Gere, Theory of Elastic Stability, chapter 2)",
+  "builder": "column",
+  "params": {
+    "E": 210000000000.0,
+    "nu": 0.3,
+    "A": 0.005,
+    "I": 4e-05,
+    "J": 2e-06,
+    "L": 4,
+    "n": 16,
+    "P": 1,
+    "bc": 1
+  },
+  "checks": [
+    {
+      "label": "Pinned-pinned  pi^2EI/L^2",
+      "quantity": "criticalLoad",
+      "tolerance": 0.001,
+      "unit": "N",
+      "expected": {
+        "formula": "pi^2*E*I/L^2"
+      }
+    },
+    {
+      "label": "Fixed-free  pi^2EI/(2L)^2",
+      "quantity": "criticalLoad",
+      "tolerance": 0.001,
+      "unit": "N",
+      "expected": {
+        "formula": "pi^2*E*I/(2*L)^2"
+      },
+      "params": {
+        "bc": 2
+      }
+    },
+    {
+      "label": "Fixed-pinned  20.1907 EI/L^2",
+      "quantity": "criticalLoad",
+      "tolerance": 0.001,
+      "unit": "N",
+      "expected": {
+        "formula": "20.190728557*E*I/L^2"
+      },
+      "params": {
+        "bc": 3
+      }
+    },
+    {
+      "label": "Fixed-fixed  pi^2EI/(0.5L)^2",
+      "quantity": "criticalLoad",
+      "tolerance": 0.001,
+      "unit": "N",
+      "expected": {
+        "formula": "pi^2*E*I/(0.5*L)^2"
+      },
+      "params": {
+        "bc": 4
+      }
+    }
+  ],
+  "convergence": {
+    "param": "n",
+    "values": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      32
+    ],
+    "check": 0
+  }
+}

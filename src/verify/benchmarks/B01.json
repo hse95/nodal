@@ -1,0 +1,63 @@
+{
+  "id": "B01",
+  "number": 1,
+  "group": "Frames and trusses",
+  "title": "Cantilever with tip point load",
+  "description": "Prismatic cantilever of length L along X, fixed at x = 0, point load P at the tip. Four Euler-Bernoulli elements; the Timoshenko check repeats the model with shear-flexible elements.",
+  "source": "Gere & Timoshenko, Mechanics of Materials (4th ed.), Appendix G, beam deflection tables; shear term from Timoshenko beam theory (Cowper 1966).",
+  "builder": "beam",
+  "params": {
+    "E": 210000000000.0,
+    "nu": 0.3,
+    "A": 0.005,
+    "I": 4e-05,
+    "J": 2e-06,
+    "L": 3,
+    "n": 4,
+    "left": 2,
+    "right": 0,
+    "Ptip": 10000
+  },
+  "checks": [
+    {
+      "label": "Tip deflection PL^3/3EI",
+      "quantity": "tipDeflection",
+      "tolerance": 1e-06,
+      "unit": "m",
+      "expected": {
+        "formula": "Ptip*L^3/(3*E*I)"
+      }
+    },
+    {
+      "label": "Tip rotation PL^2/2EI",
+      "quantity": "tipRotation",
+      "tolerance": 1e-06,
+      "unit": "rad",
+      "expected": {
+        "formula": "Ptip*L^2/(2*E*I)"
+      }
+    },
+    {
+      "label": "Base moment PL",
+      "quantity": "baseMoment",
+      "tolerance": 1e-06,
+      "unit": "N m",
+      "expected": {
+        "formula": "Ptip*L"
+      }
+    },
+    {
+      "label": "Timoshenko tip deflection PL^3/3EI + PL/(kGA)",
+      "quantity": "tipDeflection",
+      "tolerance": 1e-06,
+      "unit": "m",
+      "expected": {
+        "formula": "Ptip*L^3/(3*E*I) + Ptip*L/(E/(2*(1+nu))*As)"
+      },
+      "params": {
+        "shear": 1,
+        "As": 0.004
+      }
+    }
+  ]
+}
