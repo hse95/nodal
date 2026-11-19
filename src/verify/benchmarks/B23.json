@@ -1,0 +1,40 @@
+{
+  "id": "B23",
+  "number": 23,
+  "group": "Shells",
+  "title": "Pinched cylinder with end diaphragms",
+  "description": "Cylinder (R = 300, L = 600, t = 3, E = 3e6, nu = 0.3) with rigid end diaphragms, pinched by two opposite unit loads at mid-length. One octant is modelled.",
+  "source": "MacNeal & Harder, 'A proposed standard set of problems to test finite element accuracy', Finite Elements in Analysis and Design 1 (1985) 3-20; Belytschko, Stolarski, Liu, Carpenter & Ong, CMAME 51 (1985) 221-258; reference 1.8248e-5.",
+  "builder": "pinchedCylinder",
+  "params": {
+    "R": 300,
+    "L": 600,
+    "t": 3,
+    "E": 3000000.0,
+    "nu": 0.3,
+    "P": 1,
+    "n": 32
+  },
+  "checks": [
+    {
+      "label": "Displacement under the load, 32 x 32 quadrilaterals",
+      "quantity": "loadDeflection",
+      "tolerance": 0.05,
+      "unit": "",
+      "expected": {
+        "value": 1.8248e-05
+      }
+    }
+  ],
+  "convergence": {
+    "param": "n",
+    "values": [
+      4,
+      8,
+      16,
+      32,
+      48
+    ],
+    "check": 0
+  }
+}

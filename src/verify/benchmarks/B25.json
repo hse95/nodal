@@ -1,0 +1,52 @@
+{
+  "id": "B25",
+  "number": 25,
+  "group": "Shells",
+  "title": "Simply supported square plate, uniform pressure",
+  "description": "Thin square plate (t/a = 0.01) with hard simple supports under uniform pressure.",
+  "source": "Navier double-sine series (Timoshenko & Woinowsky-Krieger, Theory of Plates and Shells, art. 30), summed in the test code; coefficient 0.00406235 q a^4 / D",
+  "builder": "squarePlate",
+  "params": {
+    "a": 2,
+    "t": 0.02,
+    "E": 200000000000.0,
+    "nu": 0.3,
+    "q": 1000,
+    "n": 16,
+    "bc": 1
+  },
+  "checks": [
+    {
+      "label": "Centre deflection, 16 x 16 quadrilaterals (MITC4)",
+      "quantity": "centreDeflection",
+      "tolerance": 0.02,
+      "unit": "m",
+      "expected": {
+        "reference": "navier"
+      }
+    },
+    {
+      "label": "Centre deflection, 16 x 16 x 2 triangles (DKT)",
+      "quantity": "centreDeflection",
+      "tolerance": 0.02,
+      "unit": "m",
+      "expected": {
+        "reference": "navier"
+      },
+      "params": {
+        "tri": 1
+      }
+    }
+  ],
+  "convergence": {
+    "param": "n",
+    "values": [
+      2,
+      4,
+      8,
+      16,
+      32
+    ],
+    "check": 0
+  }
+}

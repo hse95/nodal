@@ -265,3 +265,105 @@ const cable: Builder = (p) => {
 
 export const BUILDERS: Record<string, Builder> = { beam: beamBuilder, triangleTruss, tenBarTruss, portal, spaceFrame, curvedBeam, rigidOffset, column, vibration, cable };
 export { shell, pressureLoad, mk, uAt, rAt, steel };
+
+// ---- shell benchmarks ---------------------------------------------------------------
+type Fix = (p: V3, u: number, w: number) => string | null;
+/** Structured (n1 x n2) shell mesh on a mapped parameter square; `fix` returns the restrained DOFs for a grid point. */
+function gridShell(n1: number, n2: number, map: (u: number, w: number) => V3, mat: Material, t: number, tri: boolean, fix: Fix): { els: ElementPart[]; sups: SupportPart[] } {
+  const P: V3[][] = [], els: ElementPart[] = [], sups: SupportPart[] = [];
+  for (let i = 0; i <= n1; i++) { P.push([]); for (let j = 0; j <= n2; j++) { const q = map(i / n1, j / n2); P[i].push(q); const f = fix(q, i / n1, j / n2); if (f) sups.push(support(q, f)); } }
+  for (let i = 0; i < n1; i++) for (let j = 0; j < n2; j++) {
+    const a = P[i][j], b = P[i + 1][j], c = P[i + 1][j + 1], d = P[i][j + 1];
+    if (tri) els.push(shell([a, b, c], mat, t), shell([a, c, d], mat, t)); else els.push(shell([a, b, c, d], mat, t));
+  }
+  return { els, sups };
+}
+const near = (a: number, b: number) => Math.abs(a - b) < 1e-9;
+const join = (...parts: (string | false)[]) => { const s = parts.filter(Boolean).join(' '); return s || null; };
+
+/** Scordelis–Lo roof, one quarter by symmetry. Axis along X, crown at theta = 0. */
+const scordelisLo: Builder = (p) => {
+  const n = Math.round(p.n), R = p.R, L = p.L, th = p.theta * Math.PI / 180, mat = material('Roof', p.E, p.nu, 0, 1, 0);
+  const map = (u: number, w: number) => v(u * L / 2, R * Math.sin(w * th), R * Math.cos(w * th));
+  const { els, sups } = gridShell(n, n, map, mat, p.t, !!p.tri, (_q, u, w) => join(near(u, 0) && 'uy uz', near(u, 1) && 'ux ry rz', near(w, 0) && 'uy rx rz'));
+  return { model: mk(els, sups, [pressureLoad(p.q, { dir: v(0, 0, -1) })]), options: { kind: 'static' }, quantities: { edgeDeflection: r => -uAt(r, map(1, 1), 2) } };
+};
+/** Pinched cylinder with rigid end diaphragms, one octant. */
+const pinchedCylinder: Builder = (p) => {
+  const n = Math.round(p.n), R = p.R, L = p.L, mat = material('Cylinder', p.E, p.nu, 0, 1, 0);
+  const map = (u: number, w: number) => v(u * L / 2, R * Math.sin(w * Math.PI / 2), R * Math.cos(w * Math.PI / 2));
+  const { els, sups } = gridShell(n, n, map, mat, p.t, !!p.tri, (_q, u, w) => join(near(u, 0) && 'uy uz', near(u, 1) && 'ux ry rz', near(w, 0) && 'uy rx rz', near(w, 1) && 'uz rx ry'));
+  return { model: mk(els, sups, [pointLoad(map(1, 0), v(0, 0, -p.P / 4))]), options: { kind: 'static' }, quantities: { loadDeflection: r => -uAt(r, map(1, 0), 2) } };
+};
+/** Hemisphere with an 18-degree hole at the pole, one quadrant, alternating unit loads on the equator. */
+const hemisphere: Builder = (p) => {
+  const n = Math.round(p.n), R = p.R, top = (90 - p.hole) * Math.PI / 180, mat = material('Hemisphere', p.E, p.nu, 0, 1, 0);
+  const map = (u: number, w: number) => v(R * Math.cos(w * top) * Math.cos(u * Math.PI / 2), R * Math.cos(w * top) * Math.sin(u * Math.PI / 2), R * Math.sin(w * top));
+  const { els, sups } = gridShell(n, n, map, mat, p.t, !!p.tri, (_q, u, w) => join(near(u, 0) && 'uy rx rz', near(u, 1) && 'ux ry rz', near(u, 0) && near(w, 0) && 'uz'));
+  return { model: mk(els, sups, [pointLoad(map(0, 0), v(p.F, 0, 0)), pointLoad(map(1, 0), v(0, -p.F, 0))]), options: { kind: 'static' }, quantities: { radialDisplacement: r => uAt(r, map(0, 0), 0), inwardDisplacement: r => -uAt(r, map(1, 0), 1) } };
+};
+/** Navier double-sine series for the centre deflection of a simply supported square plate under uniform pressure. */
+export function navierCentre(q: number, a: number, D: number, terms = 99): number {
+  let s = 0;
+  for (let m = 1; m <= terms; m += 2) for (let n = 1; n <= terms; n += 2) s += Math.sin(m * Math.PI / 2) * Math.sin(n * Math.PI / 2) / (m * n * (m * m + n * n) ** 2);
+  return 16 * q * a ** 4 / (Math.PI ** 6 * D) * s;
+}
+/** Square plate a x a in the X-Y plane under uniform pressure. bc: 1 simply supported (hard), 2 clamped. */
+const squarePlate: Builder = (p) => {
+  const n = Math.round(p.n), a = p.a, mat = material('Plate', p.E, p.nu, 0, 1, 0), clamped = Math.round(p.bc) === 2;
+  const map = (u: number, w: number) => v(u * a, w * a, 0);
+  const { els, sups } = gridShell(n, n, map, mat, p.t, !!p.tri, (_q, u, w) => {
+    const ex = near(u, 0) || near(u, 1), ey = near(w, 0) || near(w, 1);
+    return join('ux uy rz', (ex || ey) && 'uz', clamped ? (ex || ey) && 'rx ry' : join(ex && 'rx', ey && 'ry') ?? false);
+  });
+  const D = p.E * p.t ** 3 / (12 * (1 - p.nu * p.nu));
+  return {
+    model: mk(els, sups, [pressureLoad(-p.q)]), options: { kind: 'static' },
+    quantities: { centreDeflection: r => -uAt(r, map(0.5, 0.5), 2) },
+    reference: () => ({ navier: navierCentre(p.q, a, D) }),
+  };
+};
+/** Cantilever plate strip L x b along X, clamped at x = 0, total tip load P shared by the tip nodes. */
+const plateStrip: Builder = (p) => {
+  const n = Math.round(p.n), nb = Math.max(1, Math.round(p.nb ?? 2)), mat = material('Strip', p.E, 0, 0, 1, 0);
+  const map = (u: number, w: number) => v(u * p.L, w * p.b, 0);
+  const { els, sups } = gridShell(n, nb, map, mat, p.t, !!p.tri, (_q, u) => (near(u, 0) ? 'fixed' : null));
+  const loads: LoadPart[] = [];
+  for (let j = 0; j <= nb; j++) loads.push(pointLoad(map(1, j / nb), v(0, 0, -p.P / nb * (j === 0 || j === nb ? 0.5 : 1))));
+  return { model: mk(els, sups, loads), options: { kind: 'static' }, quantities: { tipDeflection: r => -uAt(r, map(1, 0.5), 2) } };
+};
+/**
+ * MacNeal–Harder patch test: a 0.24 x 0.12 rectangle meshed with five distorted quadrilaterals. Boundary nodes are
+ * driven by a displacement field of constant strain (mode 1, membrane) or constant curvature (mode 2, bending);
+ * the interior nodes and the element stress resultants must reproduce that field exactly.
+ */
+const patchTest: Builder = (p) => {
+  const bending = Math.round(p.mode) === 2, mat = material('Patch', p.E, p.nu, 0, 1, 0), t = p.t;
+  const O = [v(0, 0, 0), v(0.24, 0, 0), v(0.24, 0.12, 0), v(0, 0.12, 0)], I = [v(0.04, 0.02, 0), v(0.18, 0.03, 0), v(0.16, 0.08, 0), v(0.08, 0.08, 0)];
+  const quads = [[O[0], O[1], I[1], I[0]], [O[1], O[2], I[2], I[1]], [O[2], O[3], I[3], I[2]], [O[3], O[0], I[0], I[3]], [I[0], I[1], I[2], I[3]]];
+  const els: ElementPart[] = [];
+  for (const q of quads) { if (p.tri) els.push(shell([q[0], q[1], q[2]], mat, t), shell([q[0], q[2], q[3]], mat, t)); else els.push(shell(q, mat, t)); }
+  const c = 1e-3;
+  const field = (q: V3): number[] => bending
+    ? [0, 0, c * (q.x * q.x + q.x * q.y + q.y * q.y) / 2, c * (q.y + q.x / 2), -c * (q.x + q.y / 2), 0]
+    : [c * (q.x + q.y / 2), c * (q.y + q.x / 2), 0, 0, 0, 0];
+  const sups: SupportPart[] = [];
+  for (const q of O) sups.push(support(q, bending ? 'fixed' : 'ux uy uz rx ry', { disp: field(q) }));
+  for (const q of I) sups.push(support(q, bending ? 'ux uy rz' : 'uz rx ry'));
+  const D = p.E * t ** 3 / (12 * (1 - p.nu * p.nu));
+  const exact = bending ? { a: -D * (1 + p.nu) * c, b: -D * (1 - p.nu) / 2 * c } : { a: p.E / (1 - p.nu) * c * t, b: p.E / (2 * (1 + p.nu)) * c * t };
+  const off = bending ? 3 : 0;
+  return {
+    model: mk(els, sups, [], 1e-9), options: { kind: 'static' },
+    quantities: {
+      // Largest error of the interior-node displacements relative to the largest exact value.
+      interiorError: r => { let e = 0, s = 0; for (const q of I) { const n = nearestNode(r.model, q), f = field(q); for (let d = 0; d < 6; d++) { e = Math.max(e, Math.abs(r.cases[0].u[6 * n + d] - f[d])); s = Math.max(s, Math.abs(f[d])); } } return e / s; },
+      // Largest error of the element direct / shear resultants relative to the exact constant values.
+      directError: r => { let e = 0; for (let i = 0; i < r.model.shells.length; i++) for (const k of [0, 1]) e = Math.max(e, Math.abs(r.cases[0].shellS[8 * i + off + k] - exact.a)); return e / Math.abs(exact.a); },
+      shearError: r => { let e = 0; for (let i = 0; i < r.model.shells.length; i++) e = Math.max(e, Math.abs(r.cases[0].shellS[8 * i + off + 2] - exact.b)); return e / Math.abs(exact.b); },
+      direct: r => r.cases[0].shellS[off],
+    },
+    reference: () => ({ direct: exact.a, shear: exact.b }),
+  };
+};
+Object.assign(BUILDERS, { scordelisLo, pinchedCylinder, hemisphere, squarePlate, plateStrip, patchTest });

@@ -1,0 +1,161 @@
+{
+  "id": "B28",
+  "number": 28,
+  "group": "Shells",
+  "title": "Patch tests for membrane and bending",
+  "description": "Five-element distorted patch (0.24 x 0.12). The boundary nodes are driven by a constant-strain field (membrane) or a constant-curvature field (bending); a valid element must reproduce the field at the interior nodes and give constant stress resultants.",
+  "source": "MacNeal & Harder, 'A proposed standard set of problems to test finite element accuracy', Finite Elements in Analysis and Design 1 (1985) 3-20, patch test for plates (fig. 2); exact values: membrane stresses 1333 and 400, bending moments 1.111e-7 and 3.333e-8 per unit length",
+  "builder": "patchTest",
+  "params": {
+    "E": 1000000.0,
+    "nu": 0.25,
+    "t": 0.001,
+    "mode": 1
+  },
+  "checks": [
+    {
+      "label": "Membrane, quadrilaterals: interior displacement error",
+      "quantity": "interiorError",
+      "tolerance": 1e-06,
+      "unit": "",
+      "expected": {
+        "value": 0
+      },
+      "abs": 1e-09
+    },
+    {
+      "label": "Membrane, quadrilaterals: direct force error",
+      "quantity": "directError",
+      "tolerance": 1e-06,
+      "unit": "",
+      "expected": {
+        "value": 0
+      },
+      "abs": 1e-09
+    },
+    {
+      "label": "Membrane, quadrilaterals: shear force error",
+      "quantity": "shearError",
+      "tolerance": 1e-06,
+      "unit": "",
+      "expected": {
+        "value": 0
+      },
+      "abs": 1e-09
+    },
+    {
+      "label": "Membrane force Nx = 1333.3 t",
+      "quantity": "direct",
+      "tolerance": 1e-09,
+      "unit": "N/m",
+      "expected": {
+        "reference": "direct"
+      }
+    },
+    {
+      "label": "Bending, quadrilaterals: interior displacement error",
+      "quantity": "interiorError",
+      "tolerance": 1e-06,
+      "unit": "",
+      "expected": {
+        "value": 0
+      },
+      "abs": 1e-08,
+      "params": {
+        "mode": 2
+      }
+    },
+    {
+      "label": "Bending, quadrilaterals: moment error",
+      "quantity": "directError",
+      "tolerance": 1e-06,
+      "unit": "",
+      "expected": {
+        "value": 0
+      },
+      "abs": 1e-08,
+      "params": {
+        "mode": 2
+      }
+    },
+    {
+      "label": "Bending, quadrilaterals: twisting moment error",
+      "quantity": "shearError",
+      "tolerance": 1e-06,
+      "unit": "",
+      "expected": {
+        "value": 0
+      },
+      "abs": 1e-08,
+      "params": {
+        "mode": 2
+      }
+    },
+    {
+      "label": "Bending moment Mx = -1.111e-7",
+      "quantity": "direct",
+      "tolerance": 1e-08,
+      "unit": "N m/m",
+      "expected": {
+        "reference": "direct"
+      },
+      "params": {
+        "mode": 2
+      }
+    },
+    {
+      "label": "Membrane, triangles: interior displacement error",
+      "quantity": "interiorError",
+      "tolerance": 1e-06,
+      "unit": "",
+      "expected": {
+        "value": 0
+      },
+      "abs": 1e-09,
+      "params": {
+        "tri": 1
+      }
+    },
+    {
+      "label": "Membrane, triangles: direct force error",
+      "quantity": "directError",
+      "tolerance": 1e-06,
+      "unit": "",
+      "expected": {
+        "value": 0
+      },
+      "abs": 1e-09,
+      "params": {
+        "tri": 1
+      }
+    },
+    {
+      "label": "Bending, triangles: interior displacement error",
+      "quantity": "interiorError",
+      "tolerance": 1e-06,
+      "unit": "",
+      "expected": {
+        "value": 0
+      },
+      "abs": 1e-08,
+      "params": {
+        "mode": 2,
+        "tri": 1
+      }
+    },
+    {
+      "label": "Bending, triangles: moment error",
+      "quantity": "directError",
+      "tolerance": 1e-06,
+      "unit": "",
+      "expected": {
+        "value": 0
+      },
+      "abs": 1e-08,
+      "params": {
+        "mode": 2,
+        "tri": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "id": "B27",
+  "number": 27,
+  "group": "Shells",
+  "title": "Cantilever plate strip against beam theory",
+  "description": "Plate strip (L = 10, b = 1, t = 0.1, nu = 0) clamped at one end with a tip load, modelled with shell elements. With nu = 0 the strip is a beam.",
+  "source": "Beam theory: PL^3/3EI, plus PL/(kGA) for the shear-flexible quadrilateral",
+  "builder": "plateStrip",
+  "params": {
+    "L": 10,
+    "b": 1,
+    "t": 0.1,
+    "E": 10000000.0,
+    "P": 10,
+    "n": 20,
+    "nb": 2
+  },
+  "checks": [
+    {
+      "label": "Tip deflection, quadrilaterals (with shear term)",
+      "quantity": "tipDeflection",
+      "tolerance": 0.005,
+      "unit": "m",
+      "expected": {
+        "formula": "P*L^3/(3*E*b*t^3/12) + P*L/((5/6)*(E/2)*b*t)"
+      }
+    },
+    {
+      "label": "Tip deflection, triangles (thin-plate theory)",
+      "quantity": "tipDeflection",
+      "tolerance": 0.005,
+      "unit": "m",
+      "expected": {
+        "formula": "P*L^3/(3*E*b*t^3/12)"
+      },
+      "params": {
+        "tri": 1
+      }
+    }
+  ],
+  "convergence": {
+    "param": "n",
+    "values": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      32
+    ],
+    "check": 0
+  }
+}
