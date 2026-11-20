@@ -33,4 +33,4 @@ Architecture and theory decisions, newest last. Each has a one-line reason. Chan
 | 27 | Browser tests use the installed Chrome (Playwright "chrome" channel) | No browser download in CI or in restricted environments. |
 | 28 | Build order: engine, geometry, solver and benchmarks first; then components; then the interface | The headless layers can be tested exhaustively in Node before any UI exists. The phases in PLAN.md are all covered, in a different order from the brief. |
 | 29 | Credit line exactly as given in the brief, in the About dialog and the README | Requested wording. |
-30. American spelling throughout the interface, documentation and code (color, center, optimize). Reason: the author and most likely first users are at a US university, and one spelling is easier to search.
+| 30 | American spelling throughout the interface, documentation and code (color, center, optimize) | The author and most likely first users are at a US university, and one spelling is easier to search. |
