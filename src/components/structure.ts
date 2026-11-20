@@ -261,12 +261,14 @@ C('opt.evolve', 'Evolutionary Optimiser', 'Evolve', 'Optimisation', 'Searches sl
   [num('Fitness', 'The number to minimise or maximise', undefined, { nick: 'F' })], [num('Fitness', 'The current fitness value', undefined, { nick: 'F' })], ([f]) => [f],
   { widget: 'optimizer', state: { genes: [], population: 20, generations: 15, maximise: false, localSearch: true, seed: 1, history: [], top: [] }, width: 200, noPreview: true, example: 'Mass + penalty -> Fitness; sliders for depth and width as genes' });
 
+/** Helper functions available inside user scripts for building geometry values. */
+export const SCRIPT_PRELUDE = 'const pt = (x, y, z = 0) => ({ x, y, z }); const line = (a, b) => ({ k: "line", a, b }); const polyline = (pts, closed = false) => ({ k: "polyline", pts, closed });';
 /** Sandboxed script execution is installed by the app (a worker); tests may install their own. */
 export type ScriptRunner = (code: string, inputs: Record<string, any>, outputs: string[], cancelled: () => boolean) => Promise<Record<string, any>>;
 let scriptRunner: ScriptRunner = async () => { throw new Error('The script sandbox is not available in this environment'); };
 export function setScriptRunner(r: ScriptRunner): void { scriptRunner = r; }
 const names = (s: any, d: string[]) => { const l = String(s ?? '').split(/[,\s]+/).filter(x => /^[A-Za-z_][A-Za-z0-9_]*$/.test(x)); return l.length ? l : d; };
-C('script.js', 'Script', 'JS', 'Script', 'Runs your own JavaScript in a sandboxed worker (no page, storage or network access). Inputs are available as variables holding the whole list for each branch; assign your results to the output variables. Points are {x, y, z}. Edit the code and the port names in the inspector.',
+C('script.js', 'Script', 'JS', 'Script', 'Runs your own JavaScript in a sandboxed worker (no page, storage or network access). Inputs are available as variables holding the whole list for each branch; assign your results to the output variables. Helpers: pt(x, y, z), line(a, b), polyline(points, closed). Edit the code and the port names in the inspector.',
   [], [], async (ins, ctx) => {
     const st = ctx.node.state, inN = names(st.inputs, ['a', 'b']), outN = names(st.outputs, ['result']);
     const data: Record<string, any> = {};

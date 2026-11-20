@@ -430,20 +430,21 @@ export function solveNonlinear(model: FEModel, opt: AnalysisOptions, cancelled?:
       }
     } else {
       // Cylindrical arc-length: constraint |du_step| = dl, root choice by the angle with the previous step.
-      let dl = 0; let prevStep: Float64Array | null = null;
-      const maxSteps = nSteps * 4;
+      let dl = 0, dl0 = 0; let prevStep: Float64Array | null = null;
+      const maxSteps = nSteps * 40;
       for (let step = 1; step <= maxSteps && lambda < 1 - 1e-12; step++) {
         const st = evaluate(u, true), fr = factorReg(st.Kt!, 0);
         const ut = fr.f.solve(Ff);
-        if (step === 1) dl = norm(ut) / nSteps;
+        if (step === 1) { dl = norm(ut) / nSteps; dl0 = dl; }
         let dlam = dl / norm(ut);
         // Follow the path direction: keep the sign that continues the previous step (or the stiffness sign at the start).
         const sgn = prevStep ? Math.sign(dotN(prevStep, ut)) || 1 : (fr.f.negativePivots % 2 === 0 ? 1 : -1);
         dlam *= sgn;
         const dU = ut.map(x => x * dlam) as Float64Array;
-        let lam = lambda + dlam, ok = false;
+        let lam = lambda + dlam, ok = false, its = 0;
         const uStart = Float64Array.from(u);
         for (let it = 0; it < maxIter; it++) {
+          its = it;
           totalIt++;
           for (let i = 0; i < ndof; i++) if (sys.eq[i] >= 0) u[i] = uStart[i] + dU[sys.eq[i]];
           const s2 = evaluate(u, true), fi = freeOf(s2.fint);
@@ -466,6 +467,20 @@ export function solveNonlinear(model: FEModel, opt: AnalysisOptions, cancelled?:
         if (!ok) { for (let i = 0; i < ndof; i++) u[i] = uStart[i]; dl /= 2; if (dl < 1e-12) break; continue; }
         prevStep = Float64Array.from(dU); lambda = lam;
         path.push([lambda, norm(freeOf(u))]);
+        // Lengthen the arc when the corrector converges quickly, shorten it when it struggles.
+        if (its <= 3) dl = Math.min(dl * 1.5, dl0 * 8); else if (its > 7) dl *= 0.6;
+      }
+      if (lambda >= 1 - 1e-12) {
+        // The last arc step overshoots the target: finish with plain Newton iterations at exactly the full load.
+        for (let it = 0; it < 40; it++) {
+          totalIt++;
+          const st = evaluate(u, true), fi = freeOf(st.fint), r = new Float64Array(neq);
+          for (let i = 0; i < neq; i++) r[i] = Ff[i] - fi[i];
+          if (norm(r) <= tol * fn) break;
+          addTo(factorReg(st.Kt!, 0).f.solve(r), 1);
+        }
+        lambda = 1;
+        path.push([1, norm(freeOf(u))]);
       }
       if (lambda < 1 - 1e-6) sys.messages.push(`Load set "${set.name}": the arc-length path was followed to load factor ${lambda.toPrecision(4)} in ${maxSteps} steps (the full load was not reached). The path may contain a limit point below the applied load; see the load-displacement history.`);
     }
