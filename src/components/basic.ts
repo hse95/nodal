@@ -1,6 +1,6 @@
 /**
- * Component library, part 1: parameters, maths, lists, data trees, vectors and planes.
- * All names, descriptions and behaviours are Nodal's own.
+ * Component library, part 1: parameters, math, lists, data trees, vectors and planes.
+ * All names, descriptions and behaviors are Nodal's own.
  */
 import { registry, P, formatValue, coerce } from '../core/graph';
 import type { ComponentDef, DType, PortSpec } from '../core/types';
@@ -29,7 +29,7 @@ C('param.toggle', 'Boolean Toggle', 'Toggle', 'Params', 'A true/false switch.', 
 C('param.valuelist', 'Value List', 'List', 'Params', 'Pick one value from a named list. Edit the entries in the inspector as "Name = value", one per line.', [], [P('Value', 'any', 'The selected value', { nick: 'V' })],
   (_i, ctx) => { const it = (ctx.node.state.items ?? [])[ctx.node.state.index ?? 0]; if (!it) throw new Error('The list is empty'); const n = Number(it.value); return [it.value !== '' && Number.isFinite(n) ? n : it.value]; },
   { widget: 'valuelist', state: { items: [{ name: 'One', value: '1' }, { name: 'Two', value: '2' }, { name: 'Three', value: '3' }], index: 0 }, width: 170, noPreview: true, example: 'Value List -> Type input' });
-C('param.panel', 'Panel', 'Panel', 'Params', 'Shows the data arriving at its input as text. With nothing connected it outputs its own text, one item per line (numbers are recognised).',
+C('param.panel', 'Panel', 'Panel', 'Params', 'Shows the data arriving at its input as text. With nothing connected it outputs its own text, one item per line (numbers are recognized).',
   [P('Data', 'any', 'Data to display', { tree: true, opt: true, nick: 'D' })], [P('Out', 'any', 'The same data (or the typed text)', { tree: true, nick: 'O' })], null,
   {
     widget: 'panel', state: { text: '' }, width: 220, noPreview: true, example: 'Any output -> Panel to read values',
@@ -53,7 +53,7 @@ export function graphMap(kind: string, p: number, x: number): number {
     default: return t * t * (3 - 2 * t);
   }
 }
-C('param.colour', 'Colour', 'Colour', 'Params', 'A colour swatch.', [], [P('Colour', 'color', 'The colour', { nick: 'C' })], (_i, ctx) => [ctx.node.state.value], { widget: 'colour', state: { value: '#e4572e' }, width: 120, noPreview: true });
+C('param.color', 'Color', 'Color', 'Params', 'A color swatch.', [], [P('Color', 'color', 'The color', { nick: 'C' })], (_i, ctx) => [ctx.node.state.value], { widget: 'color', state: { value: '#e4572e' }, width: 120, noPreview: true });
 C('param.note', 'Note', 'Note', 'Params', 'A text note on the canvas. It has no effect on the model.', [], [], null, { widget: 'note', state: { text: 'Note' }, width: 200, noPreview: true });
 C('param.file', 'Geometry From File', 'File', 'Params', 'Holds geometry imported from a file (STL, OBJ, DXF, 3DM, CSV points). Use File > Import, or the Import button in the inspector.', [], [P('Geometry', 'geometry', 'Imported geometry', { list: true, nick: 'G' })],
   (_i, ctx) => { const d = ctx.node.state.data; if (!d || !d.length) throw new Error('No file loaded yet. Select this component and use Import in the inspector.'); return [d]; }, { state: { data: null, name: '' }, width: 150 });
@@ -70,7 +70,7 @@ for (const [id, name, type, d, what] of RELAYS) {
     { solveTrees: ([t]) => [t], width: 110, example: `${name} -> any ${id} input` });
 }
 
-// ======================================================================= Maths
+// ======================================================================= Math
 const isNum = (x: any): x is number => typeof x === 'number';
 function arith(op: string, a: any, b: any): any {
   const f = (x: number, y: number) => (op === '+' ? x + y : op === '-' ? x - y : op === '*' ? x * y : x / y);
@@ -83,27 +83,27 @@ function arith(op: string, a: any, b: any): any {
   throw new Error(`Cannot compute ${formatValue(a)} ${op} ${formatValue(b)}`);
 }
 for (const [id, name, op, d, desc] of [['add', 'Addition', '+', 0, 'Adds numbers or vectors (text is joined).'], ['sub', 'Subtraction', '-', 0, 'Subtracts numbers or vectors.'], ['mul', 'Multiplication', '*', 1, 'Multiplies numbers, scales a vector by a number, or gives the dot product of two vectors.'], ['div', 'Division', '/', 1, 'Divides numbers, or a vector by a number.']] as [string, string, string, number, string][]) {
-  C(`math.${id}`, name, op === '*' ? 'A×B' : op === '/' ? 'A/B' : `A${op}B`, 'Maths', desc, [P('A', 'any', 'First operand', { d }), P('B', 'any', 'Second operand', { d })], [P('Result', 'any', 'Result', { nick: 'R' })], ([a, b]) => [arith(op, a, b)], { example: `2 ${op} 3`, noPreview: true });
+  C(`math.${id}`, name, op === '*' ? 'A×B' : op === '/' ? 'A/B' : `A${op}B`, 'Math', desc, [P('A', 'any', 'First operand', { d }), P('B', 'any', 'Second operand', { d })], [P('Result', 'any', 'Result', { nick: 'R' })], ([a, b]) => [arith(op, a, b)], { example: `2 ${op} 3`, noPreview: true });
 }
 const fn1 = (id: string, name: string, nick: string, desc: string, f: (x: number) => number, d = 0) =>
-  C(`math.${id}`, name, nick, 'Maths', desc, [num('X', 'Input value', d)], [num('Y', 'Result')], ([x]) => [f(x)], { noPreview: true });
+  C(`math.${id}`, name, nick, 'Math', desc, [num('X', 'Input value', d)], [num('Y', 'Result')], ([x]) => [f(x)], { noPreview: true });
 fn1('neg', 'Negative', '−X', 'Changes the sign of a number.', x => -x); fn1('abs', 'Absolute', '|X|', 'Absolute value.', Math.abs);
 fn1('sqrt', 'Square Root', '√X', 'Square root.', Math.sqrt, 1); fn1('sin', 'Sine', 'Sin', 'Sine of an angle in radians.', Math.sin); fn1('cos', 'Cosine', 'Cos', 'Cosine of an angle in radians.', Math.cos);
 fn1('tan', 'Tangent', 'Tan', 'Tangent of an angle in radians.', Math.tan); fn1('asin', 'ArcSine', 'ASin', 'Inverse sine, in radians.', Math.asin); fn1('acos', 'ArcCosine', 'ACos', 'Inverse cosine, in radians.', Math.acos);
 fn1('atan', 'ArcTangent', 'ATan', 'Inverse tangent, in radians.', Math.atan); fn1('deg', 'Degrees', 'Deg', 'Converts radians to degrees.', x => x * 180 / Math.PI); fn1('rad', 'Radians', 'Rad', 'Converts degrees to radians.', x => x * Math.PI / 180);
 fn1('exp', 'Exponential', 'eˣ', 'e raised to the power X.', Math.exp); fn1('ln', 'Natural Logarithm', 'Ln', 'Natural logarithm.', Math.log, 1); fn1('log10', 'Logarithm', 'Log', 'Base-10 logarithm.', Math.log10, 1);
-C('math.pow', 'Power', 'Aᴮ', 'Maths', 'Raises A to the power B.', [num('A', 'Base', 2), num('B', 'Exponent', 2)], [num('R', 'Result')], ([a, b]) => [Math.pow(a, b)], { noPreview: true });
-C('math.mod', 'Modulus', 'A%B', 'Maths', 'Remainder of A divided by B.', [num('A', 'Dividend', 0), num('B', 'Divisor', 1)], [num('R', 'Remainder')], ([a, b]) => [a - b * Math.floor(a / b)], { noPreview: true });
-C('math.atan2', 'ArcTangent 2', 'ATan2', 'Maths', 'Angle of the point (X, Y) from the X axis, in radians.', [num('Y', 'Y component', 0), num('X', 'X component', 1)], [num('A', 'Angle in radians')], ([y, x]) => [Math.atan2(y, x)], { noPreview: true });
-C('math.pi', 'Pi', 'π', 'Maths', 'Pi times a factor.', [num('Factor', 'Multiplier', 1, { nick: 'N' })], [num('Y', 'N × π')], ([n]) => [n * Math.PI], { noPreview: true });
-C('math.min', 'Minimum', 'Min', 'Maths', 'Smaller of two numbers.', [num('A', 'First', 0), num('B', 'Second', 0)], [num('R', 'Minimum')], ([a, b]) => [Math.min(a, b)], { noPreview: true });
-C('math.max', 'Maximum', 'Max', 'Maths', 'Larger of two numbers.', [num('A', 'First', 0), num('B', 'Second', 0)], [num('R', 'Maximum')], ([a, b]) => [Math.max(a, b)], { noPreview: true });
-C('math.sum', 'Mass Addition', 'Sum', 'Maths', 'Adds up a list of numbers (or vectors).', [P('Input', 'any', 'Values to add', { list: true, nick: 'I' })], [P('Result', 'any', 'Total', { nick: 'R' }), P('Partial', 'any', 'Running totals', { list: true, nick: 'Pr' })],
+C('math.pow', 'Power', 'Aᴮ', 'Math', 'Raises A to the power B.', [num('A', 'Base', 2), num('B', 'Exponent', 2)], [num('R', 'Result')], ([a, b]) => [Math.pow(a, b)], { noPreview: true });
+C('math.mod', 'Modulus', 'A%B', 'Math', 'Remainder of A divided by B.', [num('A', 'Dividend', 0), num('B', 'Divisor', 1)], [num('R', 'Remainder')], ([a, b]) => [a - b * Math.floor(a / b)], { noPreview: true });
+C('math.atan2', 'ArcTangent 2', 'ATan2', 'Math', 'Angle of the point (X, Y) from the X axis, in radians.', [num('Y', 'Y component', 0), num('X', 'X component', 1)], [num('A', 'Angle in radians')], ([y, x]) => [Math.atan2(y, x)], { noPreview: true });
+C('math.pi', 'Pi', 'π', 'Math', 'Pi times a factor.', [num('Factor', 'Multiplier', 1, { nick: 'N' })], [num('Y', 'N × π')], ([n]) => [n * Math.PI], { noPreview: true });
+C('math.min', 'Minimum', 'Min', 'Math', 'Smaller of two numbers.', [num('A', 'First', 0), num('B', 'Second', 0)], [num('R', 'Minimum')], ([a, b]) => [Math.min(a, b)], { noPreview: true });
+C('math.max', 'Maximum', 'Max', 'Math', 'Larger of two numbers.', [num('A', 'First', 0), num('B', 'Second', 0)], [num('R', 'Maximum')], ([a, b]) => [Math.max(a, b)], { noPreview: true });
+C('math.sum', 'Mass Addition', 'Sum', 'Math', 'Adds up a list of numbers (or vectors).', [P('Input', 'any', 'Values to add', { list: true, nick: 'I' })], [P('Result', 'any', 'Total', { nick: 'R' }), P('Partial', 'any', 'Running totals', { list: true, nick: 'Pr' })],
   ([l]) => { const parts: any[] = []; let s: any = null; for (const x of l) { s = s === null ? x : arith('+', s, x); parts.push(s); } return [s, parts]; }, { example: 'Sum of member weights', noPreview: true });
-C('math.avg', 'Average', 'Avg', 'Maths', 'Arithmetic mean of a list.', [P('Input', 'number', 'Values', { list: true, nick: 'I' })], [num('Mean', 'Average', undefined, { nick: 'M' })], ([l]) => [l.reduce((a: number, b: number) => a + b, 0) / l.length], { noPreview: true });
-C('math.bounds', 'Bounds', 'Bnd', 'Maths', 'Smallest and largest value of a list, as a domain.', [P('Numbers', 'number', 'Values', { list: true, nick: 'N' })], [P('Domain', 'domain', 'Range of the values', { nick: 'I' }), num('Min', 'Smallest value'), num('Max', 'Largest value')],
+C('math.avg', 'Average', 'Avg', 'Math', 'Arithmetic mean of a list.', [P('Input', 'number', 'Values', { list: true, nick: 'I' })], [num('Mean', 'Average', undefined, { nick: 'M' })], ([l]) => [l.reduce((a: number, b: number) => a + b, 0) / l.length], { noPreview: true });
+C('math.bounds', 'Bounds', 'Bnd', 'Math', 'Smallest and largest value of a list, as a domain.', [P('Numbers', 'number', 'Values', { list: true, nick: 'N' })], [P('Domain', 'domain', 'Range of the values', { nick: 'I' }), num('Min', 'Smallest value'), num('Max', 'Largest value')],
   ([l]) => { const a = Math.min(...l), b = Math.max(...l); return [{ k: 'domain', a, b }, a, b]; }, { noPreview: true });
-C('math.expr', 'Expression', 'Expr', 'Maths', 'Evaluates a formula. Variables in the formula become inputs. Functions: sin cos tan asin acos atan atan2 sqrt abs exp ln log10 floor ceil round min max pow if(c,a,b) clamp deg rad; constants pi, e.',
+C('math.expr', 'Expression', 'Expr', 'Math', 'Evaluates a formula. Variables in the formula become inputs. Functions: sin cos tan asin acos atan atan2 sqrt abs exp ln log10 floor ceil round min max pow if(c,a,b) clamp deg rad; constants pi, e.',
   [], [num('Result', 'Value of the expression', undefined, { nick: 'R' })], (ins, ctx) => {
     const ex = compileExpr(String(ctx.node.state.expr ?? '0')), vars: Record<string, number> = {};
     ex.vars.forEach((name, i) => { vars[name] = ins[i]; });
@@ -116,30 +116,30 @@ C('math.expr', 'Expression', 'Expr', 'Maths', 'Evaluates a formula. Variables in
       return { inputs: names.map(n => P(n, 'number', `Variable ${n}`, { d: 0, nick: n })), outputs: [P('Result', 'number', 'Value of the expression', { nick: 'R' })] };
     },
   });
-C('math.domain', 'Construct Domain', 'Dom', 'Maths', 'A numeric range from A to B.', [num('A', 'Start', 0), num('B', 'End', 1)], [P('Domain', 'domain', 'The range', { nick: 'I' })], ([a, b]) => [{ k: 'domain', a, b }], { noPreview: true });
-C('math.dedomain', 'Deconstruct Domain', 'DeDom', 'Maths', 'Start, end and length of a domain.', [P('Domain', 'domain', 'A range', { nick: 'I' })], [num('Start', 'Start', undefined, { nick: 'S' }), num('End', 'End', undefined, { nick: 'E' }), num('Length', 'End minus start', undefined, { nick: 'L' })], ([d]) => [d.a, d.b, d.b - d.a], { noPreview: true });
-C('math.remap', 'Remap Numbers', 'ReMap', 'Maths', 'Maps a value from a source range to a target range.', [num('Value', 'Value to remap', undefined, { nick: 'V' }), P('Source', 'domain', 'Source range', { d: { k: 'domain', a: 0, b: 1 }, nick: 'S' }), P('Target', 'domain', 'Target range', { d: { k: 'domain', a: 0, b: 1 }, nick: 'T' })],
+C('math.domain', 'Construct Domain', 'Dom', 'Math', 'A numeric range from A to B.', [num('A', 'Start', 0), num('B', 'End', 1)], [P('Domain', 'domain', 'The range', { nick: 'I' })], ([a, b]) => [{ k: 'domain', a, b }], { noPreview: true });
+C('math.dedomain', 'Deconstruct Domain', 'DeDom', 'Math', 'Start, end and length of a domain.', [P('Domain', 'domain', 'A range', { nick: 'I' })], [num('Start', 'Start', undefined, { nick: 'S' }), num('End', 'End', undefined, { nick: 'E' }), num('Length', 'End minus start', undefined, { nick: 'L' })], ([d]) => [d.a, d.b, d.b - d.a], { noPreview: true });
+C('math.remap', 'Remap Numbers', 'ReMap', 'Math', 'Maps a value from a source range to a target range.', [num('Value', 'Value to remap', undefined, { nick: 'V' }), P('Source', 'domain', 'Source range', { d: { k: 'domain', a: 0, b: 1 }, nick: 'S' }), P('Target', 'domain', 'Target range', { d: { k: 'domain', a: 0, b: 1 }, nick: 'T' })],
   [num('Mapped', 'Remapped value', undefined, { nick: 'R' }), num('Clipped', 'Remapped value limited to the target range', undefined, { nick: 'C' })],
   ([x, s, t]) => { const u = s.b === s.a ? 0 : (x - s.a) / (s.b - s.a), r = t.a + u * (t.b - t.a); return [r, t.a + Math.min(1, Math.max(0, u)) * (t.b - t.a)]; }, { noPreview: true });
-C('math.range', 'Range', 'Range', 'Maths', 'Evenly spaced numbers across a domain: N steps give N+1 values.', [P('Domain', 'domain', 'Range to divide', { d: { k: 'domain', a: 0, b: 1 }, nick: 'D' }), int('Steps', 'Number of steps', 10, { nick: 'N' })],
+C('math.range', 'Range', 'Range', 'Math', 'Evenly spaced numbers across a domain: N steps give N+1 values.', [P('Domain', 'domain', 'Range to divide', { d: { k: 'domain', a: 0, b: 1 }, nick: 'D' }), int('Steps', 'Number of steps', 10, { nick: 'N' })],
   [P('Range', 'number', 'The values', { list: true, nick: 'R' })], ([d, n]) => [Array.from({ length: Math.max(1, n) + 1 }, (_, i) => d.a + (d.b - d.a) * i / Math.max(1, n))], { example: 'Range 0..1 with 10 steps -> curve parameters', noPreview: true });
-C('math.series', 'Series', 'Series', 'Maths', 'A list of numbers: start, start+step, ...', [num('Start', 'First number', 0, { nick: 'S' }), num('Step', 'Increment', 1, { nick: 'N' }), int('Count', 'How many numbers', 10, { nick: 'C' })],
+C('math.series', 'Series', 'Series', 'Math', 'A list of numbers: start, start+step, ...', [num('Start', 'First number', 0, { nick: 'S' }), num('Step', 'Increment', 1, { nick: 'N' }), int('Count', 'How many numbers', 10, { nick: 'C' })],
   [P('Series', 'number', 'The numbers', { list: true, nick: 'S' })], ([s, n, c]) => [Array.from({ length: Math.max(0, c) }, (_, i) => s + n * i)], { example: 'Series 0, 2, 5 -> 0 2 4 6 8', noPreview: true });
-C('math.random', 'Random', 'Rnd', 'Maths', 'Repeatable pseudo-random numbers in a domain (same seed, same numbers).', [P('Domain', 'domain', 'Range of the numbers', { d: { k: 'domain', a: 0, b: 1 }, nick: 'R' }), int('Count', 'How many', 10, { nick: 'N' }), int('Seed', 'Seed', 1, { nick: 'S' })],
+C('math.random', 'Random', 'Rnd', 'Math', 'Repeatable pseudo-random numbers in a domain (same seed, same numbers).', [P('Domain', 'domain', 'Range of the numbers', { d: { k: 'domain', a: 0, b: 1 }, nick: 'R' }), int('Count', 'How many', 10, { nick: 'N' }), int('Seed', 'Seed', 1, { nick: 'S' })],
   [P('Numbers', 'number', 'Random values', { list: true, nick: 'R' })], ([d, n, seed]) => { let s = (seed * 2654435761) >>> 0; const out: number[] = []; for (let i = 0; i < n; i++) { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; out.push(d.a + (d.b - d.a) * s / 4294967296); } return [out]; }, { noPreview: true });
-C('math.round', 'Round', 'Round', 'Maths', 'Rounds a number to the nearest whole number, and down and up.', [num('X', 'Number', 0)], [num('Nearest', 'Rounded', undefined, { nick: 'N' }), num('Floor', 'Rounded down', undefined, { nick: 'F' }), num('Ceiling', 'Rounded up', undefined, { nick: 'C' })], ([x]) => [Math.round(x), Math.floor(x), Math.ceil(x)], { noPreview: true });
-C('math.clamp', 'Clamp', 'Clamp', 'Maths', 'Limits a value to the range from Min to Max.', [num('Value', 'Value', 0, { nick: 'V' }), num('Min', 'Lower limit', 0), num('Max', 'Upper limit', 1)], [num('Result', 'Limited value', undefined, { nick: 'R' })], ([x, a, b]) => [Math.min(Math.max(x, a), b)], { noPreview: true });
+C('math.round', 'Round', 'Round', 'Math', 'Rounds a number to the nearest whole number, and down and up.', [num('X', 'Number', 0)], [num('Nearest', 'Rounded', undefined, { nick: 'N' }), num('Floor', 'Rounded down', undefined, { nick: 'F' }), num('Ceiling', 'Rounded up', undefined, { nick: 'C' })], ([x]) => [Math.round(x), Math.floor(x), Math.ceil(x)], { noPreview: true });
+C('math.clamp', 'Clamp', 'Clamp', 'Math', 'Limits a value to the range from Min to Max.', [num('Value', 'Value', 0, { nick: 'V' }), num('Min', 'Lower limit', 0), num('Max', 'Upper limit', 1)], [num('Result', 'Limited value', undefined, { nick: 'R' })], ([x, a, b]) => [Math.min(Math.max(x, a), b)], { noPreview: true });
 const cmp = (id: string, name: string, nick: string, desc: string, f: (a: number, b: number) => boolean) =>
-  C(`math.${id}`, name, nick, 'Maths', desc, [num('A', 'First number', 0), num('B', 'Second number', 0)], [P('Result', 'boolean', 'True or false', { nick: 'R' })], ([a, b]) => [f(a, b)], { noPreview: true });
+  C(`math.${id}`, name, nick, 'Math', desc, [num('A', 'First number', 0), num('B', 'Second number', 0)], [P('Result', 'boolean', 'True or false', { nick: 'R' })], ([a, b]) => [f(a, b)], { noPreview: true });
 cmp('gt', 'Larger Than', 'A>B', 'True when A is larger than B.', (a, b) => a > b); cmp('lt', 'Smaller Than', 'A<B', 'True when A is smaller than B.', (a, b) => a < b);
 cmp('gte', 'Larger Or Equal', 'A≥B', 'True when A is at least B.', (a, b) => a >= b); cmp('lte', 'Smaller Or Equal', 'A≤B', 'True when A is at most B.', (a, b) => a <= b);
 cmp('eq', 'Equals', 'A=B', 'True when A equals B.', (a, b) => a === b);
-C('math.similar', 'Similar', 'A≈B', 'Maths', 'True when A and B differ by no more than the tolerance.', [num('A', 'First', 0), num('B', 'Second', 0), num('Tolerance', 'Allowed difference', 1e-6, { nick: 'T' })], [P('Result', 'boolean', 'True or false', { nick: 'R' })], ([a, b, t]) => [Math.abs(a - b) <= t], { noPreview: true });
+C('math.similar', 'Similar', 'A≈B', 'Math', 'True when A and B differ by no more than the tolerance.', [num('A', 'First', 0), num('B', 'Second', 0), num('Tolerance', 'Allowed difference', 1e-6, { nick: 'T' })], [P('Result', 'boolean', 'True or false', { nick: 'R' })], ([a, b, t]) => [Math.abs(a - b) <= t], { noPreview: true });
 const logic = (id: string, name: string, desc: string, f: (a: boolean, b: boolean) => boolean) =>
-  C(`math.${id}`, name, name, 'Maths', desc, [P('A', 'boolean', 'First value', { d: false }), P('B', 'boolean', 'Second value', { d: false })], [P('Result', 'boolean', 'True or false', { nick: 'R' })], ([a, b]) => [f(a, b)], { noPreview: true });
+  C(`math.${id}`, name, name, 'Math', desc, [P('A', 'boolean', 'First value', { d: false }), P('B', 'boolean', 'Second value', { d: false })], [P('Result', 'boolean', 'True or false', { nick: 'R' })], ([a, b]) => [f(a, b)], { noPreview: true });
 logic('and', 'And', 'True when both inputs are true.', (a, b) => a && b); logic('or', 'Or', 'True when at least one input is true.', (a, b) => a || b); logic('xor', 'Xor', 'True when exactly one input is true.', (a, b) => a !== b);
-C('math.not', 'Not', 'Not', 'Maths', 'Inverts true and false.', [P('A', 'boolean', 'Value', { d: false })], [P('Result', 'boolean', 'Inverted value', { nick: 'R' })], ([a]) => [!a], { noPreview: true });
-C('math.pick', 'Pick', 'Pick', 'Maths', 'Outputs A when the test is true, otherwise B.', [P('Test', 'boolean', 'Condition', { nick: 'T' }), P('A', 'any', 'Value when true'), P('B', 'any', 'Value when false')], [P('Result', 'any', 'Chosen value', { nick: 'R' })], ([t, a, b]) => [t ? a : b], { noPreview: true });
+C('math.not', 'Not', 'Not', 'Math', 'Inverts true and false.', [P('A', 'boolean', 'Value', { d: false })], [P('Result', 'boolean', 'Inverted value', { nick: 'R' })], ([a]) => [!a], { noPreview: true });
+C('math.pick', 'Pick', 'Pick', 'Math', 'Outputs A when the test is true, otherwise B.', [P('Test', 'boolean', 'Condition', { nick: 'T' }), P('A', 'any', 'Value when true'), P('B', 'any', 'Value when false')], [P('Result', 'any', 'Chosen value', { nick: 'R' })], ([t, a, b]) => [t ? a : b], { noPreview: true });
 
 // ======================================================================= Lists
 const L = (n: string, d: string, type: DType = 'any') => P(n, type, d, { list: true, nick: 'L' });
@@ -209,8 +209,8 @@ C('plane.eval', 'Evaluate Plane', 'PlPt', 'Vector', 'The point at coordinates (U
 C('grid.square', 'Square Grid', 'SqGrid', 'Vector', 'A grid of points. Each row along Y is a branch.', [pln('Plane', 'Base plane', { nick: 'P' }), num('Size X', 'Cell size along X', 1, { nick: 'Sx' }), num('Size Y', 'Cell size along Y', 1, { nick: 'Sy' }), int('Count X', 'Cells along X', 5, { nick: 'Nx' }), int('Count Y', 'Cells along Y', 5, { nick: 'Ny' })],
   [P('Points', 'point', 'Grid points, one branch per row', { tree: true, nick: 'P' })], null,
   { solveTrees: ([pl, sx, sy, nx, ny]) => { const out = new DataTree<V3>(), p = (pl.first() ?? WORLD_XY) as Plane, a = Number(sx.first() ?? 1), b = Number(sy.first() ?? 1), n = Number(nx.first() ?? 5), m = Number(ny.first() ?? 5); for (let j = 0; j <= m; j++) for (let i = 0; i <= n; i++) out.add([j], [planePoint(p, i * a, j * b)]); return [out]; }, example: 'Square Grid -> column base points' });
-C('grid.hex', 'Hexagonal Grid', 'HexGrid', 'Vector', 'Centre points of a honeycomb pattern.', [pln('Plane', 'Base plane', { nick: 'P' }), num('Size', 'Distance from a cell centre to its corners', 1, { nick: 'S' }), int('Count X', 'Cells along X', 5, { nick: 'Nx' }), int('Count Y', 'Cells along Y', 5, { nick: 'Ny' })],
-  [P('Points', 'point', 'Cell centres', { list: true, nick: 'P' })], ([p, s, nx, ny]) => { const out: V3[] = []; for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) out.push(planePoint(p, s * Math.sqrt(3) * (i + (j % 2) / 2), s * 1.5 * j)); return [out]; });
+C('grid.hex', 'Hexagonal Grid', 'HexGrid', 'Vector', 'Center points of a honeycomb pattern.', [pln('Plane', 'Base plane', { nick: 'P' }), num('Size', 'Distance from a cell center to its corners', 1, { nick: 'S' }), int('Count X', 'Cells along X', 5, { nick: 'Nx' }), int('Count Y', 'Cells along Y', 5, { nick: 'Ny' })],
+  [P('Points', 'point', 'Cell centers', { list: true, nick: 'P' })], ([p, s, nx, ny]) => { const out: V3[] = []; for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) out.push(planePoint(p, s * Math.sqrt(3) * (i + (j % 2) / 2), s * 1.5 * j)); return [out]; });
 C('grid.radial', 'Radial Grid', 'RadGrid', 'Vector', 'Points on concentric circles. Each ring is a branch.', [pln('Plane', 'Base plane', { nick: 'P' }), num('Spacing', 'Distance between rings', 1, { nick: 'S' }), int('Rings', 'Number of rings', 4, { nick: 'Nr' }), int('Divisions', 'Points per ring', 12, { nick: 'Np' })],
   [P('Points', 'point', 'Grid points, one branch per ring', { tree: true, nick: 'P' })], null,
   { solveTrees: ([pl, s, nr, np]) => { const out = new DataTree<V3>(), p = (pl.first() ?? WORLD_XY) as Plane, sp = Number(s.first() ?? 1), R = Number(nr.first() ?? 4), N = Number(np.first() ?? 12); for (let r = 1; r <= R; r++) for (let i = 0; i < N; i++) out.add([r - 1], [planePoint(p, r * sp * Math.cos(2 * Math.PI * i / N), r * sp * Math.sin(2 * Math.PI * i / N))]); return [out]; } });

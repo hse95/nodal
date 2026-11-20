@@ -101,16 +101,16 @@ function bridge() {
   return { project: g.p, expected: [g.exp('Steel weight', 'model', 2, 'first', 4537.22, 1e-3, 'kg'), g.exp('Midspan deflection', 'dmid', 2, 'first', 18.9646, 1e-3, 'mm')] };
 }
 function sizing() {
-  const g = new GB('Section sizing of a truss', 'Each member group (top chord, bottom chord, verticals, diagonals) gets the lightest tube from a list that keeps the simplified stress utilisation below the target. This is a sizing aid based on stress only; it does not check member buckling.');
+  const g = new GB('Section sizing of a truss', 'Each member group (top chord, bottom chord, verticals, diagonals) gets the lightest tube from a list that keeps the simplified stress utilization below the target. This is a sizing aid based on stress only; it does not check member buckling.');
   trussBridge(g, 24, 3, 8, true);
   g.n('dia', 'math.series', 7, 7.2, { consts: { Start: 60, Step: 20, Count: 12 }, label: 'Tube diameters [mm]' });
   g.n('cand', 'fe.sec.tube', 8, 7.2, { consts: { Thickness: 6 }, label: 'Candidate tubes' }); g.w('dia', 'cand', 'Diameter');
   g.n('size', 'fe.sizing', 9, 3, { consts: { Target: 0.9 } }); g.w('model', 'size', 'Model').w('cand', 'size', 'Sections');
-  g.n('view', 'fe.view', 10, 1.5, { state: { utilisation: true, values: false, reactions: false } }); g.w('size', 'view', 'Result', 'Result');
+  g.n('view', 'fe.view', 10, 1.5, { state: { utilization: true, values: false, reactions: false } }); g.w('size', 'view', 'Result', 'Result');
   g.n('pm', 'param.panel', 10, 3.6, { label: 'Sized weight [kg]', w: 170, h: 46 }); g.w('size', 'pm', 'Data', 'Mass');
   g.n('pl2', 'param.panel', 10, 5, { label: 'Sizing log', w: 330, h: 110 }); g.w('size', 'pl2', 'Data', 'Log');
   g.group('Sizing', ['dia', 'cand', 'size', 'view', 'pm', 'pl2'], PURPLE);
-  return { project: g.p, expected: [g.exp('Sized weight', 'size', 2, 'first', 1012.53, 1e-3, 'kg'), g.exp('Largest utilisation is below the target', 'size', 3, 'first', 0.80779, 5e-3, '')] };
+  return { project: g.p, expected: [g.exp('Sized weight', 'size', 2, 'first', 1012.53, 1e-3, 'kg'), g.exp('Largest utilization is below the target', 'size', 3, 'first', 0.80779, 5e-3, '')] };
 }
 function portal() {
   const g = new GB('Portal frame building with load combinations', 'Pitched portal frames repeated along a building and tied by eaves and ridge beams. Dead load, roof load and wind are separate load cases; two factored combinations are built from them. Pick the combination and the diagram in the Result View inspector.');
@@ -139,10 +139,10 @@ function portal() {
   g.n('model', 'fe.assemble', 8, 3); for (const k of ['bc', 'br', 'bt']) g.w(k, 'model', 'Elements'); g.w('sup', 'model', 'Supports'); for (const k of ['dl', 'rl', 'wl', 'k1', 'k2']) g.w(k, 'model', 'Loads');
   g.n('static', 'fe.static', 9, 3); g.w('model', 'static', 'Model');
   g.n('view', 'fe.view', 10, 2, { state: { caseIndex: 3, diagram: 'My', values: false, loads: false } }); g.w('static', 'view', 'Result');
-  g.n('util', 'fe.res.util', 10, 4); g.w('static', 'util', 'Result'); g.n('pu', 'param.panel', 11, 4, { label: 'Largest utilisation (simplified)', w: 210, h: 46 }); g.w('util', 'pu', 'Data', 'Max');
+  g.n('util', 'fe.res.util', 10, 4); g.w('static', 'util', 'Result'); g.n('pu', 'param.panel', 11, 4, { label: 'Largest utilization (simplified)', w: 210, h: 46 }); g.w('util', 'pu', 'Data', 'Max');
   g.n('pd', 'param.panel', 10, 5.6, { label: 'Largest displacement [mm]', w: 210, h: 46 }); g.w('static', 'pd', 'Data', 'Max Displacement');
   g.group('Parameters', ['span', 'eave', 'rise', 'bays', 'spacing'], BLUE); g.group('Loads and combinations', ['dl', 'rl', 'wl', 'k1', 'k2'], ORANGE); g.group('Results', ['static', 'view', 'util', 'pu', 'pd'], PURPLE);
-  return { project: g.p, expected: [g.exp('Largest displacement over all cases', 'static', 1, 'first', 12.7439, 2e-3, 'mm'), g.exp('Largest utilisation (simplified stress check)', 'util', 1, 'first', 0.255828, 2e-3, '')] };
+  return { project: g.p, expected: [g.exp('Largest displacement over all cases', 'static', 1, 'first', 12.7439, 2e-3, 'mm'), g.exp('Largest utilization (simplified stress check)', 'util', 1, 'first', 0.255828, 2e-3, '')] };
 }
 function spaceTruss() {
   const g = new GB('Space truss roof on a grid', 'A double-layer "square on offset square" space truss. A short Script component writes the bars from the grid size; the rest is ordinary components. The roof stands on its four corners.');
@@ -156,14 +156,14 @@ function spaceTruss() {
   g.n('pl', 'fe.load.point', 3, 5); g.w('script', 'pl', 'Point', 3).w('F', 'pl', 'Force');
   g.n('model', 'fe.assemble', 4, 2); g.w('truss', 'model', 'Elements').w('sup', 'model', 'Supports').w('pl', 'model', 'Loads');
   g.n('static', 'fe.static', 5, 2); g.w('model', 'static', 'Model');
-  g.n('view', 'fe.view', 6, 1, { state: { diagram: 'none', utilisation: true, values: false, sections: false } }); g.w('static', 'view', 'Result');
+  g.n('view', 'fe.view', 6, 1, { state: { diagram: 'none', utilization: true, values: false, sections: false } }); g.w('static', 'view', 'Result');
   g.n('axial', 'fe.res.axial', 6, 3); g.w('static', 'axial', 'Result'); g.n('bnd', 'math.bounds', 7, 3); g.w('axial', 'bnd', 'Numbers');
   g.n('pmin', 'param.panel', 8, 2.6, { label: 'Largest compression [kN]', w: 190, h: 46 }); g.w('bnd', 'pmin', 'Data', 'Min'); g.n('pmax', 'param.panel', 8, 4, { label: 'Largest tension [kN]', w: 190, h: 46 }); g.w('bnd', 'pmax', 'Data', 'Max');
   g.n('pd', 'param.panel', 6, 5, { label: 'Largest displacement [mm]', w: 190, h: 46 }); g.w('static', 'pd', 'Data', 'Max Displacement');
   return { project: g.p, expected: [g.exp('Largest displacement', 'static', 1, 'first', 28.6877, 2e-3, 'mm'), g.exp('Largest compression', 'bnd', 1, 'first', -196.795, 2e-3, 'kN')] };
 }
 function gridshell() {
-  const g = new GB('Gridshell form-found with dynamic relaxation', 'A flat grid of slightly slack lines is loaded upward and relaxed: the hanging-chain principle turned upside down gives a compression-friendly shell shape. The found shape is then analysed as a frame of steel tubes under its own weight and a downward load.');
+  const g = new GB('Gridshell form-found with dynamic relaxation', 'A flat grid of slightly slack lines is loaded upward and relaxed: the hanging-chain principle turned upside down gives a compression-friendly shell shape. The found shape is then analyzed as a frame of steel tubes under its own weight and a downward load.');
   g.slider('L', 'Plan size [m]', 0, 0, 16, 6, 40, 1); g.slider('n', 'Grid cells', 0, 1, 10, 4, 24, 1, true); g.slider('slack', 'Slack factor', 0, 2, 1.08, 1.0, 1.3, 0.01); g.slider('q', 'Node load [kN]', 0, 7, 3, 0, 20, 0.5);
   g.n('srf', 'srf.plane', 1, 0); g.w('L', 'srf', 'X Size').w('L', 'srf', 'Y Size');
   g.n('mesh', 'mesh.surface', 2, 0, { preview: false }); g.w('srf', 'mesh', 'Surface').w('n', 'mesh', 'U Count').w('n', 'mesh', 'V Count');
@@ -240,7 +240,7 @@ function tower() {
   return { project: g.p, expected: [g.exp('First natural frequency', 'f1', 0, 'first', 1.09845, 2e-3, 'Hz'), g.exp('Sway at the top under wind', 'dtop', 2, 'first', 76.1927, 2e-3, 'mm')] };
 }
 function evolve() {
-  const g = new GB('Evolutionary optimisation of a beam', 'A simply supported concrete beam under a line load. The optimiser changes the width and depth sliders to minimise the weight, with a penalty whenever the midspan deflection exceeds span/250. Select the Evolutionary Optimiser component and press Run. By hand: the width goes to its lower limit (100 mm) and the depth to about 495 mm, the smallest that satisfies the limit.');
+  const g = new GB('Evolutionary optimization of a beam', 'A simply supported concrete beam under a line load. The optimizer changes the width and depth sliders to minimize the weight, with a penalty whenever the midspan deflection exceeds span/250. Select the Evolutionary Optimizer component and press Run. By hand: the width goes to its lower limit (100 mm) and the depth to about 495 mm, the smallest that satisfies the limit.');
   g.slider('b', 'Width [mm]', 0, 0, 300, 100, 400, 5); g.slider('h', 'Depth [mm]', 0, 1, 600, 200, 800, 5); g.slider('span', 'Span [m]', 0, 2.4, 8, 3, 15, 0.5); g.slider('w', 'Load [kN/m]', 0, 3.8, 20, 0, 80, 1);
   g.n('end', 'vec.point', 1, 2.4); g.w('span', 'end', 'X'); g.n('axis', 'crv.line', 2, 2.4, { consts: { A: '0, 0, 0' } }); g.w('end', 'axis', 'B');
   g.n('sec', 'fe.sec.rect', 2, 0.3); g.w('b', 'sec', 'Width').w('h', 'sec', 'Depth'); g.n('mat', 'fe.material', 2, 1.4, { state: { index: 3 } });
@@ -269,13 +269,13 @@ function benchmarkExample(id: string) {
 export const EXAMPLES: Example[] = [
   { id: 'quick-truss', title: 'Quick start: a simple truss', group: 'Start here', summary: 'Three bars, two supports, one load.', description: 'The smallest complete workflow: points → lines → truss elements → supports and a load → model → analysis → results. Expected: rafters −7.07 kN, tie +5.00 kN for the default sliders.', benchmark: 'B10', build: quickTruss },
   { id: 'truss-bridge', title: 'Parametric truss bridge', group: 'Parametric structures', summary: 'Depth and panel sliders with a live weight and deflection readout.', description: 'Expected for the defaults (24 m span, 3 m deep, 8 panels, 50 kN per bottom node): steel weight about 4,537 kg and midspan deflection about 19.0 mm. Increase the depth and the deflection drops while the weight rises.', build: bridge },
-  { id: 'portal-building', title: 'Portal frame building with load combinations', group: 'Parametric structures', summary: 'Five frames, three load cases, two combinations.', description: 'Expected for the defaults: largest displacement about 12.7 mm (in the 1.2DL+1.6RL combination) and a largest simplified utilisation of about 0.26.', benchmark: 'B13', build: portal },
+  { id: 'portal-building', title: 'Portal frame building with load combinations', group: 'Parametric structures', summary: 'Five frames, three load cases, two combinations.', description: 'Expected for the defaults: largest displacement about 12.7 mm (in the 1.2DL+1.6RL combination) and a largest simplified utilization of about 0.26.', benchmark: 'B13', build: portal },
   { id: 'space-truss', title: 'Space truss roof on a grid', group: 'Parametric structures', summary: 'Double-layer grid generated by a script component.', description: 'Expected for the defaults (6 × 6 bays of 3 m, 2 m deep, 15 kN on each of the 36 top nodes): largest displacement about 28.7 mm and largest bar compression about 197 kN.', build: spaceTruss },
   { id: 'gridshell', title: 'Gridshell form-found by dynamic relaxation', group: 'Form-finding', summary: 'Hanging-chain shape, then a frame analysis of it.', description: 'Expected for the defaults: the relaxed grid rises about 2.74 m over a 16 m square plan, and the largest displacement of the tube gridshell under self-weight plus 3 kN per node is about 1.0 mm.', build: gridshell },
   { id: 'cable-net', title: 'Cable net form-finding', group: 'Form-finding', summary: 'Saddle net by the force density method.', description: 'Expected for the defaults: all cables in tension, with forces between about 5.00 and 5.49 kN.', build: cableNet },
   { id: 'hypar-shell', title: 'Hypar shell roof', group: 'Shells', summary: 'Hyperbolic paraboloid concrete shell with stress contours.', description: 'Expected for the defaults (10 m plan, 3 m corner rise, 80 mm thick, self-weight plus 1.5 kPa on plan): largest displacement about 0.34 mm and largest top-surface von Mises stress about 0.67 MPa. The low values show how efficiently the doubly curved shell carries load by membrane action.', benchmark: 'B22', build: hypar },
   { id: 'tower', title: 'Tower with lateral loads and modal analysis', group: 'Parametric structures', summary: 'Static sway and natural frequencies of a tapered frame tower.', description: 'Expected for the defaults (30 m high): first natural frequency about 1.10 Hz and a sway of about 76 mm at the top under 1 kN per node. The tower has no diagonal bracing, so it is a flexible frame.', benchmark: 'B18', build: tower },
-  { id: 'sizing', title: 'Cross-section sizing of a truss', group: 'Optimisation', summary: 'Lightest tubes per member group under a stress target.', description: 'Expected for the defaults: the sized truss weighs about 1,013 kg with a largest utilisation of about 0.81 (target 0.9), compared with about 4,537 kg for a uniform 219 × 8 tube.', build: sizing },
-  { id: 'evolve-beam', title: 'Evolutionary optimisation of a beam', group: 'Optimisation', summary: 'Minimum weight under a deflection limit.', description: 'Starting point: 300 × 600 mm, 3,600 kg, 5.99 mm deflection (limit 32 mm). After running the optimiser the width should reach 100 mm and the depth about 495 mm, giving about 990 kg.', benchmark: 'B03', build: evolve },
+  { id: 'sizing', title: 'Cross-section sizing of a truss', group: 'Optimization', summary: 'Lightest tubes per member group under a stress target.', description: 'Expected for the defaults: the sized truss weighs about 1,013 kg with a largest utilization of about 0.81 (target 0.9), compared with about 4,537 kg for a uniform 219 × 8 tube.', build: sizing },
+  { id: 'evolve-beam', title: 'Evolutionary optimization of a beam', group: 'Optimization', summary: 'Minimum weight under a deflection limit.', description: 'Starting point: 300 × 600 mm, 3,600 kg, 5.99 mm deflection (limit 32 mm). After running the optimizer the width should reach 100 mm and the depth about 495 mm, giving about 990 kg.', benchmark: 'B03', build: evolve },
   ...BENCHMARKS.map(b => ({ id: 'bench-' + b.id.toLowerCase(), title: `${b.id} ${b.title}`, group: `Verification: ${b.group}`, summary: b.checks.length + ' checks against ' + (b.source.split(/[;(]/)[0].trim().slice(0, 70)), description: b.description, benchmark: b.id, build: () => benchmarkExample(b.id) })),
 ];

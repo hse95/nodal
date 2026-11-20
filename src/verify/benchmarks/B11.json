@@ -3,7 +3,7 @@
   "number": 11,
   "group": "Frames and trusses",
   "title": "Classic 10-bar planar truss",
-  "description": "Two-bay cantilever truss with ten bars (the standard sizing-optimisation test geometry), loads P at the two lower free nodes. Compared against the independent dense reference solver.",
+  "description": "Two-bay cantilever truss with ten bars (the standard sizing-optimization test geometry), loads P at the two lower free nodes. Compared against the independent dense reference solver.",
   "source": "Independent reference solver (src/ref/refsolver.ts); geometry from Venkayya (1971)",
   "builder": "tenBarTruss",
   "params": {

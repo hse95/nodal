@@ -74,7 +74,7 @@ describe('DataTree structure', () => {
     const t = new DataTree<number>().add([0], [1, 2]).add([3], [4]);
     expect(paths(t.map_(x => x * 10))).toBe('{0}:10,20 {3}:40');
   });
-  it('serialises to plain branches', () => {
+  it('serializes to plain branches', () => {
     const t = new DataTree<number>().add([1], [2]);
     expect(JSON.parse(JSON.stringify(t))).toEqual([{ path: [1], items: [2] }]);
     expect(paths(DataTree.fromBranches(t.toJSON()))).toBe('{1}:2');

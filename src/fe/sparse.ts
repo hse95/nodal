@@ -5,12 +5,12 @@
  *  - Fill-reducing ordering: minimum degree on the node graph (quotient-graph
  *    form with element absorption) and reverse Cuthill–McKee; the solver keeps
  *    whichever predicts less fill.
- *  - LDL^T factorisation without pivoting, in the up-looking form of
+ *  - LDL^T factorization without pivoting, in the up-looking form of
  *    T. A. Davis, "Algorithm 849: A concise sparse Cholesky factorization
  *    package", ACM TOMS 31(4), 2005 (re-implemented here from the paper).
  *
  * LDL^T (rather than LL^T) is used so that indefinite tangent matrices in
- * buckling and nonlinear analyses can still be factorised, and so that the
+ * buckling and nonlinear analyses can still be factorized, and so that the
  * number of negative pivots (the inertia) is available as a stability check.
  */
 
@@ -206,7 +206,7 @@ export interface FactorOptions {
   /** Relative pivot tolerance against the original diagonal. */
   tol?: number;
   /** If set, tiny pivots are replaced by this multiple of the diagonal instead of stopping (used to locate all mechanisms). */
-  regularise?: boolean;
+  regularize?: boolean;
   cancelled?: () => boolean;
 }
 
@@ -260,7 +260,7 @@ export function factorLDL(A: SymCSC, opt: FactorOptions = {}): Factor {
       zeroPivots.push(k);
       // Keep going with a stiff artificial pivot so that every mechanism is found in one pass.
       dk = scale > 0 ? scale : 1;
-      if (!opt.regularise && zeroPivots.length > 50) break;
+      if (!opt.regularize && zeroPivots.length > 50) break;
     } else if (dk < 0) negativePivots++;
     D[k] = dk;
   }

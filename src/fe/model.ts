@@ -24,7 +24,7 @@ export interface Material {
   G: number;      // shear modulus [Pa]
   nu: number;     // Poisson's ratio [-]
   rho: number;    // density [kg/m3]
-  fy: number;     // yield / characteristic strength used for the simplified utilisation [Pa]
+  fy: number;     // yield / characteristic strength used for the simplified utilization [Pa]
   alpha: number;  // coefficient of thermal expansion [1/K]
 }
 export interface Section {
@@ -35,8 +35,8 @@ export interface Section {
   J: number;      // St. Venant torsion constant [m4]
   Asy: number;    // shear area for shear along y [m2]
   Asz: number;    // shear area for shear along z [m2]
-  cy: number;     // extreme-fibre distance along y [m]
-  cz: number;     // extreme-fibre distance along z [m]
+  cy: number;     // extreme-fiber distance along y [m]
+  cz: number;     // extreme-fiber distance along z [m]
   /** Outline used to draw the section in 3D: polygon(s) in (y, z). */
   shape?: { outer: number[][]; inner?: number[][] };
 }
@@ -52,7 +52,7 @@ export const MATERIAL_PRESETS: Record<string, Material> = {
   'Steel A992 (Fy 50 ksi)': material('Steel A992', 200e9, 0.3, 7850, 345e6, 1.17e-5),
   'Concrete C30/37': material('Concrete C30/37', 33e9, 0.2, 2500, 30e6, 1.0e-5),
   'Timber GL24h': material('Timber GL24h', 11.5e9, 0.3, 420, 24e6, 5e-6, 0.65e9),
-  'Aluminium 6061-T6': material('Aluminium 6061-T6', 69e9, 0.33, 2700, 240e6, 2.3e-5),
+  'Aluminum 6061-T6': material('Aluminum 6061-T6', 69e9, 0.33, 2700, 240e6, 2.3e-5),
 };
 
 // ---- cross-sections ----------------------------------------------------------
@@ -94,7 +94,7 @@ export function secI(h: number, b: number, tw: number, tf: number): Section {
     Asy: 5 / 6 * 2 * b * tf, Asz: h * tw, cy: b / 2, cz: h / 2, shape: { outer: o },
   };
 }
-/** Channel with the web on the -y side. Properties are about centroidal axes; the shear-centre offset is ignored. */
+/** Channel with the web on the -y side. Properties are about centroidal axes; the shear-center offset is ignored. */
 export function secChannel(h: number, b: number, tw: number, tf: number): Section {
   const hw = h - 2 * tf, A = 2 * b * tf + hw * tw;
   const ey = (2 * tf * b * b / 2 + hw * tw * tw / 2) / A;             // centroid from the back of the web
@@ -116,11 +116,11 @@ export function secAngle(h: number, b: number, t: number): Section {
   return { k: 'section', name: `L ${fmt(h)}x${fmt(b)}x${fmt(t)}`, A, Iy, Iz, J: (h + b - t) * t ** 3 / 3, Asy: 5 / 6 * b * t, Asz: 5 / 6 * h * t, cy: Math.max(ey, b - ey), cz: Math.max(ez, h - ez), shape: { outer: o } };
 }
 export function secGeneric(name: string, A: number, Iy: number, Iz: number, J: number, Asy = 0, Asz = 0, cy = 0, cz = 0): Section {
-  // With no fibre distances given, estimate them from an equivalent solid rectangle so stresses can still be reported.
+  // With no fiber distances given, estimate them from an equivalent solid rectangle so stresses can still be reported.
   const h = Math.sqrt(12 * Iy / A), b = Math.sqrt(12 * Iz / A);
   return { k: 'section', name, A, Iy, Iz, J, Asy: Asy || 5 / 6 * A, Asz: Asz || 5 / 6 * A, cy: cy || b / 2, cz: cz || h / 2, shape: { outer: rectPoly(b, h) } };
 }
-function fmt(x: number): string { return String(Math.round(x * 1e4) / 10); }   // metres -> millimetres for names
+function fmt(x: number): string { return String(Math.round(x * 1e4) / 10); }   // meters -> millimeters for names
 
 // ---- geometry-level parts (what graph components pass around) ----------------------
 export type MemberType = 'beam' | 'truss' | 'cable' | 'tension' | 'compression';

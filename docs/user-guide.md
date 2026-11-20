@@ -1,10 +1,10 @@
 # Nodal user guide
 
-Nodal is a parametric modelling canvas with a structural finite element solver built in. It runs entirely in your browser: there is nothing to install, no account, and nothing is uploaded.
+Nodal is a parametric modeling canvas with a structural finite element solver built in. It runs entirely in your browser: there is nothing to install, no account, and nothing is uploaded.
 
-> Nodal is provided as is. Check every result independently before using it for any real design. The "utilisation" it reports is a simplified stress ratio, not a design-code check.
+> Nodal is provided as is. Check every result independently before using it for any real design. The "utilization" it reports is a simplified stress ratio, not a design-code check.
 
-Contents: [Getting started](#1-getting-started) · [The canvas](#2-the-canvas) · [Data trees](#3-data-trees) · [The structural workflow](#4-the-structural-workflow) · [Results](#5-results) · [Optimisation](#6-optimisation) · [Form-finding](#7-form-finding) · [Files and formats](#8-files-and-formats) · [Units](#9-units) · [Verification](#10-verification) · [Troubleshooting](#11-troubleshooting)
+Contents: [Getting started](#1-getting-started) · [The canvas](#2-the-canvas) · [Data trees](#3-data-trees) · [The structural workflow](#4-the-structural-workflow) · [Results](#5-results) · [Optimization](#6-optimization) · [Form-finding](#7-form-finding) · [Files and formats](#8-files-and-formats) · [Units](#9-units) · [Verification](#10-verification) · [Troubleshooting](#11-troubleshooting)
 
 ## 1 Getting started
 
@@ -31,7 +31,7 @@ The same model is in **Examples → Quick start: a simple truss**.
 - **Add a component**: double-click the canvas and type (fuzzy search), click an entry in the component list, or press Ctrl/Cmd+K.
 - **Connect**: drag from an output dot (right side) to an input dot (left side). A new wire replaces the old one on that input; hold **Shift** while dropping to add a second wire. Several wires into one input are merged in the order they were connected.
 - **Disconnect**: click a wire and press Delete.
-- Wires are coloured by data type. A thicker wire carries a list; a dashed thick wire carries a tree with several branches.
+- Wires are colored by data type. A thicker wire carries a list; a dashed thick wire carries a tree with several branches.
 
 ### Moving around
 
@@ -43,7 +43,7 @@ The same model is in **Examples → Quick start: a simple truss**.
 
 - Ctrl/Cmd+Z and Y undo and redo. Ctrl/Cmd+C, X, V copy, cut and paste; the clipboard also works between projects and browser tabs. Ctrl/Cmd+D duplicates.
 - **Right-click** a component for preview on/off, enable/disable, rename, group, cluster, the list-matching rule, and alignment of several selected components.
-- **Groups** (Ctrl/Cmd+G) draw a labelled frame around components. Double-click the label to rename it; right-click the label to remove the group.
+- **Groups** (Ctrl/Cmd+G) draw a labeled frame around components. Double-click the label to rename it; right-click the label to remove the group.
 - **Notes** are free text on the canvas (`Note` in Params).
 - **Clusters** pack a selection into one component with its own inputs and outputs (right-click → *Make cluster*). Wires crossing the selection boundary become the cluster's ports. A new cluster is also saved to *My clusters* in the component list, so it can be inserted into other projects. In the inspector a cluster can be renamed, saved again, or unpacked.
 
@@ -55,12 +55,12 @@ The same model is in **Examples → Quick start: a simple truss**.
 | amber border, **!** | warning: it produced data, or is waiting for an input; hover the **!** to read why |
 | red border, **!** | error: nothing was produced; the message says what to change |
 | faded | disabled |
-| italic grey name | preview off |
+| italic gray name | preview off |
 | pulsing blue border | being solved now |
 
 ### Input widgets
 
-`Number Slider` (set the range in the inspector), `Boolean Toggle`, `Value List`, `Panel` (shows whatever is wired into it, or outputs the lines you type), `Graph Mapper`, `Colour`.
+`Number Slider` (set the range in the inspector), `Boolean Toggle`, `Value List`, `Panel` (shows whatever is wired into it, or outputs the lines you type), `Graph Mapper`, `Color`.
 
 ### The inspector
 
@@ -103,7 +103,7 @@ Geometry → elements → supports and loads → model → analysis → results.
 
 ### Materials and sections
 
-- `Material` offers typical steel, concrete, timber and aluminium values; `Custom Material` takes E, ν, G, density, strength and thermal expansion.
+- `Material` offers typical steel, concrete, timber and aluminum values; `Custom Material` takes E, ν, G, density, strength and thermal expansion.
 - Sections: rectangular, hollow rectangular, circular, tube, I, channel, angle and `Generic Section` (A, Iy, Iz, J). `Section Table` reads your own CSV table (`name, A, Iy, Iz, J`), which is how to bring in standard steel shapes.
 - **Orientation**: local *x* runs along the member; local *z* is "up" (global Z made perpendicular to the member); for vertical members local *y* is global Y. `Iy` is the strong-axis value for a beam under gravity. Rotate a section with the *Angle* input of `Beam`, or give an *Up* vector. Turn on **Local axes** in the Result View to check.
 
@@ -148,7 +148,7 @@ Each load has a **Case** name. Loads with the same name are solved together; com
 
 | Component | What it does |
 |---|---|
-| Linear Static | all load cases with one factorisation; combinations by superposition |
+| Linear Static | all load cases with one factorization; combinations by superposition |
 | Second-Order Analysis | P-Δ and P-δ through the geometric stiffness, iterated to convergence |
 | Buckling Analysis | load factors and shapes of elastic buckling for one load set |
 | Modal Analysis | natural frequencies and mode shapes (consistent or lumped mass) |
@@ -160,34 +160,34 @@ For second-order and buckling analyses, split each member into several elements 
 
 ## 5 Results
 
-- **Result View** draws a result in 3D. In its inspector: load case or mode, deformed shape with scale (−1 = automatic) and animation, undeformed overlay, member diagrams (N, Vy, Vz, T, My, Mz) drawn on the member with end and extreme values, shell contours (displacements, membrane forces, moments, principal and von Mises stresses at the top, middle or bottom surface), principal directions, reactions, loads, supports, utilisation colours, section shapes and local axes.
+- **Result View** draws a result in 3D. In its inspector: load case or mode, deformed shape with scale (−1 = automatic) and animation, undeformed overlay, member diagrams (N, Vy, Vz, T, My, Mz) drawn on the member with end and extreme values, shell contours (displacements, membrane forces, moments, principal and von Mises stresses at the top, middle or bottom surface), principal directions, reactions, loads, supports, utilization colors, section shapes and local axes.
 - **Click** a node, member or shell in the 3D view to read all its values in the inspector.
 - **Result tables** (inspector of any analysis or Result View): nodal displacements, reactions, member forces, shell results; click a column to sort, type to filter, **CSV** to export.
 - Every result reports an **equilibrium check** (sum of reactions against sum of applied loads) and the solver statistics.
-- Result components feed numbers back into the graph: `Nodal Displacements`, `Displacement At Point`, `Reactions`, `Member Forces`, `Axial Forces`, `Utilisation`, `Shell Results`, `Modes`, `Deformed Geometry`, `Result Table`.
+- Result components feed numbers back into the graph: `Nodal Displacements`, `Displacement At Point`, `Reactions`, `Member Forces`, `Axial Forces`, `Utilization`, `Shell Results`, `Modes`, `Deformed Geometry`, `Result Table`.
 
 **Sign conventions**: N is positive in tension. My is positive for sagging (tension on the −z side); moment diagrams are drawn on the tension side. Shell moments are positive when the top (+z) surface is in tension. Details are in the theory manual.
 
-## 6 Optimisation
+## 6 Optimization
 
-### Evolutionary Optimiser
+### Evolutionary Optimizer
 
-1. Build a graph that ends in one number to minimise, the **fitness**. Combine a goal and constraints with an `Expression`, for example `m + 2000 * max(0, d - lim)` for weight plus a penalty when the deflection exceeds a limit.
-2. Add `Evolutionary Optimiser` and wire the fitness into it.
-3. Select it. In the inspector tick the sliders it may change, set population and generations, and press **Run optimisation**.
+1. Build a graph that ends in one number to minimize, the **fitness**. Combine a goal and constraints with an `Expression`, for example `m + 2000 * max(0, d - lim)` for weight plus a penalty when the deflection exceeds a limit.
+2. Add `Evolutionary Optimizer` and wire the fitness into it.
+3. Select it. In the inspector tick the sliders it may change, set population and generations, and press **Run optimization**.
 
 The convergence plot updates live. When it finishes, the sliders hold the best design, and the *Best designs* table lets you reinstate any of the top designs with **Use**. Ctrl/Cmd+Z returns to the design you had before. The method is a genetic algorithm with an optional local search; it is a heuristic and does not guarantee the global optimum.
 
 ### Section Sizing
 
-Give `Section Sizing` a model and a list of candidate sections. Members are grouped by element ID; each group gets the lightest candidate that keeps the simplified stress utilisation at or below the target, and the analysis repeats until the choice settles. It reports the mass, the largest utilisation and a log. It is based on stress only and does not check member buckling.
+Give `Section Sizing` a model and a list of candidate sections. Members are grouped by element ID; each group gets the lightest candidate that keeps the simplified stress utilization at or below the target, and the analysis repeats until the choice settles. It reports the mass, the largest utilization and a log. It is based on stress only and does not check member buckling.
 
 ## 7 Form-finding
 
 - **Force Density**: lines, anchors and a force density per line (force/length). One linear solve gives the equilibrium shape. Good for cable nets: start from a mesh on the boundary shape, use its edges as lines and its boundary points as anchors.
 - **Dynamic Relaxation**: lines act as elastic springs with a rest length (a factor of the drawn length, or target lengths), under loads on the nodes. Use a rest factor below 1 to pretension a net, or above 1 with an upward load to "hang" a gridshell upside down.
 
-Both output the relaxed lines, the node positions and the line forces. Feed the lines into `Beam`, `Truss` or `Cable` to analyse the found shape (see the gridshell example).
+Both output the relaxed lines, the node positions and the line forces. Feed the lines into `Beam`, `Truss` or `Cable` to analyze the found shape (see the gridshell example).
 
 ## 8 Files and formats
 
@@ -198,7 +198,7 @@ Both output the relaxed lines, the node positions and the line forces. Feed the 
 
 ## 9 Units
 
-Choose **SI** (kN, m, MPa; section sizes and displacements in mm) or **US customary** (kip, ft, ksi; section sizes and displacements in inches) in the top bar. Geometry on the canvas is unitless: one unit is one metre in SI projects and one foot in US projects. Every numeric port that carries a physical quantity shows its unit in the tooltip and in the inspector.
+Choose **SI** (kN, m, MPa; section sizes and displacements in mm) or **US customary** (kip, ft, ksi; section sizes and displacements in inches) in the top bar. Geometry on the canvas is unitless: one unit is one meter in SI projects and one foot in US projects. Every numeric port that carries a physical quantity shows its unit in the tooltip and in the inspector.
 
 Switching the unit system changes how the numbers in the graph are read; it does not convert them.
 

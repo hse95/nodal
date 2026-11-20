@@ -1,7 +1,7 @@
 /**
  * Curves: lines, polylines, circular arcs, NURBS curves and joined poly-curves.
  *
- * Every curve is evaluated over a normalised parameter t in [0, 1]. For lines,
+ * Every curve is evaluated over a normalized parameter t in [0, 1]. For lines,
  * polylines, arcs and poly-curves made of those, t is proportional to arc
  * length. For NURBS curves t maps linearly onto the knot domain, and arc-length
  * queries go through a sampled length table.
@@ -239,17 +239,17 @@ export function curveTangent(c: Curve, t: number): V3 {
   return unit(sub(curvePoint(c, b), curvePoint(c, a)));
 }
 /** Curvature (1/radius) at t. Exact for lines and arcs, finite differences otherwise. */
-export function curveCurvature(c: Curve, t: number): { k: number; centre: V3 | null } {
-  if (c.k === 'line') return { k: 0, centre: null };
-  if (c.k === 'arc') return { k: 1 / c.r, centre: c.plane.o };
+export function curveCurvature(c: Curve, t: number): { k: number; center: V3 | null } {
+  if (c.k === 'line') return { k: 0, center: null };
+  if (c.k === 'arc') return { k: 1 / c.r, center: c.plane.o };
   const h = 1e-3, tc = Math.min(1 - h, Math.max(h, t));
   const p0 = curvePoint(c, tc - h), p1 = curvePoint(c, tc), p2 = curvePoint(c, tc + h);
   const d1 = mul(sub(p2, p0), 1 / (2 * h)), d2 = mul(add(sub(p2, mul(p1, 2)), p0), 1 / (h * h));
   const cr = cross(d1, d2), l1 = len(d1);
   const kappa = l1 > 0 ? len(cr) / (l1 * l1 * l1) : 0;
-  if (kappa < 1e-12) return { k: 0, centre: null };
+  if (kappa < 1e-12) return { k: 0, center: null };
   const n = unit(cross(cr, d1));
-  return { k: kappa, centre: add(p1, mul(n, 1 / kappa)) };
+  return { k: kappa, center: add(p1, mul(n, 1 / kappa)) };
 }
 export const curveStart = (c: Curve): V3 => curvePoint(c, 0);
 export const curveEnd = (c: Curve): V3 => curvePoint(c, 1);
@@ -392,7 +392,7 @@ export function reverseCurve(c: Curve): Curve {
   }
 }
 
-/** Sub-curve between normalised parameters t0 < t1. */
+/** Sub-curve between normalized parameters t0 < t1. */
 export function subCurve(c: Curve, t0: number, t1: number): Curve {
   switch (c.k) {
     case 'line': return line(curvePoint(c, t0), curvePoint(c, t1));
@@ -530,9 +530,9 @@ export function filletPolyline(c: Polyline | Line, r: number): Curve {
     const rr = tl > lim ? r * lim / tl : r;
     tl = Math.min(tl, lim);
     const t1 = add(p, mul(u1, tl)), t2 = add(p, mul(u2, tl));
-    const centre = add(p, mul(unit(add(u1, u2)), rr / Math.sin(th / 2)));
-    const px = unit(sub(t1, centre));
-    const pl = planeFromAxes(centre, px, sub(t2, centre));
+    const center = add(p, mul(unit(add(u1, u2)), rr / Math.sin(th / 2)));
+    const px = unit(sub(t1, center));
+    const pl = planeFromAxes(center, px, sub(t2, center));
     return { t1, t2, arc: { k: 'arc', plane: pl, r: rr, a0: 0, a1: Math.PI - th } as Arc };
   };
   const corners = P.map((_, i) => (closed || (i > 0 && i < n - 1) ? corner(i) : null));
@@ -556,7 +556,7 @@ export function polygon(plane: Plane, r: number, n: number): Polyline {
 export function arc3(a: V3, b: V3, c: V3): Arc {
   const ab = sub(b, a), ac = sub(c, a), n = cross(ab, ac);
   if (len(n) < 1e-12) throw new Error('Arc points are collinear');
-  // Circumcentre from the perpendicular-bisector equations.
+  // Circumcenter from the perpendicular-bisector equations.
   const d = 2 * dot(n, n);
   const o = add(a, mul(add(mul(cross(n, ab), dot(ac, ac)), mul(cross(ac, n), dot(ab, ab))), 1 / d));
   const pl = planeFromAxes(o, sub(a, o), sub(b, o));

@@ -100,7 +100,7 @@ test('themes, layouts and the tour work', async ({ page }) => {
   await expect(page.locator('.tour')).toHaveCount(0);
   await page.locator('button[aria-label="Toggle theme"]').click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', /dark|light/);
-  await page.locator('button[aria-label="Maximise 3D view"]').click();
+  await page.locator('button[aria-label="Maximize 3D view"]').click();
   await expect(page.locator('.canvas')).toBeHidden();
   await page.locator('button[aria-label="Stacked"]').click();
   await expect(page.locator('.canvas')).toBeVisible();

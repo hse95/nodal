@@ -3,7 +3,7 @@
  */
 import type { DataTree, Matching } from './tree';
 
-/** Data types carried by wires. Wire colours are keyed on these. */
+/** Data types carried by wires. Wire colors are keyed on these. */
 export type DType =
   | 'any' | 'number' | 'integer' | 'boolean' | 'text' | 'point' | 'vector' | 'plane' | 'domain'
   | 'curve' | 'surface' | 'mesh' | 'brep' | 'geometry' | 'color' | 'transform'
@@ -57,7 +57,7 @@ export interface ComponentDef {
   /** Whole-tree solve for components that manipulate tree structure. */
   solveTrees?(inputs: DataTree[], ctx: SolveContext): DataTree[] | Promise<DataTree[]>;
   /** Special on-canvas widget. */
-  widget?: 'slider' | 'toggle' | 'panel' | 'valuelist' | 'graph' | 'note' | 'text' | 'button' | 'optimizer' | 'colour';
+  widget?: 'slider' | 'toggle' | 'panel' | 'valuelist' | 'graph' | 'note' | 'text' | 'button' | 'optimizer' | 'color';
   /** Initial node state. */
   state?: Record<string, unknown>;
   /** Hide this node's outputs from the 3D preview by default. */

@@ -1,4 +1,4 @@
-/* Nodal: one stylesheet, two themes. Colours come from the variables below. */
+/* Nodal: one stylesheet, two themes. Colors come from the variables below. */
 :root {
   --bg: #f4f3ef; --panel: #fbfaf8; --card: #ffffff; --ink: #1c222b; --muted: #68717d; --line: #dcd9d1; --line-soft: #e9e6df;
   --accent: #2456e6; --accent-soft: #e4ebff; --ok: #1f9d6b; --warn: #b9770e; --bad: #c9372c; --dots: #cfccc3; --shadow: 0 6px 24px rgba(20, 24, 31, .14);

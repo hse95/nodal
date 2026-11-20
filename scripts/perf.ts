@@ -30,5 +30,5 @@ function report(name: string, build: () => ReturnType<typeof buildModel>) {
   console.log(`   build ${(t0 - tb).toFixed(0)} ms | assemble+order ${s.tAssemble.toFixed(0)} ms | factor ${s.tFactor.toFixed(0)} ms | total solve ${(t1 - t0).toFixed(0)} ms | equilibrium ${r.cases[0].equilibrium.relError.toExponential(1)}`);
 }
 report('Shell plate 91 x 91', () => plate(90));
-report('Plane frame 60 bays x 140 storeys', () => frame3d(60, 0, 140));
-report('3D building frame 12 x 12 bays x 50 storeys', () => frame3d(12, 12, 50));
+report('Plane frame 60 bays x 140 stories', () => frame3d(60, 0, 140));
+report('3D building frame 12 x 12 bays x 50 stories', () => frame3d(12, 12, 50));

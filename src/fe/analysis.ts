@@ -64,7 +64,7 @@ export function checkModel(m: FEModel): string[] {
 
 const axialOf = (c: CaseResult, nb: number): Float64Array => { const N = new Float64Array(nb); for (let e = 0; e < nb; e++) N[e] = (c.beamQ[12 * e + 6] - c.beamQ[12 * e]) / 2; return N; };
 
-/** Load sets to analyse one at a time: named set, else all combinations, else all cases. */
+/** Load sets to analyze one at a time: named set, else all combinations, else all cases. */
 function loadSets(sys: FESystem, loads: CaseLoads[], name?: string): { name: string; loads: CaseLoads }[] {
   const m = sys.model;
   const all = [...m.cases.map((n, i) => ({ name: n, loads: loads[i] })), ...m.combos.map(c => ({ name: c.name, loads: sys.combine(loads, c.factors) }))];
@@ -183,7 +183,7 @@ export function solveSecondOrder(model: FEModel, opt: AnalysisOptions, cancelled
 /**
  * Subspace iteration for the smallest eigenvalues of K x = lambda B x with K
  * positive definite and B symmetric (mass, or minus the geometric stiffness).
- * Each sweep applies K^-1 B to a block of vectors, orthonormalises it, and
+ * Each sweep applies K^-1 B to a block of vectors, orthonormalizes it, and
  * solves the projected problem exactly (Bathe, "Finite Element Procedures",
  * section 11.6). Returned eigenvalues are the smallest positive ones.
  */
@@ -200,7 +200,7 @@ export function subspaceIteration(K: SymCSC, fK: Factor, B: SymCSC, p: number, c
   const dotv = (a: Float64Array, b: Float64Array) => { let s = 0; for (let i = 0; i < n; i++) s += a[i] * b[i]; return s; };
   for (it = 1; it <= 80; it++) {
     if (cancelled?.()) throw new Error('Analysis cancelled');
-    // Inverse iteration step and orthonormalisation (modified Gram–Schmidt, twice for stability).
+    // Inverse iteration step and orthonormalization (modified Gram–Schmidt, twice for stability).
     const Q: Float64Array[] = [];
     for (const x of X) {
       const y = fK.solve(B.mul(x));
@@ -310,9 +310,9 @@ export function solveModal(model: FEModel, opt: AnalysisOptions, cancelled?: () 
  * limitation is stated in the theory manual and returned as a message.
  *
  * Robustness: slack cables give a singular tangent. The Newton step is then
- * regularised (K + mu*I, Levenberg–Marquardt style) and accepted only if it
+ * regularized (K + mu*I, Levenberg–Marquardt style) and accepted only if it
  * lowers the total potential energy, which makes the iteration behave like a
- * safeguarded energy minimisation for cable nets.
+ * safeguarded energy minimization for cable nets.
  */
 export function solveNonlinear(model: FEModel, opt: AnalysisOptions, cancelled?: () => boolean): FEResult {
   const t0 = now(), warn = checkModel(model);

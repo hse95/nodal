@@ -1,6 +1,6 @@
 /**
  * Result queries: nodal values, member diagrams, envelopes, shell contours and
- * the simplified stress utilisation. Pure functions of (model, result), used by
+ * the simplified stress utilization. Pure functions of (model, result), used by
  * the viewport, the inspector, the result components and the benchmarks.
  */
 import { FEModel, nodeXYZ, nodeCount, beamEnds, sectionModuli } from './model';
@@ -50,12 +50,12 @@ export function memberDeflected(m: FEModel, c: CaseResult, e: number, xi: number
   return v(base.x + scale * (R[0] * ul + R[3] * vl + R[6] * wl), base.y + scale * (R[1] * ul + R[4] * vl + R[7] * wl), base.z + scale * (R[2] * ul + R[5] * vl + R[8] * wl));
 }
 /**
- * Simplified elastic stress utilisation of a line element:
+ * Simplified elastic stress utilization of a line element:
  *   max over stations of ( |N|/A + |My|/Wy + |Mz|/Wz ) / fy
  * This is a linear stress check only. It ignores buckling, shear, torsion and
  * every code-specific factor, and is NOT a design-code verification.
  */
-export function memberUtilisation(m: FEModel, c: CaseResult, e: number, stations = 8): { util: number; sigma: number; N: number } {
+export function memberUtilization(m: FEModel, c: CaseResult, e: number, stations = 8): { util: number; sigma: number; N: number } {
   const b = m.beams[e], sec = m.sections[b.sec], mat = m.materials[b.mat], { Wy, Wz } = sectionModuli(sec);
   let sigma = 0, Nmax = 0;
   for (const f of memberStations(m, c, e, stations).f) {
@@ -119,7 +119,7 @@ export function shellNodalValues(m: FEModel, c: CaseResult, q: ShellQuantity, la
   for (let n = 0; n < nn; n++) if (cnt[n]) out[n] /= cnt[n];
   return out;
 }
-/** Principal direction (global unit vector) of the surface stress at the shell centre, with its two principal values. */
+/** Principal direction (global unit vector) of the surface stress at the shell center, with its two principal values. */
 export function shellPrincipal(m: FEModel, c: CaseResult, s: number, layer: 'top' | 'mid' | 'bottom' = 'top'): { o: V3; d1: V3; d2: V3; s1: number; s2: number } {
   const g = shellGeometry(m.shells[s].n.map(i => nodeXYZ(m, i))), o = 8 * s, S = c.shellS;
   const [sx, sy, sxy] = surfaceStress({ N: [S[o], S[o + 1], S[o + 2]], M: [S[o + 3], S[o + 4], S[o + 5]], Q: [0, 0] }, m.shells[s].t, layer);

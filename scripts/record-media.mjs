@@ -82,10 +82,10 @@ await record('modes', await open('tower'), async (shot) => {
   await page.locator('.inspector label.field', { hasText: 'Mode' }).locator('select').selectOption('2');
   for (let k = 0; k < 26; k++) { await shot(); await page.waitForTimeout(70); }
 }, { fps: 10 });
-await record('optimise', await open('evolve-beam'), async (shot) => {
+await record('optimize', await open('evolve-beam'), async (shot) => {
   const page = browser.contexts().at(-1).pages().at(-1);
-  await page.locator('.node', { hasText: 'Evolutionary Optimiser' }).locator('.hd').click();
-  await page.locator('.inspector button', { hasText: 'Run optimisation' }).click();
+  await page.locator('.node', { hasText: 'Evolutionary Optimizer' }).locator('.hd').click();
+  await page.locator('.inspector button', { hasText: 'Run optimization' }).click();
   for (let k = 0; k < 60; k++) { await shot(); await page.waitForTimeout(140); if (await page.locator('.inspector', { hasText: /Finished: best/ }).count()) break; }
   await shot(6);
 }, { fps: 8 });

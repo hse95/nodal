@@ -15,14 +15,14 @@ The headless layers (engine, geometry, solver, benchmarks) were built and tested
 - [x] Data trees, branch and item matching (longest, shortest, cross), tree operations; 51 unit tests
 - [x] Incremental graph engine, type coercion, cycle detection, async components
 - [x] Node editor: pan, zoom, minimap, snapping, search on double-click, component list, command palette
-- [x] Wires coloured by type; OK / warning / error / disabled states with messages
+- [x] Wires colored by type; OK / warning / error / disabled states with messages
 - [x] Sliders, toggles, value lists, panels, graph mapper, notes
 - [x] Undo/redo, copy/paste across projects, multi-select, align, keyboard shortcuts
 - [x] Groups and reusable clusters
 - [x] Built-in help for every component
 
 ## 3 Core geometry
-- [x] Points, vectors, planes, lines, polylines, transforms, lists, maths
+- [x] Points, vectors, planes, lines, polylines, transforms, lists, math
 - [x] Three.js viewport: orbit, standard views, fit, display modes, section plane, labels, screenshots
 
 ## 4 Advanced geometry
@@ -50,19 +50,19 @@ The headless layers (engine, geometry, solver, benchmarks) were built and tested
 - [x] Surface meshing by size, area loads, contours, principal directions
 - [x] Benchmarks 22–28 with convergence studies
 
-## 8 Form-finding and optimisation
+## 8 Form-finding and optimization
 - [x] Dynamic relaxation, force density
-- [x] Evolutionary optimiser with local search, live convergence plot, reinstating designs
+- [x] Evolutionary optimizer with local search, live convergence plot, reinstating designs
 - [x] Section sizing
 
 ## 9 Examples, verification panel, documentation
 - [x] 10 examples plus all 28 benchmarks as one-click models, each with stated results that the tests check
 - [x] In-app verification panel with pass/fail table and convergence plots
-- [x] README, user guide, theory manual, generated verification report and component reference, licences
+- [x] README, user guide, theory manual, generated verification report and component reference, licenses
 
 ## 10 Polish
 - [x] Performance measured against the targets (PROGRESS.md)
-- [~] 50,000-DOF target: met for plane frames and shells, not for 3D frames (supernodal factorisation is the next step)
+- [~] 50,000-DOF target: met for plane frames and shells, not for 3D frames (supernodal factorization is the next step)
 - [x] First-run tour
 - [~] Accessibility: labels, focus styles, keyboard menus and shortcuts; components on the canvas cannot yet be reached with Tab alone
 - [~] Tablet: pointer events are used throughout, but it has not been tested on a tablet

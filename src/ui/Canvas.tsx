@@ -13,7 +13,7 @@ import { graphMap } from '../components/basic';
 import { unitSystem } from '../fe/units';
 
 const HEADER = 24, ROW = 20, PAD = 6;
-export const CATEGORY_COLORS: Record<string, string> = { Params: '#7a8699', Maths: '#4f8ef7', Lists: '#9b7fd1', Trees: '#8a6fc0', Vector: '#d19a2a', Curve: '#3fae6b', Surface: '#2f9e8f', Mesh: '#58a65c', Transform: '#a06cd5', Display: '#d1589b', Structure: '#d4504c', 'Form-Finding': '#e0703a', Optimisation: '#c2569b', Script: '#5f6b7a' };
+export const CATEGORY_COLORS: Record<string, string> = { Params: '#7a8699', Math: '#4f8ef7', Lists: '#9b7fd1', Trees: '#8a6fc0', Vector: '#d19a2a', Curve: '#3fae6b', Surface: '#2f9e8f', Mesh: '#58a65c', Transform: '#a06cd5', Display: '#d1589b', Structure: '#d4504c', 'Form-Finding': '#e0703a', Optimization: '#c2569b', Script: '#5f6b7a' };
 
 export interface Layout { w: number; h: number; ins: PortSpec[]; outs: PortSpec[]; def: ComponentDef | undefined; body: number }
 export function layoutOf(n: NodeData): Layout {
@@ -255,7 +255,7 @@ function NodeView(props: { n: NodeData; onDown: (e: PointerEvent, n: NodeData) =
       <Show when={def()?.widget === 'toggle'}><div class="widget"><button class="toggle" classList={{ on: !!n.state.value }} onClick={() => set(s => { s.value = !s.value; })} aria-pressed={!!n.state.value}>{n.state.value ? 'True' : 'False'}</button></div></Show>
       <Show when={def()?.widget === 'valuelist'}><div class="widget"><select value={n.state.index} onChange={e => set(s => { s.index = Number(e.currentTarget.value); })} aria-label="Value">
         <For each={n.state.items as { name: string }[]}>{(it, i) => <option value={i()}>{it.name}</option>}</For></select></div></Show>
-      <Show when={def()?.widget === 'colour'}><div class="widget"><input type="color" value={n.state.value} onInput={e => set(s => { s.value = e.currentTarget.value; }, false)} aria-label="Colour" /></div></Show>
+      <Show when={def()?.widget === 'color'}><div class="widget"><input type="color" value={n.state.value} onInput={e => set(s => { s.value = e.currentTarget.value; }, false)} aria-label="Color" /></div></Show>
       <Show when={def()?.widget === 'text'}><div class="widget below" style={{ top: HEADER + l().body + 'px' }}>
         <Show when={n.type === 'tree.pathmap'} fallback={<input type="text" value={n.type === 'math.expr' ? n.state.expr : n.state.name} spellcheck={false} aria-label="Text"
           onChange={e => set(s => { if (n.type === 'math.expr') s.expr = e.currentTarget.value; else s.name = e.currentTarget.value; })} />}>
@@ -324,7 +324,7 @@ function Minimap(props: { getRoot: () => HTMLDivElement }): JSX.Element {
   }}</Show>;
 }
 
-/** Categorised component list with search. Clicking an entry adds it near the centre of the visible canvas. */
+/** Categorised component list with search. Clicking an entry adds it near the center of the visible canvas. */
 export function Palette(): JSX.Element {
   const [q, setQ] = createSignal('');
   const [open, setOpen] = createSignal<Record<string, boolean>>({ Params: true, Structure: true });

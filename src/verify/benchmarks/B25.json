@@ -17,8 +17,8 @@
   },
   "checks": [
     {
-      "label": "Centre deflection, 16 x 16 quadrilaterals (MITC4)",
-      "quantity": "centreDeflection",
+      "label": "Center deflection, 16 x 16 quadrilaterals (MITC4)",
+      "quantity": "centerDeflection",
       "tolerance": 0.02,
       "unit": "m",
       "expected": {
@@ -26,8 +26,8 @@
       }
     },
     {
-      "label": "Centre deflection, 16 x 16 x 2 triangles (DKT)",
-      "quantity": "centreDeflection",
+      "label": "Center deflection, 16 x 16 x 2 triangles (DKT)",
+      "quantity": "centerDeflection",
       "tolerance": 0.02,
       "unit": "m",
       "expected": {

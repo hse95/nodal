@@ -7,7 +7,7 @@
  * containing one item.
  *
  * Conventions used throughout Nodal (our own definitions, documented in the
- * user guide so behaviour is predictable):
+ * user guide so behavior is predictable):
  *  - Branches are always kept sorted lexicographically by path.
  *  - `simplify` strips the longest prefix shared by all paths but always leaves
  *    at least one index, so a single-branch tree keeps its last index.

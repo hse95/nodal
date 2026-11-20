@@ -3,7 +3,7 @@
   "number": 14,
   "group": "Frames and trusses",
   "title": "3D space frame",
-  "description": "Irregular one-storey 3D frame with a pyramid roof, two truss braces, mixed supports, distributed and nodal loads including moments. Checked for equilibrium and against the reference solver.",
+  "description": "Irregular one-story 3D frame with a pyramid roof, two truss braces, mixed supports, distributed and nodal loads including moments. Checked for equilibrium and against the reference solver.",
   "source": "Independent reference solver (src/ref/refsolver.ts)",
   "builder": "spaceFrame",
   "params": {

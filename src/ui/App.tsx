@@ -111,7 +111,7 @@ const TOUR: { title: string; text: string; keys: string[] }[] = [
   { title: '1. Geometry from sliders', text: 'Two sliders set the span and the height. Three points are built from them, and three lines join the points. To add components yourself, double-click the canvas and type a name.', keys: ['span', 'height', 'half', 'A', 'B', 'C', 'l1', 'l2', 'l3'] },
   { title: '2. Structural elements', text: 'A Tube Section and a Truss component turn the three lines into bars. Element components always need a curve and a cross-section; the material defaults to steel.', keys: ['sec', 'truss'] },
   { title: '3. Supports and a load', text: 'Supports and loads are placed by position: each one attaches to the node at its point. Here a pin, a roller, and a 10 kN load at the apex. Because the truss is flat, the apex is also held against moving out of its plane.', keys: ['sA', 'sB', 'sC', 'load', 'neg', 'F', 'pl'] },
-  { title: '4. Assemble and analyse', text: 'Assemble Model joins everything at shared nodes and checks the model. Linear Static solves it in a background worker and reports an equilibrium check.', keys: ['model', 'static'] },
+  { title: '4. Assemble and analyze', text: 'Assemble Model joins everything at shared nodes and checks the model. Linear Static solves it in a background worker and reports an equilibrium check.', keys: ['model', 'static'] },
   { title: '5. Results', text: 'Result View draws the deformed shape and the axial forces; the panel lists them: −7.07 kN in the rafters and +5.00 kN in the tie. Now drag the Height slider and watch the forces change. Click any bar in the 3D view to read its results.', keys: ['view', 'axial', 'panel'] },
 ];
 function showTourStep(step: number): void {
@@ -200,8 +200,8 @@ export function App(): JSX.Element {
           <button title="Side by side" aria-label="Side by side" classList={{ on: ui.layout === 'split' }} onClick={() => setUi('layout', 'split')}>▯▯</button>
           <button title="Stacked" aria-label="Stacked" classList={{ on: ui.layout === 'stack' }} onClick={() => setUi('layout', 'stack')}>▭</button>
           <button title="Swap canvas and 3D view" aria-label="Swap canvas and 3D view" onClick={() => setUi('swap', !ui.swap)}>⇄</button>
-          <button title="Maximise canvas" aria-label="Maximise canvas" classList={{ on: ui.layout === 'canvas' }} onClick={() => setUi('layout', ui.layout === 'canvas' ? 'split' : 'canvas')}>◧</button>
-          <button title="Maximise 3D view" aria-label="Maximise 3D view" classList={{ on: ui.layout === 'view' }} onClick={() => setUi('layout', ui.layout === 'view' ? 'split' : 'view')}>◨</button>
+          <button title="Maximize canvas" aria-label="Maximize canvas" classList={{ on: ui.layout === 'canvas' }} onClick={() => setUi('layout', ui.layout === 'canvas' ? 'split' : 'canvas')}>◧</button>
+          <button title="Maximize 3D view" aria-label="Maximize 3D view" classList={{ on: ui.layout === 'view' }} onClick={() => setUi('layout', ui.layout === 'view' ? 'split' : 'view')}>◨</button>
           <button title={ui.theme === 'dark' ? 'Light theme' : 'Dark theme'} aria-label="Toggle theme" onClick={() => setTheme(ui.theme === 'dark' ? 'light' : 'dark')}>{ui.theme === 'dark' ? '☀' : '☾'}</button>
         </div>
       </header>
@@ -218,9 +218,9 @@ export function App(): JSX.Element {
       <Show when={ui.dialog === 'examples'}><ExamplesDialog /></Show>
       <Show when={ui.dialog === 'verification'}><VerificationDialog /></Show>
       <Show when={ui.dialog === 'about'}><Dialog title="About Nodal"><div class="about">
-        <p><b>Nodal {VERSION}</b>: parametric modelling and structural finite element analysis in the browser. Free and open source (MIT licence). Everything runs on your computer; nothing is uploaded.</p>
+        <p><b>Nodal {VERSION}</b>: parametric modeling and structural finite element analysis in the browser. Free and open source (MIT license). Everything runs on your computer; nothing is uploaded.</p>
         <p>{CREDIT.replace('samsmith@ksu.edu)', '')}<a href="mailto:samsmith@ksu.edu">samsmith@ksu.edu</a>)</p>
-        <p class="warnbox">This software is provided as is, without warranty. It is a tool for exploration and teaching. Check every result independently before using it for any real design. The utilisation values are simplified stress checks and are not design-code verifications.</p>
+        <p class="warnbox">This software is provided as is, without warranty. It is a tool for exploration and teaching. Check every result independently before using it for any real design. The utilization values are simplified stress checks and are not design-code verifications.</p>
         <p>Source code, user guide, theory manual and verification report: <a href="https://github.com/hse95/nodal" target="_blank" rel="noopener">github.com/hse95/nodal</a></p>
         <p class="muted">Uses Solid, Three.js, Manifold and rhino3dm. See THIRD_PARTY_LICENSES.md in the repository.</p></div></Dialog></Show>
       <Show when={ui.dialog === 'shortcuts'}><Dialog title="Keyboard shortcuts"><table class="kv shortcuts"><tbody>

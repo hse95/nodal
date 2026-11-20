@@ -17,7 +17,7 @@ import { fmtNum } from '../core/graph';
 
 export interface Label { p: THREE.Vector3; text: string; cls: string; size?: number }
 export interface Legend { title: string; min: number; max: number; unit: string }
-export interface ViewOptions { caseIndex: number; scale: number; deformed: boolean; undeformed: boolean; diagram: string; contour: string; layer: 'top' | 'mid' | 'bottom'; reactions: boolean; loads: boolean; supports: boolean; utilisation: boolean; mode: number; animate: boolean; values: boolean; sections: boolean; localAxes: boolean; principal: boolean }
+export interface ViewOptions { caseIndex: number; scale: number; deformed: boolean; undeformed: boolean; diagram: string; contour: string; layer: 'top' | 'mid' | 'bottom'; reactions: boolean; loads: boolean; supports: boolean; utilization: boolean; mode: number; animate: boolean; values: boolean; sections: boolean; localAxes: boolean; principal: boolean }
 /** Vertex buffers that move with the animation factor: position = base + factor * delta. */
 interface Morph { attr: THREE.BufferAttribute; base: Float32Array; delta: Float32Array }
 
@@ -80,7 +80,7 @@ export class SceneBuilder {
   label(p: V3, text: string, cls = '', size?: number): void { if (this.labels.length < 500) this.labels.push({ p: new THREE.Vector3(p.x, p.y, p.z), text, cls, size }); }
 
   // ---- generic geometry ----------------------------------------------------------
-  /** Draw any value produced by a component. `hi` draws it in the selection colour. */
+  /** Draw any value produced by a component. `hi` draws it in the selection color. */
   draw(g: any, hi: boolean, color?: string, nodeId = ''): void {
     if (g === null || g === undefined) return;
     const col = hi ? C.hi : color ?? (this.dark ? 0xdfe5ec : C.ink);
@@ -94,7 +94,7 @@ export class SceneBuilder {
       case 'styled': this.draw(g.g, hi, g.color, nodeId); return;
       case 'tag': this.label(g.p, g.text, 'tag', g.size); this.track(g.p); return;
       case 'model': this.model(g as FEModel, { supports: true, loads: true, sections: true, caseIndex: 0, values: true, localAxes: false } as ViewOptions, hi, nodeId); return;
-      case 'result': this.result(g as FEResult, { caseIndex: 0, scale: -1, deformed: true, undeformed: true, diagram: 'none', contour: (g as FEResult).model.shells.length ? 'disp' : 'none', layer: 'top', reactions: true, loads: false, supports: true, utilisation: false, mode: 0, animate: false, values: true, sections: false, localAxes: false, principal: false }, nodeId); return;
+      case 'result': this.result(g as FEResult, { caseIndex: 0, scale: -1, deformed: true, undeformed: true, diagram: 'none', contour: (g as FEResult).model.shells.length ? 'disp' : 'none', layer: 'top', reactions: true, loads: false, supports: true, utilization: false, mode: 0, animate: false, values: true, sections: false, localAxes: false, principal: false }, nodeId); return;
       case 'feview': this.result(g.result, g.opts, nodeId); return;
       case 'element': this.element(g, col); return;
       case 'support': { const p = mul(g.p, 1 / this.u.len.f); this.points([p], C.support, 10); return; }
@@ -215,7 +215,7 @@ export class SceneBuilder {
     this.animated = !!o.animate && scale > 0;
 
     // Line elements: sampled deflected curves.
-    const nSeg = 8, util = o.utilisation && cr ? m.beams.map((_, e) => post.memberUtilisation(m, cr, e).util) : null;
+    const nSeg = 8, util = o.utilization && cr ? m.beams.map((_, e) => post.memberUtilization(m, cr, e).util) : null;
     if (m.beams.length) {
       const base: number[] = [], delta: number[] = [], colors: number[] = [], ids: number[] = [];
       const col = new THREE.Color();
@@ -242,9 +242,9 @@ export class SceneBuilder {
       o3.userData.pick = { kind: 'beam', ids, nodeId }; this.pickables.push(o3); this.group.add(o3);
       this.morphs.push({ attr, base: Float32Array.from(base), delta: Float32Array.from(delta) });
       for (let i = 0; i < pos.length; i += 3) this.track(v(pos[i], pos[i + 1], pos[i + 2]));
-      if (util) this.legend = { title: 'Utilisation (stress-based, simplified)', min: 0, max: 1, unit: '' };
+      if (util) this.legend = { title: 'Utilization (stress-based, simplified)', min: 0, max: 1, unit: '' };
     }
-    // Shells: deformed mesh, optionally coloured by a result quantity.
+    // Shells: deformed mesh, optionally colored by a result quantity.
     if (m.shells.length) {
       const base = new Float32Array(3 * nn), delta = new Float32Array(3 * nn);
       for (let i = 0; i < nn; i++) for (let d = 0; d < 3; d++) { base[3 * i + d] = m.nodes[3 * i + d] * f; delta[3 * i + d] = U[6 * i + d] * scale * f; }

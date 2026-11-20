@@ -302,8 +302,8 @@ const hemisphere: Builder = (p) => {
   const { els, sups } = gridShell(n, n, map, mat, p.t, !!p.tri, (_q, u, w) => join(near(u, 0) && 'uy rx rz', near(u, 1) && 'ux ry rz', near(u, 0) && near(w, 0) && 'uz'));
   return { model: mk(els, sups, [pointLoad(map(0, 0), v(p.F, 0, 0)), pointLoad(map(1, 0), v(0, -p.F, 0))]), options: { kind: 'static' }, quantities: { radialDisplacement: r => uAt(r, map(0, 0), 0), inwardDisplacement: r => -uAt(r, map(1, 0), 1) } };
 };
-/** Navier double-sine series for the centre deflection of a simply supported square plate under uniform pressure. */
-export function navierCentre(q: number, a: number, D: number, terms = 99): number {
+/** Navier double-sine series for the center deflection of a simply supported square plate under uniform pressure. */
+export function navierCenter(q: number, a: number, D: number, terms = 99): number {
   let s = 0;
   for (let m = 1; m <= terms; m += 2) for (let n = 1; n <= terms; n += 2) s += Math.sin(m * Math.PI / 2) * Math.sin(n * Math.PI / 2) / (m * n * (m * m + n * n) ** 2);
   return 16 * q * a ** 4 / (Math.PI ** 6 * D) * s;
@@ -319,8 +319,8 @@ const squarePlate: Builder = (p) => {
   const D = p.E * p.t ** 3 / (12 * (1 - p.nu * p.nu));
   return {
     model: mk(els, sups, [pressureLoad(-p.q)]), options: { kind: 'static' },
-    quantities: { centreDeflection: r => -uAt(r, map(0.5, 0.5), 2) },
-    reference: () => ({ navier: navierCentre(p.q, a, D) }),
+    quantities: { centerDeflection: r => -uAt(r, map(0.5, 0.5), 2) },
+    reference: () => ({ navier: navierCenter(p.q, a, D) }),
   };
 };
 /** Cantilever plate strip L x b along X, clamped at x = 0, total tip load P shared by the tip nodes. */

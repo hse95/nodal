@@ -29,7 +29,7 @@ export interface CaseResult {
   beamQ: Float64Array;      // 12 local end forces per line element
   beamD: Float64Array;      // 12 local end displacements per line element
   beamW: Float64Array;      // 6 per line element: local distributed load at start (3) and end (3)
-  shellS: Float64Array;     // 8 per shell: Nx, Ny, Nxy, Mx, My, Mxy, Qx, Qy (local, centre)
+  shellS: Float64Array;     // 8 per shell: Nx, Ny, Nxy, Mx, My, Mxy, Qx, Qy (local, center)
   equilibrium: Equilibrium;
   /** 0 where a tension-/compression-only member is slack in this case. */
   active: Uint8Array | null;
@@ -258,7 +258,7 @@ export class FESystem {
           const fa = mat.E * sec.A * mat.alpha * l.dT;
           c.feq[o] -= fa; c.feq[o + 6] += fa;
           if (!this.kin[l.el].axialOnly) {
-            // Free thermal curvature: hotter +z fibre bows the member towards +z (w'' = -alpha*gz).
+            // Free thermal curvature: hotter +z fiber bows the member towards +z (w'' = -alpha*gz).
             const my = mat.E * sec.Iy * mat.alpha * l.gz, mz = mat.E * sec.Iz * mat.alpha * l.gy;
             c.feq[o + 4] -= my; c.feq[o + 10] += my; c.feq[o + 5] += mz; c.feq[o + 11] -= mz;
           }
@@ -329,7 +329,7 @@ export class FESystem {
 
   factor(K: SymCSC, what = 'The structure'): Factor {
     const t0 = now();
-    const f = factorLDL(K, { cancelled: this.cancelled, regularise: true });
+    const f = factorLDL(K, { cancelled: this.cancelled, regularize: true });
     this.stats.tFactor += now() - t0; this.stats.nnzL = f.nnzL;
     if (f.zeroPivots.length) throw new ModelError(this.mechanismMessage(f.zeroPivots, what));
     return f;

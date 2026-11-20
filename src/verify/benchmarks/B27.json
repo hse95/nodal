@@ -3,7 +3,7 @@
   "number": 27,
   "group": "Shells",
   "title": "Cantilever plate strip against beam theory",
-  "description": "Plate strip (L = 10, b = 1, t = 0.1, nu = 0) clamped at one end with a tip load, modelled with shell elements. With nu = 0 the strip is a beam.",
+  "description": "Plate strip (L = 10, b = 1, t = 0.1, nu = 0) clamped at one end with a tip load, modeled with shell elements. With nu = 0 the strip is a beam.",
   "source": "Beam theory: PL^3/3EI, plus PL/(kGA) for the shear-flexible quadrilateral",
   "builder": "plateStrip",
   "params": {

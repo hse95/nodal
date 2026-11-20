@@ -2,7 +2,7 @@
  * Unit systems. All structural quantities are stored in SI base units
  * (N, m, Pa, kg, K); these factors convert a displayed value to SI
  * (value_SI = value_display * f). Geometry on the canvas is unitless: one
- * model unit is one metre in SI projects and one foot in US projects.
+ * model unit is one meter in SI projects and one foot in US projects.
  */
 export type UnitKey = 'len' | 'dim' | 'force' | 'moment' | 'lineLoad' | 'pressure' | 'stress' | 'density' | 'area' | 'inertia' | 'temp' | 'alpha' | 'mass' | 'spring' | 'rotSpring' | 'tempGrad' | 'freq' | 'angle' | 'none' | 'forcePerLen' | 'momentPerLen';
 export interface Unit { label: string; f: number }

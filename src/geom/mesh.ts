@@ -17,7 +17,7 @@ export function meshFromPointsFaces(pts: V3[], faces: number[][]): Mesh {
   return { k: 'mesh', v: pts.flatMap(p => [p.x, p.y, p.z]), f: faces.map(f => [...f]) };
 }
 export function faceNormal(m: Mesh, f: number[]): V3 { return newellNormal(f.map(i => mv(m, i))); }
-export function faceCentre(m: Mesh, f: number[]): V3 {
+export function faceCenter(m: Mesh, f: number[]): V3 {
   let c = v();
   for (const i of f) c = add(c, mv(m, i));
   return mul(c, 1 / f.length);
@@ -222,7 +222,7 @@ export function quadSplit(m: Mesh): Mesh {
     return i;
   };
   for (const q of m.f) {
-    const c = push(faceCentre(m, q)), n = q.length;
+    const c = push(faceCenter(m, q)), n = q.length;
     for (let i = 0; i < n; i++) f.push([q[i], midpoint(q[i], q[(i + 1) % n]), c, midpoint(q[(i + n - 1) % n], q[i])]);
   }
   return { k: 'mesh', v: vs, f };

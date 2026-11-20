@@ -47,7 +47,7 @@ export function forceDensity(net: Net, q: number[], loads: V3[]): V3[] {
     const qe = q[k];
     D.add(eq[a], eq[a], qe); D.add(eq[b], eq[b], qe);
     if (eq[a] >= 0 && eq[b] >= 0) D.add(eq[a], eq[b], -qe);
-    // Fixed neighbours move to the right-hand side.
+    // Fixed neighbors move to the right-hand side.
     for (const [f, c] of [[a, b], [b, a]]) if (eq[f] >= 0 && eq[c] < 0) { const p = net.pts[c]; rhs[0][eq[f]] += qe * p.x; rhs[1][eq[f]] += qe * p.y; rhs[2][eq[f]] += qe * p.z; }
   });
   const f = factorLDL(D);

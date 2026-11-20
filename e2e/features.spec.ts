@@ -41,14 +41,14 @@ test('the script component runs in its sandbox and cannot reach the network', as
   expect(errors).toEqual([]);
 });
 
-test('the evolutionary optimiser drives the sliders and improves the fitness', async ({ page }) => {
+test('the evolutionary optimizer drives the sliders and improves the fitness', async ({ page }) => {
   const errors = watch(page);
   await open(page, 'evolve-beam');
-  await page.locator('.node', { hasText: 'Evolutionary Optimiser' }).locator('.hd').click();
+  await page.locator('.node', { hasText: 'Evolutionary Optimizer' }).locator('.hd').click();
   const field = (label: string) => page.locator('.inspector label.field', { hasText: label }).locator('input');
   await field('Population').fill('10'); await field('Population').blur();
   await field('Generations').fill('6'); await field('Generations').blur();
-  await page.locator('.inspector button', { hasText: 'Run optimisation' }).click();
+  await page.locator('.inspector button', { hasText: 'Run optimization' }).click();
   await expect(page.locator('.inspector')).toContainText(/Finished: best/, { timeout: 90_000 });
   await expect(page.locator('.inspector table.grid tbody tr').first()).toBeVisible();
   // The weight panel must now show less than the 3600 kg starting design.
@@ -94,7 +94,7 @@ test('solid booleans run through the Manifold WebAssembly module in the browser'
   const errors = watch(page);
   await open(page, 'quick-truss');
   const project = { format: 'nodal', schema: 1, name: 'Boolean', units: 'SI', clusters: {}, graph: { groups: [], nodes: [
-    { id: 'box', type: 'solid.box', x: 40, y: 40, state: {}, consts: { X: 2, Y: 2, Z: 2 } }, { id: 'sph', type: 'solid.sphere', x: 40, y: 200, state: {}, consts: { Centre: '2, 2, 2', Radius: 1.2 } },
+    { id: 'box', type: 'solid.box', x: 40, y: 40, state: {}, consts: { X: 2, Y: 2, Z: 2 } }, { id: 'sph', type: 'solid.sphere', x: 40, y: 200, state: {}, consts: { Center: '2, 2, 2', Radius: 1.2 } },
     { id: 'dif', type: 'solid.difference', x: 300, y: 100, state: {}, consts: {} }, { id: 'av', type: 'solid.props', x: 520, y: 100, state: {}, consts: {} }, { id: 'pan', type: 'param.panel', x: 740, y: 100, state: { text: '' }, consts: {} }],
     wires: [{ id: 'w1', from: 'box', out: 0, to: 'dif', inp: 0 }, { id: 'w2', from: 'sph', out: 0, to: 'dif', inp: 1 }, { id: 'w3', from: 'dif', out: 0, to: 'av', inp: 0 }, { id: 'w4', from: 'av', out: 1, to: 'pan', inp: 0 }] } };
   await page.locator('.menu-btn', { hasText: 'File' }).click();

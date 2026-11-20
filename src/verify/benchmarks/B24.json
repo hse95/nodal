@@ -3,7 +3,7 @@
   "number": 24,
   "group": "Shells",
   "title": "Pinched hemisphere with an 18 degree hole",
-  "description": "Hemisphere (R = 10, t = 0.04, E = 6.825e7, nu = 0.3) with an 18 degree hole at the pole, loaded by alternating radial unit loads on the equator (one quadrant modelled).",
+  "description": "Hemisphere (R = 10, t = 0.04, E = 6.825e7, nu = 0.3) with an 18 degree hole at the pole, loaded by alternating radial unit loads on the equator (one quadrant modeled).",
   "source": "MacNeal & Harder, 'A proposed standard set of problems to test finite element accuracy', Finite Elements in Analysis and Design 1 (1985) 3-20 (who quote 0.0940); the value 0.093 specified for this project is the one commonly used with later converged solutions (e.g. Simo, Fox & Rifai, CMAME 72 (1989)).",
   "builder": "hemisphere",
   "params": {

@@ -194,7 +194,7 @@ Pin at A, roller at B, apex C loaded by P. Member forces from the method of join
 <a id="b11"></a>
 ### B11 Classic 10-bar planar truss
 
-Two-bay cantilever truss with ten bars (the standard sizing-optimisation test geometry), loads P at the two lower free nodes. Compared against the independent dense reference solver.
+Two-bay cantilever truss with ten bars (the standard sizing-optimization test geometry), loads P at the two lower free nodes. Compared against the independent dense reference solver.
 
 **Reference:** Independent reference solver (src/ref/refsolver.ts); geometry from Venkayya (1971)
 
@@ -248,7 +248,7 @@ Note: The formula neglects axial deformation; the model has a very large area so
 <a id="b14"></a>
 ### B14 3D space frame
 
-Irregular one-storey 3D frame with a pyramid roof, two truss braces, mixed supports, distributed and nodal loads including moments. Checked for equilibrium and against the reference solver.
+Irregular one-story 3D frame with a pyramid roof, two truss braces, mixed supports, distributed and nodal loads including moments. Checked for equilibrium and against the reference solver.
 
 **Reference:** Independent reference solver (src/ref/refsolver.ts)
 
@@ -414,9 +414,9 @@ Convergence of "Midspan sag" with n:
 <a id="b22"></a>
 ### B22 Scordelis-Lo roof
 
-Cylindrical roof (R = 25, L = 50, t = 0.25, 80 degree arc, E = 4.32e8, nu = 0) on rigid end diaphragms under gravity load 90 per unit area. One quarter is modelled; the vertical displacement at the middle of the free edge is checked.
+Cylindrical roof (R = 25, L = 50, t = 0.25, 80 degree arc, E = 4.32e8, nu = 0) on rigid end diaphragms under gravity load 90 per unit area. One quarter is modeled; the vertical displacement at the middle of the free edge is checked.
 
-**Reference:** MacNeal & Harder, 'A proposed standard set of problems to test finite element accuracy', Finite Elements in Analysis and Design 1 (1985) 3-20; reference 0.3024 (the value MacNeal & Harder and Belytschko et al. 1985 normalise by; Scordelis & Lo's own value is 0.3086, and Krysl & Chen 2022 argue for 0.3006 for shear-rigid shells).
+**Reference:** MacNeal & Harder, 'A proposed standard set of problems to test finite element accuracy', Finite Elements in Analysis and Design 1 (1985) 3-20; reference 0.3024 (the value MacNeal & Harder and Belytschko et al. 1985 normalize by; Scordelis & Lo's own value is 0.3086, and Krysl & Chen 2022 argue for 0.3006 for shear-rigid shells).
 
 **Parameters:** R = 25, L = 50, t = 0.25, theta = 40, E = 432000000, nu = 0, q = 90, n = 16
 
@@ -437,7 +437,7 @@ Convergence of "Free-edge midpoint deflection, 16 x 16 quadrilaterals" with n:
 <a id="b23"></a>
 ### B23 Pinched cylinder with end diaphragms
 
-Cylinder (R = 300, L = 600, t = 3, E = 3e6, nu = 0.3) with rigid end diaphragms, pinched by two opposite unit loads at mid-length. One octant is modelled.
+Cylinder (R = 300, L = 600, t = 3, E = 3e6, nu = 0.3) with rigid end diaphragms, pinched by two opposite unit loads at mid-length. One octant is modeled.
 
 **Reference:** MacNeal & Harder, 'A proposed standard set of problems to test finite element accuracy', Finite Elements in Analysis and Design 1 (1985) 3-20; Belytschko, Stolarski, Liu, Carpenter & Ong, CMAME 51 (1985) 221-258; reference 1.8248e-5.
 
@@ -459,7 +459,7 @@ Convergence of "Displacement under the load, 32 x 32 quadrilaterals" with n:
 <a id="b24"></a>
 ### B24 Pinched hemisphere with an 18 degree hole
 
-Hemisphere (R = 10, t = 0.04, E = 6.825e7, nu = 0.3) with an 18 degree hole at the pole, loaded by alternating radial unit loads on the equator (one quadrant modelled).
+Hemisphere (R = 10, t = 0.04, E = 6.825e7, nu = 0.3) with an 18 degree hole at the pole, loaded by alternating radial unit loads on the equator (one quadrant modeled).
 
 **Reference:** MacNeal & Harder, 'A proposed standard set of problems to test finite element accuracy', Finite Elements in Analysis and Design 1 (1985) 3-20 (who quote 0.0940); the value 0.093 specified for this project is the one commonly used with later converged solutions (e.g. Simo, Fox & Rifai, CMAME 72 (1989)).
 
@@ -490,10 +490,10 @@ Thin square plate (t/a = 0.01) with hard simple supports under uniform pressure.
 
 | Check | Computed | Reference | Error | Tolerance | Result |
 |---|---|---|---|---|---|
-| Centre deflection, 16 x 16 quadrilaterals (MITC4) | 4.43278e-4 m | 4.43609e-4 m | 0.0746 % | 2 % | pass |
-| Centre deflection, 16 x 16 x 2 triangles (DKT) | 4.42503e-4 m | 4.43609e-4 m | 0.249 % | 2 % | pass |
+| Center deflection, 16 x 16 quadrilaterals (MITC4) | 4.43278e-4 m | 4.43609e-4 m | 0.0746 % | 2 % | pass |
+| Center deflection, 16 x 16 x 2 triangles (DKT) | 4.42503e-4 m | 4.43609e-4 m | 0.249 % | 2 % | pass |
 
-Convergence of "Centre deflection, 16 x 16 quadrilaterals (MITC4)" with n:
+Convergence of "Center deflection, 16 x 16 quadrilaterals (MITC4)" with n:
 
 | n | 2 | 4 | 8 | 16 | 32 |
 |---|---|---|---|---|---|
@@ -513,10 +513,10 @@ Thin square plate (t/a = 0.01) with all edges clamped under uniform pressure.
 
 | Check | Computed | Reference | Error | Tolerance | Result |
 |---|---|---|---|---|---|
-| Centre deflection, 16 x 16 quadrilaterals (MITC4) | 1.38045e-4 m | 1.38173e-4 m | 0.0930 % | 2 % | pass |
-| Centre deflection, 16 x 16 x 2 triangles (DKT) | 1.39240e-4 m | 1.38173e-4 m | 0.772 % | 2 % | pass |
+| Center deflection, 16 x 16 quadrilaterals (MITC4) | 1.38045e-4 m | 1.38173e-4 m | 0.0930 % | 2 % | pass |
+| Center deflection, 16 x 16 x 2 triangles (DKT) | 1.39240e-4 m | 1.38173e-4 m | 0.772 % | 2 % | pass |
 
-Convergence of "Centre deflection, 16 x 16 quadrilaterals (MITC4)" with n:
+Convergence of "Center deflection, 16 x 16 quadrilaterals (MITC4)" with n:
 
 | n | 2 | 4 | 8 | 16 | 32 |
 |---|---|---|---|---|---|
@@ -528,7 +528,7 @@ Convergence of "Centre deflection, 16 x 16 quadrilaterals (MITC4)" with n:
 <a id="b27"></a>
 ### B27 Cantilever plate strip against beam theory
 
-Plate strip (L = 10, b = 1, t = 0.1, nu = 0) clamped at one end with a tip load, modelled with shell elements. With nu = 0 the strip is a beam.
+Plate strip (L = 10, b = 1, t = 0.1, nu = 0) clamped at one end with a tip load, modeled with shell elements. With nu = 0 the strip is a beam.
 
 **Reference:** Beam theory: PL^3/3EI, plus PL/(kGA) for the shear-flexible quadrilateral
 

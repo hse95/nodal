@@ -4,7 +4,7 @@ This manual states what the solver computes, with the formulas, the sign convent
 
 Internal units are SI throughout: N, m, kg, s, K (stresses in Pa, moments in N·m). Unit conversion happens only at component inputs and outputs (`src/fe/units.ts`).
 
-Contents: [1 Coordinates and degrees of freedom](#1-coordinates-and-degrees-of-freedom) · [2 Line elements](#2-line-elements) · [3 Shell elements](#3-shell-elements) · [4 Loads](#4-loads) · [5 Assembly, supports and solution](#5-assembly-supports-and-solution) · [6 Second-order and buckling](#6-second-order-analysis-and-buckling) · [7 Modal analysis](#7-modal-analysis) · [8 Nonlinear analysis](#8-geometrically-nonlinear-analysis) · [9 Results](#9-results-and-sign-conventions) · [10 Form-finding](#10-form-finding) · [11 Optimisation](#11-optimisation) · [12 Geometry kernel](#12-geometry-kernel) · [13 Known limitations](#13-known-limitations) · [References](#references)
+Contents: [1 Coordinates and degrees of freedom](#1-coordinates-and-degrees-of-freedom) · [2 Line elements](#2-line-elements) · [3 Shell elements](#3-shell-elements) · [4 Loads](#4-loads) · [5 Assembly, supports and solution](#5-assembly-supports-and-solution) · [6 Second-order and buckling](#6-second-order-analysis-and-buckling) · [7 Modal analysis](#7-modal-analysis) · [8 Nonlinear analysis](#8-geometrically-nonlinear-analysis) · [9 Results](#9-results-and-sign-conventions) · [10 Form-finding](#10-form-finding) · [11 Optimization](#11-optimization) · [12 Geometry kernel](#12-geometry-kernel) · [13 Known limitations](#13-known-limitations) · [References](#references)
 
 ## 1 Coordinates and degrees of freedom
 
@@ -90,7 +90,7 @@ Consistent mass uses the Hermite cubics for bending ($\rho A L/420$ times the us
 
 ### 2.5 Cross-section properties
 
-Source: `src/fe/model.ts`. $A$, $I_y$, $I_z$ are exact for the idealised shapes (sharp corners, no fillets). Torsion constants: solid rectangle by the series approximation $J = a c^3\left[\tfrac13 - 0.21\tfrac{c}{a}\left(1 - \tfrac{c^4}{12a^4}\right)\right]$ ($a \ge c$); closed hollow sections by Bredt's formula $J = 4A_m^2 t/p_m$; open sections by $\sum b t^3/3$. Shear areas are the usual estimates ($5A/6$ for solid rectangles, $0.9A$ for solid circles, $A/2$ for tubes, web area for I and channel sections). Channel and angle sections ignore the shear-centre offset, and the angle ignores the rotation of its principal axes; both are stated in the component help.
+Source: `src/fe/model.ts`. $A$, $I_y$, $I_z$ are exact for the idealized shapes (sharp corners, no fillets). Torsion constants: solid rectangle by the series approximation $J = a c^3\left[\tfrac13 - 0.21\tfrac{c}{a}\left(1 - \tfrac{c^4}{12a^4}\right)\right]$ ($a \ge c$); closed hollow sections by Bredt's formula $J = 4A_m^2 t/p_m$; open sections by $\sum b t^3/3$. Shear areas are the usual estimates ($5A/6$ for solid rectangles, $0.9A$ for solid circles, $A/2$ for tubes, web area for I and channel sections). Channel and angle sections ignore the shear-center offset, and the angle ignores the rotation of its principal axes; both are stated in the component help.
 
 ## 3 Shell elements
 
@@ -102,7 +102,7 @@ Source: `src/fe/shell.ts`. Shells are flat elements: a membrane part and a plate
 
 $$u = \sum_i N_i u_i + (1-\xi^2)\,a_1 + (1-\eta^2)\,a_2, \qquad v = \sum_i N_i v_i + (1-\xi^2)\,a_3 + (1-\eta^2)\,a_4,$$
 
-(Wilson et al. 1973). The gradients of the incompatible modes are evaluated with the Jacobian at the element centre and scaled by $\det\mathbf{J}_0/\det\mathbf{J}$, the modification of Taylor, Beresford & Wilson (1976) that makes the element pass the patch test for any shape (often called QM6). The internal parameters $a_i$ are condensed element by element. Benchmark B28 confirms the patch test to round-off.
+(Wilson et al. 1973). The gradients of the incompatible modes are evaluated with the Jacobian at the element center and scaled by $\det\mathbf{J}_0/\det\mathbf{J}$, the modification of Taylor, Beresford & Wilson (1976) that makes the element pass the patch test for any shape (often called QM6). The internal parameters $a_i$ are condensed element by element. Benchmark B28 confirms the patch test to round-off.
 
 **Triangle.** Constant-strain triangle (CST). It passes the patch test but is stiff in in-plane bending, so triangles converge more slowly than quadrilaterals (compare the two rows of benchmark B22).
 
@@ -144,7 +144,7 @@ Lumped mass puts the tributary mass $\rho t A_i$ on the translations and a small
 
 $$\mathbf{K}_g = \int_A \mathbf{G}^{\mathsf T}\begin{bmatrix}N_x & N_{xy}\\ N_{xy} & N_y\end{bmatrix}\mathbf{G}\;\mathrm{d}A ,$$
 
-using the membrane forces at the element centre.
+using the membrane forces at the element center.
 
 ### 3.5 What to expect
 
@@ -177,11 +177,11 @@ Degrees of freedom that receive no stiffness from any element (for example the r
 
 ### 5.2 Linear solver
 
-The stiffness matrix is stored as the upper triangle in compressed-column form. Nodes are reordered to reduce fill, using a minimum-degree ordering on the node graph (quotient-graph form with element absorption and exact external degrees); a reverse Cuthill–McKee ordering is also computed and used if it predicts less fill. The factorisation is $\mathbf{K} = \mathbf{L}\mathbf{D}\mathbf{L}^{\mathsf T}$ without pivoting, in the up-looking form of Davis (2005), with the elimination tree giving the pattern of each row. All load cases reuse one factorisation.
+The stiffness matrix is stored as the upper triangle in compressed-column form. Nodes are reordered to reduce fill, using a minimum-degree ordering on the node graph (quotient-graph form with element absorption and exact external degrees); a reverse Cuthill–McKee ordering is also computed and used if it predicts less fill. The factorization is $\mathbf{K} = \mathbf{L}\mathbf{D}\mathbf{L}^{\mathsf T}$ without pivoting, in the up-looking form of Davis (2005), with the elimination tree giving the pattern of each row. All load cases reuse one factorization.
 
-$\mathbf{L}\mathbf{D}\mathbf{L}^{\mathsf T}$ is used instead of Cholesky so that indefinite matrices can be factorised and the number of negative pivots is available (Sylvester's law of inertia); the second-order and nonlinear analyses use it as a stability check.
+$\mathbf{L}\mathbf{D}\mathbf{L}^{\mathsf T}$ is used instead of Cholesky so that indefinite matrices can be factorized and the number of negative pivots is available (Sylvester's law of inertia); the second-order and nonlinear analyses use it as a stability check.
 
-**Singularity.** A pivot smaller than $10^{-12}$ times the original diagonal entry is treated as zero. The factorisation then continues with a stiff artificial pivot so that all such pivots are found in one pass, and the analysis stops with a message naming the node and direction of each unrestrained motion.
+**Singularity.** A pivot smaller than $10^{-12}$ times the original diagonal entry is treated as zero. The factorization then continues with a stiff artificial pivot so that all such pivots are found in one pass, and the analysis stops with a message naming the node and direction of each unrestrained motion.
 
 **Other checks before solving** (`checkModel` in `src/fe/analysis.ts`): no elements, no supports, zero-length elements, degenerate shells, non-positive material or section properties, duplicate elements (warning), and separate parts of the model without any support.
 
@@ -207,7 +207,7 @@ starting from the linear solution, with $\mathbf{N}^{(i)}$ the member axial forc
 
 $$\left[\mathbf{K} + \lambda\,\mathbf{K}_g(\mathbf{N}_{ref})\right]\boldsymbol\phi = \mathbf{0}.$$
 
-The smallest positive $\lambda$ are found by subspace iteration (Bathe 1996, section 11.6) on $\mathbf{K}^{-1}(-\mathbf{K}_g)$, with a block of $\min(2p, p+8)$ vectors, Gram–Schmidt orthonormalisation and an exact solution of the projected problem (Cholesky reduction and Jacobi rotations), until the first $p$ eigenvalues change by less than $10^{-10}$ relative.
+The smallest positive $\lambda$ are found by subspace iteration (Bathe 1996, section 11.6) on $\mathbf{K}^{-1}(-\mathbf{K}_g)$, with a block of $\min(2p, p+8)$ vectors, Gram–Schmidt orthonormalization and an exact solution of the projected problem (Cholesky reduction and Jacobi rotations), until the first $p$ eigenvalues change by less than $10^{-10}$ relative.
 
 ## 7 Modal analysis
 
@@ -225,7 +225,7 @@ $$N = EA\,\frac{l - l_n}{l_n}, \qquad \mathbf{f}_{int} = N\begin{bmatrix}-\mathb
 
 **Frame and shell elements are kept geometrically linear in this analysis.** A model that mixes them with cables is solved with a linear frame and nonlinear cables. For sway and member-buckling effects in frames use the second-order analysis. This is the main limitation of the nonlinear solver and is returned as a note with every nonlinear result.
 
-**Newton–Raphson with load steps.** At each step the residual $\lambda\mathbf{P} - \mathbf{f}_{int}(\mathbf{u})$ is driven below $10^{-8}\lVert\mathbf{P}\rVert$. Slack cables make the tangent singular, so the iteration is safeguarded: if the tangent is not positive definite it is regularised as $\mathbf{K}_t + \mu\,\bar k\,\mathbf{I}$ ($\bar k$ the mean diagonal, $\mu$ increased tenfold until the factorisation succeeds and reduced again after full steps), and a step is accepted only if a backtracking line search finds a decrease of the total potential energy $\Pi = U(\mathbf{u}) - \lambda\mathbf{P}^{\mathsf T}\mathbf{u}$. For cable nets, whose energy is convex, this behaves as a globally convergent minimisation. Benchmark B21 starts from a straight, slack chord and converges to the elastic catenary.
+**Newton–Raphson with load steps.** At each step the residual $\lambda\mathbf{P} - \mathbf{f}_{int}(\mathbf{u})$ is driven below $10^{-8}\lVert\mathbf{P}\rVert$. Slack cables make the tangent singular, so the iteration is safeguarded: if the tangent is not positive definite it is regularized as $\mathbf{K}_t + \mu\,\bar k\,\mathbf{I}$ ($\bar k$ the mean diagonal, $\mu$ increased tenfold until the factorization succeeds and reduced again after full steps), and a step is accepted only if a backtracking line search finds a decrease of the total potential energy $\Pi = U(\mathbf{u}) - \lambda\mathbf{P}^{\mathsf T}\mathbf{u}$. For cable nets, whose energy is convex, this behaves as a globally convergent minimization. Benchmark B21 starts from a straight, slack chord and converges to the elastic catenary.
 
 **Arc-length method.** Optional cylindrical arc-length control (Crisfield 1981): the load factor is an extra unknown, constrained by $\lVert\Delta\mathbf{u}\rVert = \Delta l$; of the two roots of the constraint equation the one closest to the previous direction is taken; the step is halved on failure. It follows limit points (snap-through) of bar structures and returns the load–displacement path.
 
@@ -240,16 +240,16 @@ Source: `src/fe/beam.ts` (`sectionForces`), `src/fe/post.ts`.
 | $N$ | axial force | tension |
 | $V_y$, $V_z$ | shear forces | the force on the $+x$ face of the cut points along $+y$ / $+z$ |
 | $T$ | torque | the moment vector on the $+x$ face points along $+x$ |
-| $M_y$ | bending moment about local $y$ | the $-z$ fibre is in tension (sagging for a beam with $z$ up) |
-| $M_z$ | bending moment about local $z$ | the $-y$ fibre is in tension |
+| $M_y$ | bending moment about local $y$ | the $-z$ fiber is in tension (sagging for a beam with $z$ up) |
+| $M_z$ | bending moment about local $z$ | the $-y$ fiber is in tension |
 
 With these conventions $\mathrm{d}M_y/\mathrm{d}x = -V_z$ and $\mathrm{d}M_z/\mathrm{d}x = -V_y$. Moment diagrams are drawn on the tension side.
 
 **Deflected shape.** Between nodes the displayed member axis is the shape-function interpolation of the end displacements plus, for members without bending releases, the fixed-end particular solution for a linearly varying load (Euler–Bernoulli), $w_p = \dfrac{L^4\xi^2(1-\xi)^2}{120EI}\left[(3-\xi)q_1 + (2+\xi)q_2\right]$. For Timoshenko members and members with releases the displayed curve between nodes is an approximation; nodal values are not affected.
 
-**Shell results** are evaluated at the element centre in local axes: membrane forces $N_x, N_y, N_{xy}$ (per unit width, tension positive), moments $M_x, M_y, M_{xy}$ ($M_x > 0$ puts the top, $+z$, surface in tension), shears $Q_x, Q_y$ (quadrilaterals only). Surface stresses are $\sigma = N/t \pm 6M/t^2$; principal values and von Mises stress follow from them. Contours average the centre values of the elements meeting at each node. Averaging smooths real jumps (at folds, thickness changes and supports) and does not extrapolate to the element corners, so peak values at edges are underestimated on coarse meshes.
+**Shell results** are evaluated at the element center in local axes: membrane forces $N_x, N_y, N_{xy}$ (per unit width, tension positive), moments $M_x, M_y, M_{xy}$ ($M_x > 0$ puts the top, $+z$, surface in tension), shears $Q_x, Q_y$ (quadrilaterals only). Surface stresses are $\sigma = N/t \pm 6M/t^2$; principal values and von Mises stress follow from them. Contours average the center values of the elements meeting at each node. Averaging smooths real jumps (at folds, thickness changes and supports) and does not extrapolate to the element corners, so peak values at edges are underestimated on coarse meshes.
 
-**Utilisation** of a line element is the largest value, over stations along the member, of
+**Utilization** of a line element is the largest value, over stations along the member, of
 
 $$\frac{1}{f_y}\left(\frac{|N|}{A} + \frac{|M_y|}{W_y} + \frac{|M_z|}{W_z}\right).$$
 
@@ -263,15 +263,15 @@ Source: `src/geom/formfind.ts`.
 
 $$\left(\mathbf{C}_f^{\mathsf T}\mathbf{Q}\mathbf{C}_f\right)\mathbf{x}_f = \mathbf{p}_x - \mathbf{C}_f^{\mathsf T}\mathbf{Q}\mathbf{C}_x\,\mathbf{x}_x,$$
 
-and likewise for $y$ and $z$. One sparse factorisation serves the three coordinates.
+and likewise for $y$ and $z$. One sparse factorization serves the three coordinates.
 
 **Dynamic relaxation with kinetic damping** (Barnes 1999). Each node has a fictitious mass $m_i = 0.55\sum_j \left(EA_j/l_{0j} + |T_j|/l_j\right)$ over the lines meeting at it, which keeps the explicit integration with unit time step stable. Velocities are updated from the residual forces; when the total kinetic energy falls, the nodes are moved back half a step and all velocities are reset to zero. Iteration stops when the largest residual is below the tolerance times the largest force. Lines are linear springs with rest length $l_0$ (a factor of the drawn length, or a target length), optionally tension-only; free nodes may also be tied to their starting positions by a spring.
 
-## 11 Optimisation
+## 11 Optimization
 
-**Evolutionary optimiser** (`src/core/optimize.ts`): real-coded genetic algorithm with binary tournament selection, blend crossover (BLX with a 25 % overshoot), Gaussian mutation (standard deviation 10 % of each range), elitism, and an optional Hooke–Jeeves pattern search from the best individual. Evaluated designs are cached. It is a heuristic: it does not guarantee a global optimum, and results depend on the seed.
+**Evolutionary optimizer** (`src/core/optimize.ts`): real-coded genetic algorithm with binary tournament selection, blend crossover (BLX with a 25 % overshoot), Gaussian mutation (standard deviation 10 % of each range), elitism, and an optional Hooke–Jeeves pattern search from the best individual. Evaluated designs are cached. It is a heuristic: it does not guarantee a global optimum, and results depend on the seed.
 
-**Section sizing** (`src/fe/sizing.ts`): members are grouped by element ID; each pass gives every group the lightest candidate whose utilisation (Section 9) is at most the target under the current forces, re-analyses, and repeats until no group changes. In statically indeterminate structures the result can depend on the starting point and need not be the global minimum weight.
+**Section sizing** (`src/fe/sizing.ts`): members are grouped by element ID; each pass gives every group the lightest candidate whose utilization (Section 9) is at most the target under the current forces, re-analyses, and repeats until no group changes. In statically indeterminate structures the result can depend on the starting point and need not be the global minimum weight.
 
 ## 12 Geometry kernel
 
@@ -282,14 +282,14 @@ Source: `src/geom`. Curves are lines, polylines, circular arcs, rational B-splin
 - No B-rep kernel: no trimmed surfaces, no solid fillets or shelling, no STEP or IGES. Solids are meshes.
 - Frames and shells are geometrically linear in the nonlinear analysis (Section 8).
 - No material nonlinearity anywhere.
-- No lateral–torsional or warping-torsion effects in line elements (uniform torsion only); no shear-centre offset for channels and angles.
+- No lateral–torsional or warping-torsion effects in line elements (uniform torsion only); no shear-center offset for channels and angles.
 - Triangular shells use a constant-strain membrane; prefer quadrilaterals.
 - Shell loads are lumped to nodes; shell temperature loads and line loads on shell edges are not implemented.
-- Shell stresses are centre values averaged at nodes.
+- Shell stresses are center values averaged at nodes.
 - Modal analysis uses element mass only; no response-spectrum or time-history analysis.
 - Second-order analysis treats tension-/compression-only members as ordinary bars.
-- The utilisation is a simplified stress ratio, not a code check. Nodal contains no design-code checks.
-- Performance: the sparse factorisation is a scalar (non-supernodal) implementation in TypeScript. Measured times are in `PROGRESS.md`; three-dimensional frames with a large bandwidth are the slowest case.
+- The utilization is a simplified stress ratio, not a code check. Nodal contains no design-code checks.
+- Performance: the sparse factorization is a scalar (non-supernodal) implementation in TypeScript. Measured times are in `PROGRESS.md`; three-dimensional frames with a large bandwidth are the slowest case.
 
 ## References
 

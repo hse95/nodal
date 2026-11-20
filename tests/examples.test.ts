@@ -3,7 +3,7 @@ import '../src/components';
 import { Engine } from '../src/core/graph';
 import { EXAMPLES, Expected } from '../src/examples';
 import { setScriptRunner, SCRIPT_PRELUDE } from '../src/components/structure';
-import { optimise } from '../src/core/optimize';
+import { optimize } from '../src/core/optimize';
 import type { DataTree } from '../src/core/tree';
 
 // In Node there is no Worker: run example scripts directly (the code under test is the examples, not the sandbox).
@@ -50,10 +50,10 @@ describe('example gallery', () => {
       expect(problems, `${ex.title}: ${problems.join('; ')}`).toEqual([]);
     });
   }
-  it('the beam optimisation example reaches the hand-calculated optimum', async () => {
+  it('the beam optimization example reaches the hand-calculated optimum', async () => {
     const ex = EXAMPLES.find(e => e.id === 'evolve-beam')!, { project } = ex.build(), engine = new Engine();
     const opt = project.graph.nodes.find(n => n.type === 'opt.evolve')!, sliders = (opt.state.genes as string[]).map(id => project.graph.nodes.find(n => n.id === id)!);
-    const res = await optimise(sliders.map(s => ({ min: s.state.min, max: s.state.max })), async (x) => { sliders.forEach((s, i) => { s.state.value = x[i]; }); await engine.run(project); return engine.outputs(opt.id)[0].first() as number; }, { population: 20, generations: 15, localSearch: true, seed: 1 });
+    const res = await optimize(sliders.map(s => ({ min: s.state.min, max: s.state.max })), async (x) => { sliders.forEach((s, i) => { s.state.value = x[i]; }); await engine.run(project); return engine.outputs(opt.id)[0].first() as number; }, { population: 20, generations: 15, localSearch: true, seed: 1 });
     // By hand: b = 100 mm (lower limit), h from 5wL^4/(384 E b h^3/12) = L/250.
     const hOpt = Math.cbrt(12 * 5 * 20000 * 8 ** 4 / (384 * 33e9 * 0.1 * 0.032)) * 1000;
     expect(res.best.x[0]).toBeLessThan(108); expect(Math.abs(res.best.x[1] - hOpt)).toBeLessThan(12);

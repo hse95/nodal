@@ -3,7 +3,7 @@
  *
  * Members are grouped by their element ID. Each pass runs a linear static
  * analysis and gives every group the lightest candidate section whose
- * simplified stress utilisation (see post.ts) stays at or below the target in
+ * simplified stress utilization (see post.ts) stays at or below the target in
  * every load case/combination. Because changing sections changes the force
  * distribution in statically indeterminate structures, the loop repeats until
  * no group changes or the iteration limit is reached.
@@ -41,11 +41,11 @@ export function sizeSections(model: FEModel, candidates: Section[], target = 1, 
       maxUtil = Math.max(maxUtil, utilOf(cands[pick]));
       if (pick !== m.beams[els[0]].sec) { changed++; for (const e of els) m.beams[e].sec = pick; }
     }
-    log.push(`Pass ${it}: ${changed} group(s) changed, mass ${modelMass(m).toFixed(1)} kg, largest utilisation ${(maxUtil * 100).toFixed(1)} %`);
+    log.push(`Pass ${it}: ${changed} group(s) changed, mass ${modelMass(m).toFixed(1)} kg, largest utilization ${(maxUtil * 100).toFixed(1)} %`);
     if (changed === 0) { converged = true; break; }
     result = solveStatic(m, cancelled);
   }
   if (!converged) { result = solveStatic(m, cancelled); log.push(`Stopped after ${maxIter} passes without settling (sections may still be alternating).`); }
-  if (maxUtil > target + 1e-9) log.push(`Even the largest candidate section is over the target in at least one group (utilisation ${(maxUtil * 100).toFixed(1)} %).`);
+  if (maxUtil > target + 1e-9) log.push(`Even the largest candidate section is over the target in at least one group (utilization ${(maxUtil * 100).toFixed(1)} %).`);
   return { model: m, result, log, mass: modelMass(m), maxUtil, converged };
 }

@@ -2,7 +2,7 @@
  * Untrimmed NURBS surfaces.
  *
  * Every surface in Nodal is a tensor-product rational B-spline patch evaluated
- * over normalised (u, v) in [0,1] x [0,1]. Planes, four-point patches,
+ * over normalized (u, v) in [0,1] x [0,1]. Planes, four-point patches,
  * extrusions and surfaces of revolution are exact. Lofts, sweeps, point-grid
  * surfaces and offsets are built by interpolating sampled points, so they are
  * approximations of the "true" skinned surface (stated in the user guide).
@@ -110,7 +110,7 @@ export function loft(sections: Curve[], samples = 16, degree = 3): Surface {
 }
 /**
  * Sweep a profile along a rail. Frames along the rail are propagated by
- * rotation-minimising (parallel) transport, so the profile does not twist.
+ * rotation-minimizing (parallel) transport, so the profile does not twist.
  */
 export function sweep(rail: Curve, profile: Curve, stations = 24, samples = 16): Surface {
   const L = curveLength(rail), ts = paramsAtLengths(rail, Array.from({ length: stations + 1 }, (_, i) => L * i / stations));

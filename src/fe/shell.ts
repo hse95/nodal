@@ -125,7 +125,7 @@ function quadMembraneK(g: ShellGeom, C: Mat): Mat {
   const [a11, a12, a21, a22] = c0.J;
   for (const [xi, eta] of GAUSS2) {
     const s = quadShape(g, xi, eta), B = membraneB(s.dx, s.dy);
-    // Incompatible modes (1 - xi^2) and (1 - eta^2): derivatives taken with the centre Jacobian and
+    // Incompatible modes (1 - xi^2) and (1 - eta^2): derivatives taken with the center Jacobian and
     // scaled by det(J0)/det(J) so that constant-stress states are reproduced exactly (patch test).
     const f = c0.det / s.det;
     const d1x = f * (a22 * (-2 * xi)) / c0.det, d1y = f * (-a21 * (-2 * xi)) / c0.det;
@@ -320,10 +320,10 @@ export function shellMass(g: ShellGeom, m: Material, t: number, consistent: bool
 }
 
 export interface ShellStress {
-  /** Membrane forces [Nx, Ny, Nxy] (N/m), moments [Mx, My, Mxy] (N*m/m), shears [Qx, Qy] (N/m) at the centre, local axes. */
+  /** Membrane forces [Nx, Ny, Nxy] (N/m), moments [Mx, My, Mxy] (N*m/m), shears [Qx, Qy] (N/m) at the center, local axes. */
   N: number[]; M: number[]; Q: number[];
 }
-/** Stress resultants at the element centre from local nodal displacements (6 per node). */
+/** Stress resultants at the element center from local nodal displacements (6 per node). */
 export function shellStress(g: ShellGeom, m: Material, t: number, dl: ArrayLike<number>): ShellStress {
   const n = g.nn, C = planeStress(m, t), D = bendingD(m, t);
   const um: number[] = [], ub: number[] = [];
@@ -331,7 +331,7 @@ export function shellStress(g: ShellGeom, m: Material, t: number, dl: ArrayLike<
   const mulv = (A: Mat, x: number[]) => A.map(r => r.reduce((s, a, j) => s + a * x[j], 0));
   if (n === 4) {
     const { s, Bb, Bs } = mitc4B(g, 0, 0);
-    // The incompatible modes have zero gradient at the centre, so the compatible B gives the centre strain.
+    // The incompatible modes have zero gradient at the center, so the compatible B gives the center strain.
     const e = mulv(membraneB(s.dx, s.dy), um), k = mulv(Bb, ub), gs = mulv(Bs, ub), Gs = KAPPA_SHEAR * m.G * t;
     return { N: mulv(C, e), M: mulv(D, k), Q: [Gs * gs[0], Gs * gs[1]] };
   }

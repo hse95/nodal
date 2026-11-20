@@ -1,5 +1,5 @@
 /**
- * Single-objective evolutionary optimiser.
+ * Single-objective evolutionary optimizer.
  *
  * A real-coded genetic algorithm (tournament selection, blend crossover,
  * Gaussian mutation, elitism) with an optional pattern-search polish of the
@@ -9,15 +9,15 @@
 export interface Gene { min: number; max: number; integer?: boolean }
 export interface GAOptions {
   population?: number; generations?: number; mutation?: number; crossover?: number; elite?: number;
-  seed?: number; maximise?: boolean; localSearch?: boolean; localEvaluations?: number;
+  seed?: number; maximize?: boolean; localSearch?: boolean; localEvaluations?: number;
 }
 export interface Evaluated { x: number[]; f: number; generation: number }
 export interface GAProgress { generation: number; best: Evaluated; mean: number; history: number[]; phase: 'evolution' | 'local search' }
 export interface GAResult { best: Evaluated; history: number[]; top: Evaluated[]; evaluations: number; stopped: boolean }
 
-export async function optimise(genes: Gene[], fitness: (x: number[]) => Promise<number>, opt: GAOptions = {}, onProgress?: (p: GAProgress) => void, shouldStop?: () => boolean): Promise<GAResult> {
+export async function optimize(genes: Gene[], fitness: (x: number[]) => Promise<number>, opt: GAOptions = {}, onProgress?: (p: GAProgress) => void, shouldStop?: () => boolean): Promise<GAResult> {
   const pop = Math.max(4, opt.population ?? 24), gens = Math.max(1, opt.generations ?? 20), pm = opt.mutation ?? 0.15, pc = opt.crossover ?? 0.9, elite = Math.min(pop - 1, opt.elite ?? 2);
-  const sign = opt.maximise ? -1 : 1;                    // internally always minimise sign*f
+  const sign = opt.maximize ? -1 : 1;                    // internally always minimize sign*f
   let s = ((opt.seed ?? 1) * 2654435761) >>> 0;
   const rnd = () => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s / 4294967296; };
   const gauss = () => Math.sqrt(-2 * Math.log(rnd() + 1e-12)) * Math.cos(2 * Math.PI * rnd());

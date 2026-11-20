@@ -3,8 +3,8 @@
   "number": 22,
   "group": "Shells",
   "title": "Scordelis-Lo roof",
-  "description": "Cylindrical roof (R = 25, L = 50, t = 0.25, 80 degree arc, E = 4.32e8, nu = 0) on rigid end diaphragms under gravity load 90 per unit area. One quarter is modelled; the vertical displacement at the middle of the free edge is checked.",
-  "source": "MacNeal & Harder, 'A proposed standard set of problems to test finite element accuracy', Finite Elements in Analysis and Design 1 (1985) 3-20; reference 0.3024 (the value MacNeal & Harder and Belytschko et al. 1985 normalise by; Scordelis & Lo's own value is 0.3086, and Krysl & Chen 2022 argue for 0.3006 for shear-rigid shells).",
+  "description": "Cylindrical roof (R = 25, L = 50, t = 0.25, 80 degree arc, E = 4.32e8, nu = 0) on rigid end diaphragms under gravity load 90 per unit area. One quarter is modeled; the vertical displacement at the middle of the free edge is checked.",
+  "source": "MacNeal & Harder, 'A proposed standard set of problems to test finite element accuracy', Finite Elements in Analysis and Design 1 (1985) 3-20; reference 0.3024 (the value MacNeal & Harder and Belytschko et al. 1985 normalize by; Scordelis & Lo's own value is 0.3086, and Krysl & Chen 2022 argue for 0.3006 for shear-rigid shells).",
   "builder": "scordelisLo",
   "params": {
     "R": 25,

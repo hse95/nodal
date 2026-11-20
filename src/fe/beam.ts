@@ -242,8 +242,8 @@ export function endForces(kin: BeamKin, dLocal: number[], feq: number[]): number
  * [0, x]. Returned as [N, Vy, Vz, T, My, Mz] in the reporting convention:
  *   N   tension positive
  *   Vy, Vz, T   force / torque components acting on the +x face of the cut
- *   My  positive when the -z fibre is in tension (sagging for a beam with z up)
- *   Mz  positive when the -y fibre is in tension
+ *   My  positive when the -z fiber is in tension (sagging for a beam with z up)
+ *   Mz  positive when the -y fiber is in tension
  */
 export function sectionForces(q: ArrayLike<number>, w1: number[], w2: number[], L: number, x: number): number[] {
   const i0 = (d: number) => w1[d] * x + (w2[d] - w1[d]) * x * x / (2 * L);           // integral of w

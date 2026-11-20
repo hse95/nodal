@@ -20,13 +20,13 @@ The live URL returns the app's HTML. The no-console-errors check was run on the 
 
 Solver, `npm run bench` (Node 22, 2-core cloud VM; a current laptop is usually faster):
 
-| Model | Free DOF | Non-zeros in the factor | Factorisation | Whole analysis |
+| Model | Free DOF | Non-zeros in the factor | Factorization | Whole analysis |
 |---|---|---|---|---|
-| Plane frame, 60 bays × 140 storeys | 51,240 | 5.3 M | 1.1 s | 1.7 s |
+| Plane frame, 60 bays × 140 stories | 51,240 | 5.3 M | 1.1 s | 1.7 s |
 | Shell plate, 91 × 91 nodes | 48,606 | 11.0 M | 3.8 s | 5.3 s |
-| 3D building frame, 12 × 12 bays × 50 storeys | 50,700 | 22.5 M | 18.9 s | 21.1 s |
+| 3D building frame, 12 × 12 bays × 50 stories | 50,700 | 22.5 M | 18.9 s | 21.1 s |
 
-Target: about 50,000 DOF in a few seconds. **Met for plane frames, borderline for shells, not met for 3D frames.** The cause is the scalar up-looking factorisation; a supernodal or multifrontal kernel with dense blocks (or a compiled WASM kernel) should give a factor of 3 to 5.
+Target: about 50,000 DOF in a few seconds. **Met for plane frames, borderline for shells, not met for 3D frames.** The cause is the scalar up-looking factorization; a supernodal or multifrontal kernel with dense blocks (or a compiled WASM kernel) should give a factor of 3 to 5.
 
 Interface:
 
@@ -50,13 +50,13 @@ Interface:
 ## Known limitations of what is there
 
 - Triangular shells have a constant-strain membrane: use quadrilaterals where possible.
-- Shell stresses are element-centre values averaged at nodes; peaks at edges are underestimated on coarse meshes.
+- Shell stresses are element-center values averaged at nodes; peaks at edges are underestimated on coarse meshes.
 - Shell loads are lumped to nodes; no shell temperature load; no line loads on shell edges.
-- No lateral–torsional buckling, no warping torsion, no shear-centre offset for channels and angles.
+- No lateral–torsional buckling, no warping torsion, no shear-center offset for channels and angles.
 - Second-order analysis treats tension-/compression-only members as ordinary bars.
 - Modal mass comes from element density only.
 - Curve offset does not trim self-intersections; fillet works on polylines; loft, sweep and surface offset are interpolated approximations.
-- The utilisation is a simplified stress ratio; there are no design-code checks.
+- The utilization is a simplified stress ratio; there are no design-code checks.
 - Rotated supports are treated as global-axis supports for cable members in the nonlinear analysis.
 - The "duplicate elements" warning is the only guard against accidentally doubled geometry (it caught a doubled leg in the tower example during development).
 

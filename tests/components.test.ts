@@ -7,7 +7,7 @@ import { meshBox, meshVolume } from '../src/geom/mesh';
 import { WORLD_XY, v } from '../src/geom/vec';
 import * as cv from '../src/geom/curve';
 import { revolve, srfPoint, loft, isoCurve } from '../src/geom/surface';
-import { optimise } from '../src/core/optimize';
+import { optimize } from '../src/core/optimize';
 import { buildNet, forceDensity, dynamicRelaxation } from '../src/geom/formfind';
 
 function graph(build: (add: (type: string, init?: any) => string, wire: (a: string, out: number, b: string, inp: number) => void, p: ProjectFile) => void): ProjectFile {
@@ -135,23 +135,23 @@ describe('geometry kernel', () => {
   });
 });
 
-describe('form-finding and optimisation', () => {
+describe('form-finding and optimization', () => {
   const grid = (n: number) => { const ls: any[] = [], an: any[] = []; for (let i = 0; i <= n; i++) for (let j = 0; j <= n; j++) { if (i < n) ls.push({ a: v(i, j, 0), b: v(i + 1, j, 0) }); if (j < n) ls.push({ a: v(i, j, 0), b: v(i, j + 1, 0) }); if (i === 0 || j === 0 || i === n || j === n) an.push(v(i, j, 0)); } return { ls, an }; };
   it('force density reproduces the discrete membrane solution and dynamic relaxation agrees with it', () => {
     const { ls, an } = grid(4), net = buildNet(ls, an), loads = net.pts.map((_, i) => (net.fixed[i] ? v() : v(0, 0, -1)));
     const pts = forceDensity(net, net.edges.map(() => 1), loads);
     // Out-of-balance check: sum q (x_j - x_i) + p = 0 at every free node.
     net.pts.forEach((_, i) => { if (net.fixed[i]) return; let r = -1; net.edges.forEach(([a, b]) => { if (a === i) r += pts[b].z - pts[a].z; if (b === i) r += pts[a].z - pts[b].z; }); expect(Math.abs(r)).toBeLessThan(1e-10); });
-    const centre = pts.reduce((m, p) => Math.min(m, p.z), 0);
-    expect(centre).toBeLessThan(-0.5);
+    const center = pts.reduce((m, p) => Math.min(m, p.z), 0);
+    expect(center).toBeLessThan(-0.5);
     // A stiff, strongly pretensioned net under a small load sags by about (load / force density) times the same shape.
     const dr = dynamicRelaxation(net, { stiffness: net.edges.map(() => 1e4), rest: net.edges.map(() => 0.5), loads: loads.map(l => v(0, 0, l.z * 10)), tol: 1e-9 });
     expect(dr.converged).toBe(true);
     const T = dr.forces[0], sag = dr.pts.reduce((m, p) => Math.min(m, p.z), 0);
-    expect(sag / (centre * 10 / T)).toBeGreaterThan(0.97); expect(sag / (centre * 10 / T)).toBeLessThan(1.03);
+    expect(sag / (center * 10 / T)).toBeGreaterThan(0.97); expect(sag / (center * 10 / T)).toBeLessThan(1.03);
   });
-  it('the evolutionary optimiser finds the minimum of a smooth function', async () => {
-    const r = await optimise([{ min: -5, max: 5 }, { min: -5, max: 5 }, { min: 0, max: 10, integer: true }], async ([x, y, k]) => (x - 1.5) ** 2 + (y + 2) ** 2 + (k - 7) ** 2, { population: 24, generations: 25, localSearch: true, seed: 3 });
+  it('the evolutionary optimizer finds the minimum of a smooth function', async () => {
+    const r = await optimize([{ min: -5, max: 5 }, { min: -5, max: 5 }, { min: 0, max: 10, integer: true }], async ([x, y, k]) => (x - 1.5) ** 2 + (y + 2) ** 2 + (k - 7) ** 2, { population: 24, generations: 25, localSearch: true, seed: 3 });
     expect(r.best.f).toBeLessThan(1e-3); expect(r.best.x[2]).toBe(7);
     expect(r.history[r.history.length - 1]).toBeLessThanOrEqual(r.history[0]);
   });
