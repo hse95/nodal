@@ -156,3 +156,27 @@ describe('form-finding and optimisation', () => {
     expect(r.history[r.history.length - 1]).toBeLessThanOrEqual(r.history[0]);
   });
 });
+
+describe('load combinations and envelopes', () => {
+  it('combinations superpose cases and the envelope spans them', async () => {
+    let env = '', st = '';
+    const p = graph((add, wire) => {
+      const ln = add('crv.line', { consts: { A: '0,0,0', B: '6,0,0' } }), sec = add('fe.sec.rect'), bm = add('fe.beam', { consts: { Size: 1.5 } });
+      wire(ln, 0, bm, 0); wire(sec, 0, bm, 1);
+      const s1 = add('fe.support', { consts: { Point: '0,0,0', Conditions: 'ux uy uz rx' } }), s2 = add('fe.support', { consts: { Point: '6,0,0', Conditions: 'uy uz' } });
+      const g = add('fe.load.line', { consts: { Load: '0,0,-10', Case: 'G' } }), q = add('fe.load.line', { consts: { Load: '0,0,4', Case: 'W' } });
+      const c1 = add('fe.load.combo', { consts: { Name: 'C1', Cases: ['G'], Factors: [1.35] } }), c2 = add('fe.load.combo', { consts: { Name: 'C2', Cases: ['G', 'W'], Factors: [1, 1.5] } });
+      const model = add('fe.assemble'); wire(bm, 0, model, 0); wire(s1, 0, model, 1); wire(s2, 0, model, 1); for (const l of [g, q, c1, c2]) wire(l, 0, model, 2);
+      st = add('fe.static'); wire(model, 0, st, 0);
+      env = add('fe.res.envelope'); wire(st, 0, env, 0);
+    });
+    const e = new Engine();
+    await e.run(p);
+    expect(e.status(env).messages).toEqual([]);
+    // Midspan moments: C1 = 1.35 * 10 * 36 / 8 = 60.75 kNm (sagging); C2 = (10 - 6) * 36 / 8 = 18 kNm.
+    expect(e.outputs(env)[3].first()).toBeCloseTo(60.75, 8);
+    expect(e.outputs(env)[2].first()).toBeCloseTo(0, 8);
+    const res = e.outputs(st)[0].first() as any;
+    expect(res.cases.map((c: any) => c.name)).toEqual(['G', 'W', 'C1', 'C2']);
+  });
+});
