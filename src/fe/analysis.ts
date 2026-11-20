@@ -132,9 +132,9 @@ export function solveStatic(model: FEModel, cancelled?: () => boolean): FEResult
     // Unilateral members make the problem nonlinear, so superposition is not valid: each set is solved on its own.
     const sets = [...model.cases.map((n, i) => ({ name: n, loads: loads[i] })), ...model.combos.map(c => ({ name: c.name, loads: sys.combine(loads, c.factors) }))];
     cases = sets.map(s => solveUnilateral(sys, s.name, s.loads));
-    sys.messages.push('The model contains tension-only, compression-only or cable members: every load case and combination was solved separately (no superposition).');
+    sys.notes.push('The model contains tension-only, compression-only or cable members: every load case and combination was solved separately (no superposition).');
   }
-  if (sys.stats.inactiveDofs) sys.messages.push(`${sys.stats.inactiveDofs} degrees of freedom without any stiffness (e.g. rotations at pure truss nodes) were switched off automatically.`);
+  if (sys.stats.inactiveDofs) sys.notes.push(`${sys.stats.inactiveDofs} degrees of freedom without any stiffness (e.g. rotations at pure truss nodes) were switched off automatically.`);
   for (const c of cases) if (c.equilibrium.relError > 1e-6) sys.messages.push(`Load set "${c.name}": equilibrium check is off by ${(c.equilibrium.relError * 100).toExponential(2)} %. The model may be ill-conditioned.`);
   return sys.finish('static', cases, [], t0);
 }
@@ -320,7 +320,7 @@ export function solveNonlinear(model: FEModel, opt: AnalysisOptions, cancelled?:
   sys.messages.push(...warn);
   const bars: number[] = [], linear: number[] = [];
   model.beams.forEach((b, e) => (b.type === 'beam' ? linear : bars).push(e));
-  if (linear.length || sys.ns) sys.messages.push('Frame and shell elements are geometrically linear in this analysis; only truss and cable members follow large displacements.');
+  if (linear.length || sys.ns) sys.notes.push('Frame and shell elements are geometrically linear in this analysis; only truss and cable members follow large displacements.');
   if (bars.length === 0) sys.messages.push('The model has no truss or cable members, so the nonlinear analysis reduces to a linear one.');
   const loads = sys.buildLoads(false);
   const nSteps = Math.max(1, Math.round(opt.steps ?? 10)), tol = opt.tol ?? 1e-8, maxIter = opt.maxIter ?? 200;

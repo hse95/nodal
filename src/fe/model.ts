@@ -132,6 +132,7 @@ export interface BeamPart {
   offA: V3 | null; offB: V3 | null;   // rigid offsets from node to member end, global [m]
   pre: number;                    // pretension for cables [N]
   l0: number;                     // unstressed length as a multiple of the drawn length (1 = as drawn; >1 = slack cable)
+  ci: number; cn: number;         // position in a subdivided member: element ci of cn
   summary: string;
 }
 export interface ShellPart { k: 'element'; kind: 'shell'; id: string; pts: V3[]; mat: Material; t: number; summary: string }
@@ -143,7 +144,7 @@ export interface SupportPart {
   summary: string;
 }
 export type LoadPart = { k: 'load'; lc: string; summary: string } & (
-  | { kind: 'point'; p: V3; f: V3; m: V3 }
+  | { kind: 'point'; p: V3; f: V3; m: V3; snap?: boolean }
   | { kind: 'line'; ids: string[] | null; w1: V3; w2: V3; sys: 'global' | 'local' | 'projected' }
   | { kind: 'gravity'; dir: V3 }                 // multiples of g, e.g. (0,0,-1)
   | { kind: 'temp'; ids: string[] | null; dT: number; gy: number; gz: number }
@@ -245,7 +246,12 @@ export function buildModel(elements: ElementPart[], supports: SupportPart[], loa
     const lc = caseIndex(l.lc || 'LC1');
     switch (l.kind) {
       case 'point': {
-        const node = merger.find(l.p, false);
+        let node = merger.find(l.p, false);
+        if (node < 0 && l.snap) {
+          // Loads that come from a load mesh go to the nearest node.
+          let bd = Infinity;
+          for (let i = 0; i < merger.coords.length / 3; i++) { const d = Math.hypot(merger.coords[3 * i] - l.p.x, merger.coords[3 * i + 1] - l.p.y, merger.coords[3 * i + 2] - l.p.z); if (d < bd) { bd = d; node = i; } }
+        }
         if (node < 0) warnings.push(`A point load at ${p3(l.p)} does not touch any node and was ignored.`);
         else fl.push({ lc, t: 'node', node, f: [l.f.x, l.f.y, l.f.z, l.m.x, l.m.y, l.m.z] });
         break;

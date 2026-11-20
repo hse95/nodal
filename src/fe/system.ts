@@ -43,7 +43,10 @@ export interface FEResult {
   cases: CaseResult[];
   modes: ModeResult[];
   stats: SolveStats;
+  /** Warnings that the user should read. */
   messages: string[];
+  /** Informational remarks (not warnings). */
+  notes: string[];
   /** Load-displacement history for nonlinear runs: [load factor, displacement norm]. */
   path?: number[][];
   summary: string;
@@ -75,6 +78,7 @@ export class FESystem {
   pattern!: SymCSC;
   readonly stats: SolveStats;
   readonly messages: string[] = [];
+  readonly notes: string[] = [];
   readonly unilateral: number[] = [];
 
   /**
@@ -403,7 +407,7 @@ export class FESystem {
     this.stats.tTotal = now() - t0;
     const worst = cases.reduce((mx, c) => Math.max(mx, c.equilibrium.relError), 0);
     return {
-      k: 'result', kind, model: this.model, cases, modes, stats: { ...this.stats }, messages: [...this.model.warnings, ...this.messages],
+      k: 'result', kind, model: this.model, cases, modes, stats: { ...this.stats }, messages: [...this.model.warnings, ...this.messages], notes: [...this.notes],
       summary: `${kind} result: ${cases.length} case${cases.length === 1 ? '' : 's'}${modes.length ? `, ${modes.length} modes` : ''}, ${this.neq} equations${cases.length ? `, equilibrium error ${worst.toExponential(1)}` : ''}${extra}`,
     };
   }

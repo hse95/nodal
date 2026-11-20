@@ -21,6 +21,8 @@ export interface PortSpec {
   /** Default used when nothing is wired and no constant is set. `undefined` = required. */
   default?: unknown;
   optional?: boolean;    // may be left empty without raising a warning
+  /** Physical unit of a numeric port; the label shown depends on the project unit system. */
+  unit?: string;
 }
 
 export interface SolveContext {

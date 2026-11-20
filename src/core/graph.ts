@@ -32,10 +32,10 @@ export class Registry {
 export const registry = new Registry();
 
 /** Port specification helper: P('A', 'number', 'First value', { d: 0 }). */
-export function P(name: string, type: DType, desc: string, o: { d?: unknown; list?: boolean; tree?: boolean; opt?: boolean; nick?: string } = {}): PortSpec {
+export function P(name: string, type: DType, desc: string, o: { d?: unknown; list?: boolean; tree?: boolean; opt?: boolean; nick?: string; u?: string } = {}): PortSpec {
   return {
     name, nick: o.nick ?? (name.length <= 5 ? name : name.replace(/[^A-Z0-9]/g, '').slice(0, 3) || name.slice(0, 3)),
-    type, desc, access: o.tree ? 'tree' : o.list ? 'list' : 'item', default: o.d, optional: o.opt,
+    type, desc, access: o.tree ? 'tree' : o.list ? 'list' : 'item', default: o.d, optional: o.opt, unit: o.u,
   };
 }
 export function portsOf(node: NodeData, project: ProjectFile, reg: Registry = registry): { inputs: PortSpec[]; outputs: PortSpec[] } {

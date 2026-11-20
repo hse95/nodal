@@ -37,7 +37,7 @@ export function beam(a: V3, b: V3, mat: Material, sec: Section, o: BeamOptions =
   const type = o.type ?? 'beam';
   return {
     k: 'element', kind: 'beam', id: o.id ?? 'B', a, b, type, mat, sec, shear: o.shear ?? false, ref: o.ref ?? null, angle: o.angle ?? 0,
-    rel, offA: o.offA ?? null, offB: o.offB ?? null, pre: o.pre ?? 0, l0: o.l0 ?? 1,
+    rel, offA: o.offA ?? null, offB: o.offB ?? null, pre: o.pre ?? 0, l0: o.l0 ?? 1, ci: 0, cn: 1,
     summary: `${type === 'beam' ? 'Beam' : type[0].toUpperCase() + type.slice(1)} "${o.id ?? 'B'}" L=${+dist(a, b).toFixed(3)} m, ${sec.name}, ${mat.name}`,
   };
 }
@@ -48,6 +48,7 @@ export function beamChain(a: V3, b: V3, n: number, mat: Material, sec: Section, 
   for (let i = 0; i < n; i++) {
     const rel = [...(i === 0 ? full.slice(0, 6) : none), ...(i === n - 1 ? full.slice(6) : none)];
     out.push(beam(lerp(a, b, i / n), lerp(a, b, (i + 1) / n), mat, sec, { ...o, rel, relStart: undefined, relEnd: undefined, offA: i === 0 ? o.offA : null, offB: i === n - 1 ? o.offB : null }));
+    out[i].ci = i; out[i].cn = n;
   }
   return out;
 }
