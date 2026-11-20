@@ -52,8 +52,9 @@ test('the evolutionary optimizer drives the sliders and improves the fitness', a
   await expect(page.locator('.inspector')).toContainText(/Finished: best/, { timeout: 90_000 });
   await expect(page.locator('.inspector table.grid tbody tr').first()).toBeVisible();
   // The weight panel must now show less than the 3600 kg starting design.
-  const weight = Number((await page.locator('.node', { hasText: 'Weight [kg]' }).locator('pre').innerText()).trim().split(/\s+/).pop());
-  expect(weight).toBeLessThan(1500);
+  const weight = async () => Number((await page.locator('.node', { hasText: 'Weight [kg]' }).locator('pre').innerText()).trim().split(/\s+/).pop() || 'NaN');
+  await expect.poll(weight, { timeout: 30_000 }).toBeLessThan(1500);
+  expect(await weight()).toBeGreaterThan(100);
   expect(errors).toEqual([]);
 });
 
@@ -103,8 +104,10 @@ test('solid booleans run through the Manifold WebAssembly module in the browser'
   await expect(page.locator('.node')).toHaveCount(5);
   await expect(page.locator('.status .ok')).toBeVisible({ timeout: 30_000 });
   // Box volume 8 minus one eighth of a sphere of radius 1.2 (faceted, so slightly less is removed): about 7.12.
-  const vol = Number((await page.locator('.node.w-panel pre').innerText()).trim().split(/\s+/).pop());
-  expect(vol).toBeGreaterThan(7.09); expect(vol).toBeLessThan(7.14);
+  // The WebAssembly module loads on first use, so wait for the panel to show a number instead of reading it once.
+  const volume = async () => Number((await page.locator('.node.w-panel pre').innerText()).trim().split(/\s+/).pop() || 'NaN');
+  await expect.poll(volume, { timeout: 30_000 }).toBeGreaterThan(7.09);
+  expect(await volume()).toBeLessThan(7.14);
   expect(errors).toEqual([]);
 });
 
