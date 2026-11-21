@@ -20,7 +20,8 @@
   },
   "checks": [
     {
-      "label": "Pinned bases: base shear H/2",
+      "label": "Pinned bases: base shear",
+      "tex": "\\frac{H}{2}",
       "quantity": "baseShear",
       "tolerance": 0.0001,
       "unit": "N",
@@ -30,7 +31,8 @@
       "note": "Exact only for an inextensible beam; the model area is very large, leaving a difference of a few parts per million."
     },
     {
-      "label": "Pinned bases: vertical reaction Hh/L",
+      "label": "Pinned bases: vertical reaction",
+      "tex": "\\frac{Hh}{L}",
       "quantity": "upliftReaction",
       "tolerance": 1e-06,
       "unit": "N",
@@ -39,7 +41,8 @@
       }
     },
     {
-      "label": "Pinned bases: knee moment Hh/2",
+      "label": "Pinned bases: knee moment",
+      "tex": "\\frac{Hh}{2}",
       "quantity": "kneeMoment",
       "tolerance": 0.0001,
       "unit": "N m",
@@ -58,7 +61,8 @@
       }
     },
     {
-      "label": "Fixed bases: base moment (Hh/2)(3k+1)/(6k+1)",
+      "label": "Fixed bases: base moment",
+      "tex": "\\frac{Hh}{2}\\cdot\\frac{3k+1}{6k+1}",
       "quantity": "baseMoment",
       "tolerance": 0.001,
       "unit": "N m",
@@ -71,7 +75,8 @@
       "note": "The formula neglects axial deformation; the model has a very large area so the difference is negligible."
     },
     {
-      "label": "Fixed bases: knee moment (Hh/2)(3k)/(6k+1)",
+      "label": "Fixed bases: knee moment",
+      "tex": "\\frac{Hh}{2}\\cdot\\frac{3k}{6k+1}",
       "quantity": "kneeMoment",
       "tolerance": 0.001,
       "unit": "N m",

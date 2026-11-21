@@ -52,6 +52,21 @@ if (want('verification')) {
   await p.waitForFunction(() => document.querySelectorAll('.bench').length === 28, null, { timeout: 120000 });
   await p.waitForTimeout(300); await p.screenshot({ path: join(out, 'verification.png') }); await p.close(); console.log('verification.png');
 }
+if (want('beam')) { const p = await open('bench-b05', { w: 1440, h: 760 }); await p.waitForSelector('.panel-table .katex'); await p.waitForTimeout(400); await p.screenshot({ path: join(out, 'beam.png') }); await p.close(); console.log('beam.png'); }
+await record('templates', await open('quick-truss', { palette: true }), async (shot) => {
+  const page = browser.contexts().at(-1).pages().at(-1);
+  // Start an empty project, then drop two templates from the Templates tab and move a slider.
+  await page.evaluate(() => localStorage.setItem('nodal.noUnloadPrompt', '1'));
+  await page.locator('.menu-btn', { hasText: 'File' }).click(); page.once('dialog', d => d.accept()); await page.locator('.menu-drop button', { hasText: 'New project' }).click();
+  await page.locator('.menu-btn', { hasText: 'Templates' }).click(); await page.waitForTimeout(300); await shot(5);
+  await page.locator('.pal-tpl', { hasText: 'Simply supported beam' }).click(); await settle(page, 900); await shot(8);
+  for (const L of ramp(6, 10, 8)) { await setSlider(page, 'Span [m]', L); await shot(); }
+  for (const w of ramp(10, 25, 6)) { await setSlider(page, 'Load [kN/m]', w); await shot(); }
+  await shot(4);
+  await page.locator('.menu-btn', { hasText: 'File' }).click(); page.once('dialog', d => d.accept()); await page.locator('.menu-drop button', { hasText: 'New project' }).click();
+  await page.locator('.pal-tpl', { hasText: 'Portal frame' }).click(); await settle(page, 900); await shot(8);
+  for (const F of ramp(20, 80, 8)) { await setSlider(page, 'Side load [kN]', F); await shot(); }
+});
 await record('truss', await open('quick-truss'), async (shot) => {
   for (const hgt of [...ramp(3, 6, 9), ...ramp(6, 1.5, 12), ...ramp(1.5, 3, 5)]) { await setSlider(page(), 'Height [m]', hgt); await shot(); }
   function page() { return browser.contexts().at(-1).pages().at(-1); }

@@ -19,6 +19,18 @@ Parametric structural design usually needs a CAD package, a visual programming a
 
 ## See it in action
 
+### Start from a template
+
+The Templates tab drops a complete small model onto the canvas: a beam, a continuous beam, a truss, a portal frame, a column or a plate. Each one has sliders for its size and loads and is checked against a hand calculation.
+
+[![Inserting a simply supported beam and a portal frame from the Templates tab and moving their sliders](docs/media/templates.gif)](docs/media/templates.gif)
+
+### Results that read like a textbook figure
+
+A plane model opens square-on. Diagrams are filled bands with values at the peaks, loads and reactions are labelled once, and formulas are typeset.
+
+[![A fixed-fixed beam with its bending moment diagram and a table comparing computed values with the closed-form formulas](docs/media/beam.png)](docs/media/beam.png)
+
 ### Geometry, structure and results on one canvas
 
 Sliders drive points, points drive lines, lines become truss bars, and the bar forces update while the slider moves. The panel shows the hand-calculated values for this truss: −7.07 kN in the rafters and +5.00 kN in the tie.
@@ -62,6 +74,9 @@ The evolutionary optimizer changes the width and depth of a beam to minimize its
 - **250+ components** in 14 categories: parameters, math, lists, data trees, vectors and planes, curves, surfaces and solids, meshes, transforms, display, structure, form-finding, optimization and scripting.
 - **Data trees** with longest-list, shortest-list and cross-reference matching, plus graft, flatten, simplify, reverse, path mapping and branch extraction.
 - **Canvas tools**: fuzzy search on double-click, command palette (Ctrl/Cmd+K), wires colored by type, groups, notes, reusable clusters, undo/redo, copy and paste between projects, minimap, snapping, and help for every component.
+- **Templates**: ten ready-made groups of components (seven complete models and three building blocks) that drop into the open project.
+- **Easy wiring**: drop a wire on a component or on empty canvas and Nodal offers what fits; right-click a wire to delete it.
+- **Readable**: adjustable text size, labels that stay legible when zoomed out, and typeset formulas (KaTeX) in expressions, notes and tables.
 - **Geometry**: lines, polylines, arcs, NURBS curves and surfaces, lofts, sweeps, revolves, meshes, Delaunay triangulation and solid booleans.
 - **Script component**: your own JavaScript in a sandboxed worker.
 

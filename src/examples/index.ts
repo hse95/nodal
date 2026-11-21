@@ -12,7 +12,7 @@ export interface Expected { label: string; node: string; out: number; pick: 'fir
 export interface Example { id: string; title: string; group: string; summary: string; description: string; benchmark?: string; build: () => { project: ProjectFile; expected: Expected[] } }
 
 /** Small builder for laying out example graphs on a column/row grid. */
-class GB {
+export class GB {
   p: ProjectFile;
   ids: Record<string, string> = {};
   constructor(name: string, description: string, units: 'SI' | 'US' = 'SI') { this.p = emptyProject(name); this.p.description = description; this.p.units = units; }
@@ -39,7 +39,7 @@ class GB {
   note(col: number, row: number, text: string, w = 300, h = 90): void { const n = makeNode('param.note', 40 + col * 205, 40 + row * 66, { w, h }); n.state = { text }; this.p.graph.nodes.push(n); }
   exp(label: string, node: string, out: number, pick: Expected['pick'], value: number, tol: number, unit: string, comp?: 'x' | 'y' | 'z'): Expected { return { label, node: this.ids[node], out, pick, value, tol, unit, comp }; }
 }
-const BLUE = '#4f8ef7', GREEN = '#3fae6b', RED = '#d4504c', PURPLE = '#9b7fd1', ORANGE = '#e0703a';
+export const BLUE = '#4f8ef7', GREEN = '#3fae6b', RED = '#d4504c', PURPLE = '#9b7fd1', ORANGE = '#e0703a';
 
 function quickTruss() {
   const g = new GB('Quick start: a simple truss', 'Three bars, two supports and one load. Drag the sliders and watch the forces change.');
@@ -65,7 +65,7 @@ function quickTruss() {
 }
 
 /** Planar truss in the X-Z plane from sliders; shared by the bridge and the sizing example. */
-function trussBridge(g: GB, span: number, depth: number, panels: number, groupIds: boolean) {
+export function trussBridge(g: GB, span: number, depth: number, panels: number, groupIds: boolean) {
   g.slider('span', 'Span [m]', 0, 0, span, 8, 60, 1); g.slider('depth', 'Depth [m]', 0, 1, depth, 1, 8); g.slider('panels', 'Panels', 0, 2, panels, 2, 20, 1, true); g.slider('load', 'Load per node [kN]', 0, 9, 50, 0, 300, 5);
   g.n('end', 'vec.point', 1, 0); g.w('span', 'end', 'X');
   g.n('base', 'crv.line', 2, 0, { consts: { A: '0, 0, 0' } }); g.w('end', 'base', 'B');
@@ -261,8 +261,8 @@ function benchmarkExample(id: string) {
   const g = new GB(`${def.id} ${def.title}`, `${def.description}\n\nReference: ${def.source}`);
   g.n('bm', 'fe.benchmark', 0, 0, { state: { index } });
   const shell = def.group === 'Shells', modes = def.builder === 'vibration' || (def.builder === 'column' && !def.params.second);
-  g.n('view', 'fe.view', 1.3, 0, { state: { contour: shell ? 'disp' : 'none', diagram: shell || modes || def.builder === 'cable' ? 'none' : def.builder === 'triangleTruss' || def.builder === 'tenBarTruss' ? 'N' : 'My', values: !shell, sections: false, animate: modes } }); g.w('bm', 'view', 'Result', 'Result');
-  g.n('panel', 'param.panel', 1.3, 2.4, { label: 'Computed vs reference', w: 620, h: 190 }); g.w('bm', 'panel', 'Data', 'Table');
+  g.n('view', 'fe.view', 1.3, 0, { state: { contour: shell ? 'disp' : 'none', diagram: shell || modes || def.builder === 'cable' ? 'none' : def.builder === 'triangleTruss' || def.builder === 'tenBarTruss' ? 'N' : 'My', values: !shell, loads: !shell, sections: false, animate: modes } }); g.w('bm', 'view', 'Result', 'Result');
+  g.n('panel', 'param.panel', 0, 2, { label: 'Computed vs reference', w: 520, h: 100 + 36 * def.checks.length }); g.w('bm', 'panel', 'Data', 'Table');
   return { project: g.p, expected: [g.exp('All checks of this benchmark pass', 'bm', 3, 'first', 1, 0, '')] };
 }
 

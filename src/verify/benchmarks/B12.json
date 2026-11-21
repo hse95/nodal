@@ -21,7 +21,8 @@
   },
   "checks": [
     {
-      "label": "Axial force -EA alpha dT",
+      "label": "Axial force",
+      "tex": "-EA\\,\\alpha\\,\\Delta T",
       "quantity": "axialForce",
       "tolerance": 1e-06,
       "unit": "N",
@@ -30,7 +31,8 @@
       }
     },
     {
-      "label": "Restraint moment EI alpha gz",
+      "label": "Restraint moment",
+      "tex": "EI\\,\\alpha\\,g_z",
       "quantity": "midMoment",
       "tolerance": 1e-06,
       "unit": "N m",

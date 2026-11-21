@@ -18,7 +18,8 @@
   },
   "checks": [
     {
-      "label": "Rafter force -P/(2 sin a)",
+      "label": "Rafter force",
+      "tex": "-\\frac{P}{2\\sin\\alpha}",
       "quantity": "rafterForce",
       "tolerance": 1e-06,
       "unit": "N",
@@ -27,7 +28,8 @@
       }
     },
     {
-      "label": "Tie force P L/(4 h)",
+      "label": "Tie force",
+      "tex": "\\frac{PL}{4h}",
       "quantity": "tieForce",
       "tolerance": 1e-06,
       "unit": "N",
@@ -36,7 +38,8 @@
       }
     },
     {
-      "label": "Support reaction P/2",
+      "label": "Support reaction",
+      "tex": "\\frac{P}{2}",
       "quantity": "leftReaction",
       "tolerance": 1e-06,
       "unit": "N",

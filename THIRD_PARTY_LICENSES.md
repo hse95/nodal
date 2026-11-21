@@ -8,6 +8,7 @@ Nodal's own code is released under the MIT license (see `LICENSE`). It depends o
 |---|---|---|---|---|
 | [solid-js](https://github.com/solidjs/solid) | 1.9 | MIT | user interface | bundled in the main script |
 | [three](https://github.com/mrdoob/three.js) | 0.170 | MIT | 3D viewport (WebGL2), orbit controls | bundled in the main script |
+| [katex](https://github.com/KaTeX/KaTeX) | 0.16 | MIT (code), SIL OFL 1.1 (its math fonts) | typeset formulas in panels, notes, expressions and the verification table | separate script, style sheet and fonts, downloaded only when the first formula is shown |
 | [manifold-3d](https://github.com/elalish/manifold) | 3.5 | Apache-2.0 | solid and mesh booleans | WebAssembly module, downloaded only when a boolean component first runs |
 | [rhino3dm](https://github.com/mcneel/rhino3dm) | 8.35 | MIT | reading and writing .3dm files | WebAssembly module, downloaded only on the first 3DM import or export |
 

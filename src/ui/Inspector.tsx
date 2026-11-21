@@ -17,11 +17,9 @@ import { toCSV, importFile } from '../io/formats';
 import { runOptimizer, stopOptimizer, optRunning, optStatus, reinstate } from './optimizer';
 import { sparkline } from './Canvas';
 import { cancelSolver } from './workers';
-
-const firstResult = (id: string): FEResult | null => {
-  for (const t of engine.outputs(id)) for (const it of t.allItems() as any[]) { if (it?.k === 'result') return it; if (it?.k === 'feview') return it.result; }
-  return null;
-};
+import { firstResult, previewPlan, previewOn } from './preview';
+import { exprToTex } from '../core/expr';
+import { Tex } from './Tex';
 
 export function Inspector(): JSX.Element {
   const node = createMemo(() => (selection().length === 1 ? project.graph.nodes.find(n => n.id === selection()[0]) : undefined));
@@ -43,7 +41,7 @@ function ProjectPanel(): JSX.Element {
     <p class="muted">{project.graph.nodes.length} components, {project.graph.wires.length} wires. {stats().err ? `${stats().err} with errors. ` : ''}{stats().warn ? `${stats().warn} with warnings. ` : ''}Last solve {stats().ms.toFixed(0)} ms.</p>
     <p class="muted">Units: {project.units === 'SI' ? 'SI (kN, m, MPa; section sizes in mm)' : 'US customary (kip, ft, ksi; section sizes in inches)'}. One model unit is one {unitSystem(project.units).len.label === 'm' ? 'meter' : 'foot'}.</p>
     <h4>Getting around</h4>
-    <ul class="tips"><li>Double-click the canvas to add a component.</li><li>Drag from an output dot to an input dot to connect. Hold Shift to add a second wire to an input.</li><li>Select a component to see its settings and help here.</li><li>Click a structural node or member in the 3D view to read its results.</li><li>Ctrl/Cmd+K opens the command palette.</li></ul>
+    <ul class="tips"><li>Double-click the canvas to add a component, or drag one from the list on the left.</li><li>The Templates tab on the left adds whole groups, such as a complete beam model.</li><li>Drag from an output dot to an input dot to connect. Let go on empty canvas to pick what to connect to.</li><li>Right-click a wire to delete it.</li><li>Select a component to see its settings and help here.</li><li>Click a node or member in the 3D view to read its results.</li><li>The A− and A+ buttons at the top change the text size.</li></ul>
   </div>;
 }
 
@@ -91,6 +89,7 @@ function NodePanel(props: { n: NodeData }): JSX.Element {
   const status = createMemo(() => { runTick(); return engine.status(n().id); });
   const wired = createMemo(() => new Set(project.graph.wires.filter(w => w.to === n().id).map(w => w.inp)));
   const u = () => unitSystem(project.units);
+  const hiddenBy = createMemo(() => { runTick(); void n().preview; void project.graph.wires.length; return previewPlan().hiddenBy(n().id); });
   const edit = (fn: (x: NodeData) => void, run = true) => mutate(p => { const x = p.graph.nodes.find(q => q.id === n().id); if (x) fn(x); }, { run });
   const setState = (k: string, val: any) => edit(x => { x.state[k] = val; });
   const unitLabel = (p: PortSpec) => (p.unit ? (u() as any)[p.unit]?.label ?? '' : '');
@@ -107,9 +106,10 @@ function NodePanel(props: { n: NodeData }): JSX.Element {
       <Show when={optRunning() === null && (status().state === 'pending')}><button onClick={() => cancelSolver()}>Cancel analysis</button></Show>
       <label class="field"><span>Label</span><input type="text" value={n().label ?? ''} placeholder={def()?.name} onChange={e => edit(x => { x.label = e.currentTarget.value || undefined; }, false)} /></label>
       <div class="row">
-        <label class="check"><input type="checkbox" checked={n().preview === undefined ? !def()?.noPreview : n().preview} onChange={e => edit(x => { x.preview = e.currentTarget.checked; }, false)} />Preview in 3D</label>
+        <label class="check"><input type="checkbox" checked={previewOn(n()) && !hiddenBy()} onChange={e => edit(x => { x.preview = e.currentTarget.checked; }, false)} />Preview in 3D</label>
         <label class="check"><input type="checkbox" checked={n().enabled !== false} onChange={e => edit(x => { x.enabled = e.currentTarget.checked; })} />Enabled</label>
       </div>
+      <Show when={hiddenBy()}><p class="muted">Not drawn on its own because it feeds “{hiddenBy()}”, which draws it. Tick Preview to draw it here as well.</p></Show>
       <Show when={def()?.solve && ports().inputs.length > 1}><label class="field"><span>List matching</span><select value={n().matching ?? 'longest'} onChange={e => edit(x => { x.matching = e.currentTarget.value as any; })}><option value="longest">Longest list (repeat last item)</option><option value="shortest">Shortest list</option><option value="cross">Cross reference (all combinations)</option></select></label></Show>
     </div>
     <StatePanel n={n()} setState={setState} edit={edit} />
@@ -138,12 +138,16 @@ function StatePanel(props: { n: NodeData; setState: (k: string, v: any) => void;
   const check = (k: string, label: string) => <label class="check"><input type="checkbox" checked={!!s()[k]} onChange={e => props.setState(k, e.currentTarget.checked)} />{label}</label>;
   const res = createMemo(() => { runTick(); return n().type === 'fe.view' ? firstResult(n().id) : null; });
   const sliders = createMemo(() => project.graph.nodes.filter(x => x.type === 'param.slider'));
+  const exprTex = createMemo(() => { if (n().type !== 'math.expr') return ''; try { return exprToTex(String(s().expr ?? '')); } catch { return ''; } });
   return <Switch>
     <Match when={n().type === 'param.slider'}><div class="ins-sec"><h4>Slider</h4><div class="row">{num('min', 'Minimum')}{num('max', 'Maximum')}{num('step', 'Step')}</div><div class="row">{num('value', 'Value')}{check('integer', 'Whole numbers only')}</div></div></Match>
     <Match when={n().type === 'param.valuelist'}><div class="ins-sec"><h4>Entries</h4><textarea rows="6" spellcheck={false} value={(s().items as any[]).map(it => `${it.name} = ${it.value}`).join('\n')} aria-label="List entries"
       onChange={e => props.setState('items', e.currentTarget.value.split('\n').filter(l => l.trim()).map(l => { const k = l.indexOf('='); return k < 0 ? { name: l.trim(), value: l.trim() } : { name: l.slice(0, k).trim(), value: l.slice(k + 1).trim() }; }))} /><p class="muted">One entry per line, written as “Name = value”.</p></div></Match>
     <Match when={n().type === 'param.graph'}><div class="ins-sec"><h4>Curve</h4><label class="field"><span>Shape</span><select value={s().kind} onChange={e => props.setState('kind', e.currentTarget.value)}><option value="linear">Linear</option><option value="smooth">Smooth step</option><option value="power">Power</option><option value="sine">Sine wave</option><option value="parabola">Parabola</option><option value="bell">Bell</option></select></label>{num('p', 'Shape parameter')}</div></Match>
-    <Match when={n().type === 'math.expr'}><div class="ins-sec"><h4>Formula</h4><input type="text" value={s().expr} spellcheck={false} aria-label="Formula" onChange={e => props.setState('expr', e.currentTarget.value)} /></div></Match>
+    <Match when={n().type === 'math.expr'}><div class="ins-sec"><h4>Formula</h4><input type="text" value={s().expr} spellcheck={false} aria-label="Formula" onChange={e => props.setState('expr', e.currentTarget.value)} />
+      <Show when={exprTex()} fallback={<p class="msg error">This is not a valid formula yet.</p>}>{t => <div class="formula"><Tex tex={t()} block /></div>}</Show>
+      <p class="muted">Write it as you would on a calculator: <span class="code">w*L^2/8</span>, <span class="code">sqrt(a^2 + b^2)</span>. Each name becomes an input.</p></div></Match>
+    <Match when={n().type === 'param.note'}><div class="ins-sec"><h4>Note</h4><textarea rows="5" value={s().text} aria-label="Note text" onChange={e => props.setState('text', e.currentTarget.value)} /><p class="muted">Text between dollar signs is typeset as a formula, for example <span class="code">$\frac{'{wL^2}{8}'}$</span>.</p></div></Match>
     <Match when={n().type === 'script.js'}><div class="ins-sec"><h4>Script</h4><div class="row"><label class="field small"><span>Inputs</span><input type="text" value={s().inputs} onChange={e => props.setState('inputs', e.currentTarget.value)} /></label><label class="field small"><span>Outputs</span><input type="text" value={s().outputs} onChange={e => props.setState('outputs', e.currentTarget.value)} /></label></div>
       <textarea class="code" rows="12" spellcheck={false} value={s().code} aria-label="Script code" onChange={e => props.setState('code', e.currentTarget.value)} /><p class="muted">Runs in a sandboxed worker without access to the page or the network, and is stopped after 5 seconds.</p></div></Match>
     <Match when={n().type === 'param.file'}><div class="ins-sec"><h4>File</h4><p>{s().name || 'No file loaded.'}</p><button onClick={async () => { const f = await pickFile('.stl,.obj,.dxf,.3dm,.csv,.txt,.step,.stp,.iges,.igs'); if (!f) return; try { const data = await importFile(f.name, await f.arrayBuffer()); props.edit(x => { x.state.data = data; x.state.name = `${f.name} (${data.length} object${data.length === 1 ? '' : 's'})`; }); } catch (e) { toast((e as Error).message, 7000); } }}>Import a file…</button><p class="muted">STL, OBJ, DXF, 3DM and CSV (points). The geometry is stored inside the project file.</p></div></Match>

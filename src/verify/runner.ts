@@ -9,6 +9,8 @@ import type { FEResult } from '../fe/system';
 
 export interface CheckDef {
   label: string;
+  /** The reference formula in TeX, shown typeset next to the label. */
+  tex?: string;
   quantity: string;
   /** Closed-form expression in the benchmark parameters, a literal value, or a named value from the builder's reference(). */
   expected: { formula?: string; value?: number; reference?: string };
@@ -28,7 +30,7 @@ export interface BenchmarkDef {
   builder: string; params: Params; checks: CheckDef[];
   convergence?: { param: string; values: number[]; check: number; label?: string };
 }
-export interface CheckResult { label: string; computed: number; expected: number; errorPct: number; tolerancePct: number; pass: boolean; unit: string; note?: string; absolute: boolean }
+export interface CheckResult { label: string; tex?: string; computed: number; expected: number; errorPct: number; tolerancePct: number; pass: boolean; unit: string; note?: string; absolute: boolean }
 export interface BenchmarkResult {
   def: BenchmarkDef; rows: CheckResult[]; pass: boolean; ms: number; error?: string;
   convergence?: { param: string; label: string; expected: number; points: { x: number; computed: number; errorPct: number }[] };
@@ -65,7 +67,7 @@ export function runBenchmark(def: BenchmarkDef): BenchmarkResult {
       const absolute = expected === 0 || (check.abs !== undefined && Math.abs(expected) < check.abs);
       const err = absolute ? Math.abs(computed - expected) : Math.abs(computed - expected) / Math.abs(expected);
       const pass = Number.isFinite(computed) && (absolute ? err <= (check.abs ?? check.tolerance) : err <= check.tolerance);
-      rows.push({ label: check.label, computed, expected, errorPct: absolute ? err : err * 100, tolerancePct: absolute ? (check.abs ?? check.tolerance) : check.tolerance * 100, pass, unit: check.unit ?? '', note: check.note, absolute });
+      rows.push({ label: check.label, tex: check.tex, computed, expected, errorPct: absolute ? err : err * 100, tolerancePct: absolute ? (check.abs ?? check.tolerance) : check.tolerance * 100, pass, unit: check.unit ?? '', note: check.note, absolute });
     }
     let convergence: BenchmarkResult['convergence'];
     if (def.convergence) {

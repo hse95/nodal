@@ -39,7 +39,8 @@
       }
     },
     {
-      "label": "Tip sway vs approximate factor 1/(1 - P/Pcr)",
+      "label": "Tip sway vs approximate amplification factor",
+      "tex": "\\frac{HL^3}{3EI}\\cdot\\frac{1}{1-P/P_{cr}}",
       "quantity": "tipSway",
       "tolerance": 0.02,
       "unit": "m",

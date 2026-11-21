@@ -18,7 +18,8 @@
   },
   "checks": [
     {
-      "label": "Offset: horizontal displacement HL/EA + He^2L/EI",
+      "label": "Offset: horizontal displacement",
+      "tex": "\\frac{HL}{EA}+\\frac{He^2L}{EI}",
       "quantity": "nodeHorizontal",
       "tolerance": 1e-06,
       "unit": "m",
@@ -27,7 +28,8 @@
       }
     },
     {
-      "label": "Offset: vertical displacement -HeL^2/2EI",
+      "label": "Offset: vertical displacement",
+      "tex": "-\\frac{HeL^2}{2EI}",
       "quantity": "nodeVertical",
       "tolerance": 1e-06,
       "unit": "m",
@@ -36,7 +38,8 @@
       }
     },
     {
-      "label": "Offset: base moment He",
+      "label": "Offset: base moment",
+      "tex": "He",
       "quantity": "baseMoment",
       "tolerance": 1e-06,
       "unit": "N m",
@@ -45,7 +48,8 @@
       }
     },
     {
-      "label": "Release: fixed-end moment wL^2/8 (acts as a propped cantilever)",
+      "label": "Release: fixed-end moment (acts as a propped cantilever)",
+      "tex": "\\frac{wL^2}{8}",
       "quantity": "baseMoment",
       "tolerance": 1e-06,
       "unit": "N m",
@@ -68,7 +72,8 @@
       }
     },
     {
-      "label": "Release: reaction at the released end 3wL/8",
+      "label": "Release: reaction at the released end",
+      "tex": "\\frac{3wL}{8}",
       "quantity": "rightReaction",
       "tolerance": 1e-06,
       "unit": "N",
@@ -91,7 +96,8 @@
       }
     },
     {
-      "label": "Release: moment at the released end (zero)",
+      "label": "Release: moment at the released end",
+      "tex": "0",
       "quantity": "endMomentRight",
       "tolerance": 1e-06,
       "abs": 1e-05,

@@ -21,7 +21,8 @@
   },
   "checks": [
     {
-      "label": "Interior support moment wL^2/8",
+      "label": "Interior support moment",
+      "tex": "\\frac{wL^2}{8}",
       "quantity": "interiorMoment",
       "tolerance": 1e-06,
       "unit": "N m",
@@ -30,7 +31,8 @@
       }
     },
     {
-      "label": "Interior reaction 5wL/4",
+      "label": "Interior reaction",
+      "tex": "\\frac{5wL}{4}",
       "quantity": "midReaction",
       "tolerance": 1e-06,
       "unit": "N",
@@ -39,7 +41,8 @@
       }
     },
     {
-      "label": "End reaction 3wL/8",
+      "label": "End reaction",
+      "tex": "\\frac{3wL}{8}",
       "quantity": "leftReaction",
       "tolerance": 1e-06,
       "unit": "N",

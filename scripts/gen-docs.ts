@@ -38,8 +38,8 @@ for (const r of results) { const rel = r.rows.filter(c => !c.absolute), worst = 
 let group = '';
 for (const r of results) {
   if (r.def.group !== group) { group = r.def.group; md += `\n## ${group}\n`; }
-  md += `\n<a id="${r.def.id.toLowerCase()}"></a>\n### ${r.def.id} ${r.def.title}\n\n${r.def.description}\n\n**Reference:** ${r.def.source}\n\n**Parameters:** ${Object.entries(r.def.params).map(([k, v]) => `${k} = ${v}`).join(', ')}\n\n| Check | Computed | Reference | Error | Tolerance | Result |\n|---|---|---|---|---|---|\n`;
-  for (const c of r.rows) md += `| ${c.label}${c.note ? ' [note]' : ''} | ${fmtSci(c.computed)} ${c.unit} | ${fmtSci(c.expected)} ${c.unit} | ${fmtErr(c)} | ${fmtTol(c)} | ${c.pass ? 'pass' : '**FAIL**'} |\n`;
+  md += `\n<a id="${r.def.id.toLowerCase()}"></a>\n### ${r.def.id} ${r.def.title}\n\n${r.def.description}\n\n**Reference:** ${r.def.source}\n\n**Parameters:** ${Object.entries(r.def.params).map(([k, v]) => `${k} = ${v}`).join(', ')}\n\n| Check | Formula | Computed | Reference | Error | Tolerance | Result |\n|---|---|---|---|---|---|---|\n`;
+  for (const c of r.rows) md += `| ${c.label}${c.note ? ' [note]' : ''} | ${c.tex ? '$' + c.tex.replace(/\|/g, '\\vert ') + '$' : ''} | ${fmtSci(c.computed)} ${c.unit} | ${fmtSci(c.expected)} ${c.unit} | ${fmtErr(c)} | ${fmtTol(c)} | ${c.pass ? 'pass' : '**FAIL**'} |\n`;
   const notes = [...new Set(r.rows.filter(c => c.note).map(c => c.note!))];
   if (notes.length) md += `\n${notes.map(n => `Note: ${n}`).join('\n\n')}\n`;
   if (r.error) md += `\n**Error:** ${r.error}\n`;

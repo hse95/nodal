@@ -66,3 +66,13 @@ The headless layers (engine, geometry, solver, benchmarks) were built and tested
 - [x] First-run tour
 - [~] Accessibility: labels, focus styles, keyboard menus and shortcuts; components on the canvas cannot yet be reached with Tab alone
 - [~] Tablet: pointer events are used throughout, but it has not been tested on a tablet
+
+## 11 Version 0.2.0: clearer results and easier editing (requested after the first release)
+- [x] Clean result display: one stage of a structural chain drawn, front view for plane models, bold members, banded diagrams with values at peaks, truss forces by color, labels that do not overlap or leave the view
+- [x] Typeset formulas (KaTeX): expressions, notes, benchmark comparison table, verification dialog and report
+- [x] Adjustable text size, remembered; legible text when zoomed out
+- [x] Right-click a wire to delete it
+- [x] Templates: seven complete models and three building blocks, each complete model tested against a hand calculation
+- [x] Easier editing: wire dropped on a component or on empty canvas, drag from the list, quick result controls in the 3D view, undo from anywhere, rename by double-click, readable zoom on open
+- [~] Narrow screens: the side panels are slimmer below 1320 px, but there is no automatic collapse
+

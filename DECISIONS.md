@@ -34,3 +34,11 @@ Architecture and theory decisions, newest last. Each has a one-line reason. Chan
 | 28 | Build order: engine, geometry, solver and benchmarks first; then components; then the interface | The headless layers can be tested exhaustively in Node before any UI exists. The phases in PLAN.md are all covered, in a different order from the brief. |
 | 29 | Credit line exactly as given in the brief, in the About dialog and the README | Requested wording. |
 | 30 | American spelling throughout the interface, documentation and code (color, center, optimize) | The author and most likely first users are at a US university, and one spelling is easier to search. |
+| 31 | Only the last stage of a structural chain is drawn automatically | Drawing the model under its own result was the main cause of cluttered views. Selecting a component or ticking its Preview still shows any stage. |
+| 32 | A hidden last stage hides the whole chain (earlier stages do not reappear) | Switching a Result View off means "do not show this", not "show the raw result instead". |
+| 33 | Plane X–Z models open in the Front (orthographic) view | Loads and diagrams of a beam, truss or plane frame are read square-on, as in a textbook figure. |
+| 34 | Axial force in truss and cable members is shown by color and line weight, not by a band | Bands on every diagonal of a truss overlap each other. |
+| 35 | Formulas are typeset with KaTeX, loaded on first use | MIT license, fast, and it keeps the first load small (about 78 kB gzipped when needed). Benchmark files carry their reference formula in TeX. |
+| 36 | Text size scales interface text through one CSS variable and canvas components through the zoom | Components keep their proportions, so wires and saved layouts are not disturbed. |
+| 37 | Templates are built with the same helper as the examples and inserted as ordinary components in a group | Nothing new to learn or to maintain; each complete template is tested against a hand calculation. |
+| 38 | Thick lines use Three.js Line2 (screen-space width) for members only | WebGL lines are one pixel wide. Geometry curves stay thin lines to keep large models fast. |

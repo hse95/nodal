@@ -1,6 +1,6 @@
 {
   "name": "nodal",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Browser-based parametric modeling and structural finite element analysis",
   "license": "MIT",
   "private": true,
@@ -16,6 +16,7 @@
     "bench": "tsx scripts/perf.ts"
   },
   "dependencies": {
+    "katex": "^0.16.47",
     "manifold-3d": "^3.5.5",
     "rhino3dm": "^8.35.0",
     "solid-js": "^1.9.0",

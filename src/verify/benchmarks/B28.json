@@ -44,7 +44,8 @@
       "abs": 1e-09
     },
     {
-      "label": "Membrane force Nx = 1333.3 t",
+      "label": "Membrane force",
+      "tex": "N_x=1333.3\\,t",
       "quantity": "direct",
       "tolerance": 1e-09,
       "unit": "N/m",
@@ -92,7 +93,8 @@
       }
     },
     {
-      "label": "Bending moment Mx = -1.111e-7",
+      "label": "Bending moment",
+      "tex": "M_x=-1.111\\times10^{-7}",
       "quantity": "direct",
       "tolerance": 1e-08,
       "unit": "N m/m",

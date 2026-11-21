@@ -21,7 +21,8 @@
   },
   "checks": [
     {
-      "label": "Roller reaction w(L-a)/2",
+      "label": "Roller reaction",
+      "tex": "\\frac{w(L-a)}{2}",
       "quantity": "rightReaction",
       "tolerance": 1e-06,
       "unit": "N",
@@ -30,7 +31,8 @@
       }
     },
     {
-      "label": "Fixed-end reaction wa + w(L-a)/2",
+      "label": "Fixed-end reaction",
+      "tex": "wa+\\frac{w(L-a)}{2}",
       "quantity": "leftReaction",
       "tolerance": 1e-06,
       "unit": "N",
@@ -39,7 +41,8 @@
       }
     },
     {
-      "label": "Fixed-end moment wa^2/2 + w(L-a)a/2",
+      "label": "Fixed-end moment",
+      "tex": "\\frac{wa^2}{2}+\\frac{w(L-a)\\,a}{2}",
       "quantity": "baseMoment",
       "tolerance": 1e-06,
       "unit": "N m",
@@ -48,7 +51,8 @@
       }
     },
     {
-      "label": "Moment at the hinge (zero)",
+      "label": "Moment at the hinge",
+      "tex": "0",
       "quantity": "hingeMoment",
       "tolerance": 1e-06,
       "unit": "N m",

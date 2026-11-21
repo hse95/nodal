@@ -19,7 +19,8 @@
   },
   "checks": [
     {
-      "label": "Pinned-pinned  pi^2EI/L^2",
+      "label": "Pinned-pinned",
+      "tex": "\\frac{\\pi^2EI}{L^2}",
       "quantity": "criticalLoad",
       "tolerance": 0.001,
       "unit": "N",
@@ -28,7 +29,8 @@
       }
     },
     {
-      "label": "Fixed-free  pi^2EI/(2L)^2",
+      "label": "Fixed-free",
+      "tex": "\\frac{\\pi^2EI}{(2L)^2}",
       "quantity": "criticalLoad",
       "tolerance": 0.001,
       "unit": "N",
@@ -40,7 +42,8 @@
       }
     },
     {
-      "label": "Fixed-pinned  20.1907 EI/L^2",
+      "label": "Fixed-pinned",
+      "tex": "\\frac{20.1907\\,EI}{L^2}",
       "quantity": "criticalLoad",
       "tolerance": 0.001,
       "unit": "N",
@@ -52,7 +55,8 @@
       }
     },
     {
-      "label": "Fixed-fixed  pi^2EI/(0.5L)^2",
+      "label": "Fixed-fixed",
+      "tex": "\\frac{\\pi^2EI}{(0.5L)^2}",
       "quantity": "criticalLoad",
       "tolerance": 0.001,
       "unit": "N",

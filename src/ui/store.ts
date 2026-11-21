@@ -18,17 +18,36 @@ export const [selectedWire, setSelectedWire] = createSignal<string | null>(null)
 export const [runTick, setRunTick] = createSignal(0);
 export const [solvingNode, setSolvingNode] = createSignal<string | null>(null);
 export const [dirty, setDirty] = createSignal(false);
+/** Increments whenever a project is opened (the views use it to zoom to fit once). */
+export const [openTick, setOpenTick] = createSignal(0);
 export interface Pick { kind: 'node' | 'beam' | 'shell'; index: number; nodeId: string }
+/** Available text sizes (View > Text size). */
+export const TEXT_SCALES: [number, string][] = [[0.9, 'Small'], [1, 'Normal'], [1.15, 'Large'], [1.3, 'Larger'], [1.5, 'Largest']];
+function readTextScale(): number { const x = Number(localStorage.getItem('nodal.textScale')); return TEXT_SCALES.some(t => t[0] === x) ? x : 1; }
 export const [ui, setUi] = createStore({
   theme: (localStorage.getItem('nodal.theme') as 'light' | 'dark') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
   layout: 'split' as 'split' | 'canvas' | 'view' | 'stack', swap: false, split: 0.56,
   panX: 60, panY: 60, zoom: 1,
+  /** Text size chosen in the View menu: scales the interface text and the base size of canvas components. */
+  textScale: readTextScale(),
   palette: true, inspector: true,
   dialog: null as null | 'examples' | 'verification' | 'about' | 'shortcuts' | 'help',
   toast: '', tour: -1,
   pick: null as Pick | null,
   display: 'shaded' as 'shaded' | 'wireframe' | 'ghosted', sectionOn: false, sectionAxis: 'x' as 'x' | 'y' | 'z', sectionPos: 0.5, grid: true,
 });
+/**
+ * Change the text size. Interface text follows the CSS variable --ts. Canvas components keep their
+ * proportions and are enlarged through the canvas zoom, so wires and layouts stay intact.
+ */
+export function setTextScale(next: number): void {
+  const ratio = next / ui.textScale;
+  if (ratio === 1) return;
+  setUi({ textScale: next, zoom: Math.min(2.5 * next, ui.zoom * ratio) });
+  document.documentElement.style.setProperty('--ts', String(next));
+  try { localStorage.setItem('nodal.textScale', String(next)); } catch { /* storage unavailable */ }
+}
+export function stepTextScale(dir: 1 | -1): void { const i = TEXT_SCALES.findIndex(t => t[0] === ui.textScale), j = Math.min(TEXT_SCALES.length - 1, Math.max(0, i + dir)); setTextScale(TEXT_SCALES[j][0]); }
 export function toast(msg: string, ms = 3500): void { setUi('toast', msg); if (msg) setTimeout(() => { if (ui.toast === msg) setUi('toast', ''); }, ms); }
 
 // ---- solving ------------------------------------------------------------------
@@ -105,7 +124,7 @@ export function openProject(p: ProjectFile, keepUndo = false): void {
   if (!keepUndo) { undoStack.length = 0; redoStack.length = 0; } else pushUndo();
   engine.cancel(); engine.invalidate();
   setProject(reconcile(migrate(JSON.parse(JSON.stringify(p)))));
-  setSelection([]); setSelectedWire(null); setUi('pick', null);
+  setSelection([]); setSelectedWire(null); setUi('pick', null); setOpenTick(t => t + 1);
   const v = (p.view ?? {}) as any;
   setUi({ panX: v.panX ?? 60, panY: v.panY ?? 60, zoom: v.zoom ?? 1 });
   afterChange();
@@ -182,6 +201,33 @@ export function paste(at?: { x: number; y: number }): void {
   const wires = clip.wires.map(w => ({ ...w, id: newId('w'), from: idMap.get(w.from)!, to: idMap.get(w.to)! }));
   mutate(p => { p.graph.nodes.push(...nodes); p.graph.wires.push(...wires); for (const [k, c] of Object.entries(clip.clusters ?? {})) p.clusters[k] ??= c; });
   setSelection(nodes.map(n => n.id));
+}
+/**
+ * Insert a ready-made group of components (a template) into the current project with its top-left
+ * corner at (x, y). Ids are renewed so the same template can be inserted several times.
+ */
+export function insertFragment(graph: GraphDoc, x: number, y: number): string[] {
+  if (!graph.nodes.length) return [];
+  const idMap = new Map<string, string>();
+  const minX = Math.min(...graph.nodes.map(n => n.x)), minY = Math.min(...graph.nodes.map(n => n.y));
+  const snap = (val: number) => Math.round(val / 10) * 10;
+  const nodes = graph.nodes.map(n => { const id = newId(); idMap.set(n.id, id); return { ...JSON.parse(JSON.stringify(n)), id, x: snap(n.x - minX + x), y: snap(n.y - minY + y) } as NodeData; });
+  // Optimizer components refer to sliders by id.
+  for (const n of nodes) if (Array.isArray(n.state?.genes)) n.state.genes = n.state.genes.map((id: string) => idMap.get(id) ?? id);
+  const wires = graph.wires.filter(w => idMap.has(w.from) && idMap.has(w.to)).map(w => ({ ...w, id: newId('w'), from: idMap.get(w.from)!, to: idMap.get(w.to)! }));
+  const groups = graph.groups.map(g => ({ ...g, id: newId('g'), nodes: g.nodes.map(id => idMap.get(id)!).filter(Boolean) }));
+  mutate(p => { p.graph.nodes.push(...nodes); p.graph.wires.push(...wires); p.graph.groups.push(...groups); });
+  setSelection(nodes.map(n => n.id)); setSelectedWire(null);
+  return nodes.map(n => n.id);
+}
+/** Free spot for new content: just below everything that is already on the canvas. */
+export function freeSpot(): { x: number; y: number } {
+  const ns = project.graph.nodes;
+  return ns.length ? { x: Math.min(...ns.map(n => n.x)), y: Math.max(...ns.map(n => n.y + 120)) + 60 } : { x: 60, y: 60 };
+}
+export function deleteWire(id: string): void {
+  mutate(p => { p.graph.wires = p.graph.wires.filter(w => w.id !== id); });
+  if (selectedWire() === id) setSelectedWire(null);
 }
 export function groupSelection(): void {
   const ids = selection();

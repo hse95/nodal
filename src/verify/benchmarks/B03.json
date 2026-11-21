@@ -20,7 +20,8 @@
   },
   "checks": [
     {
-      "label": "Midspan deflection 5wL^4/384EI",
+      "label": "Midspan deflection",
+      "tex": "\\frac{5wL^4}{384EI}",
       "quantity": "midDeflection",
       "tolerance": 1e-06,
       "unit": "m",
@@ -29,7 +30,8 @@
       }
     },
     {
-      "label": "Midspan moment wL^2/8",
+      "label": "Midspan moment",
+      "tex": "\\frac{wL^2}{8}",
       "quantity": "midMoment",
       "tolerance": 1e-06,
       "unit": "N m",
@@ -38,7 +40,8 @@
       }
     },
     {
-      "label": "Support reaction wL/2",
+      "label": "Support reaction",
+      "tex": "\\frac{wL}{2}",
       "quantity": "leftReaction",
       "tolerance": 1e-06,
       "unit": "N",

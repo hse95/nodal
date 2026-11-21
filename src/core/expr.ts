@@ -59,7 +59,7 @@ const BIN_PREC: Record<string, number> = {
 
 export interface CompiledExpr { vars: string[]; eval(vars?: Record<string, number>): number }
 
-export function compileExpr(src: string): CompiledExpr {
+function parseExpr(src: string): Node {
   const toks = tokenize(src);
   let i = 0;
   const peek = () => toks[i];
@@ -116,6 +116,11 @@ export function compileExpr(src: string): CompiledExpr {
 
   const ast = ternary();
   if (i < toks.length) throw new Error(`Unexpected "${toks[i].v}" in expression`);
+  return ast;
+}
+
+export function compileExpr(src: string): CompiledExpr {
+  const ast = parseExpr(src);
 
   const names = new Set<string>();
   (function collect(n: Node): void {
@@ -162,4 +167,73 @@ export function compileExpr(src: string): CompiledExpr {
 
 export function evalExpr(src: string, vars: Record<string, number> = {}): number {
   return compileExpr(src).eval(vars);
+}
+
+// ---- typeset form ------------------------------------------------------------------------
+
+const GREEK = new Set(['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta', 'kappa', 'lambda', 'mu', 'nu', 'xi', 'rho', 'sigma', 'tau', 'phi', 'chi', 'psi', 'omega', 'Gamma', 'Delta', 'Theta', 'Lambda', 'Sigma', 'Phi', 'Psi', 'Omega']);
+/** A variable name as TeX: Greek names become symbols and trailing digits or letters become subscripts (I_y, x_1, sigma_max). */
+export function nameToTex(name: string): string {
+  if (name === 'pi' || name === 'PI') return '\\pi';
+  if (GREEK.has(name)) return '\\' + name;
+  const us = name.indexOf('_');
+  if (us > 0) return `${nameToTex(name.slice(0, us))}_{\\mathrm{${name.slice(us + 1).replace(/_/g, '\\,')}}}`;
+  for (const g of GREEK) if (name.startsWith(g) && name.length > g.length) return `\\${g}_{\\mathrm{${name.slice(g.length)}}}`;
+  const m = /^([A-Za-z])(\d+|[a-z]{1,3}|[A-Z]?[a-z]{0,3})$/.exec(name);
+  if (m && m[2]) return `${m[1]}_{${/^\d+$/.test(m[2]) ? m[2] : `\\mathrm{${m[2]}}`}}`;
+  return name.length === 1 ? name : `\\mathrm{${name}}`;
+}
+const texNum = (x: number): string => {
+  if (!Number.isFinite(x)) return String(x);
+  const t = String(x);
+  const e = /^(-?[\d.]+)e([+-]?\d+)$/.exec(t);
+  return e ? `${e[1] === '1' ? '' : e[1] + '\\times '}10^{${Number(e[2])}}` : t;
+};
+const TEX_PREC: Record<string, number> = { '||': 1, '&&': 2, '==': 3, '!=': 3, '<': 4, '<=': 4, '>': 4, '>=': 4, '+': 5, '-': 5, '*': 6, '/': 6, '%': 6, '^': 8 };
+const TEX_OP: Record<string, string> = { '||': '\\lor', '&&': '\\land', '==': '=', '!=': '\\ne', '<': '<', '<=': '\\le', '>': '>', '>=': '\\ge', '%': '\\bmod' };
+
+/**
+ * The expression written as TeX, for display only: a/b becomes a fraction, a*b a product, sqrt a root.
+ * Throws the same errors as compileExpr for text that is not a valid expression.
+ */
+export function exprToTex(src: string): string {
+  const paren = (s: string) => `\\left(${s}\\right)`;
+  const prec = (n: Node): number => (n.t === 'bin' ? (n.op === '/' ? 9 : TEX_PREC[n.op]) : n.t === 'un' ? 7 : n.t === 'tern' ? 0 : 9);
+  /** Whether a factor begins with a digit, in which case the product needs a visible sign. */
+  const startsWithNumber = (n: Node): boolean => n.t === 'num' || (n.t === 'bin' && (n.op === '*' || n.op === '^') && startsWithNumber(n.a));
+  const tex = (n: Node): string => {
+    switch (n.t) {
+      case 'num': return texNum(n.v);
+      case 'var': return nameToTex(n.n);
+      case 'un': { const a = tex(n.a); return (n.op === '!' ? '\\lnot ' : '-') + (prec(n.a) < 6 ? paren(a) : a); }
+      case 'tern': return `\\begin{cases}${tex(n.a)} & \\text{if } ${tex(n.c)}\\\\ ${tex(n.b)} & \\text{otherwise}\\end{cases}`;
+      case 'call': {
+        const a = n.args.map(tex);
+        switch (n.n) {
+          case 'sqrt': return `\\sqrt{${a[0]}}`;
+          case 'abs': return `\\left|${a[0]}\\right|`;
+          case 'exp': return `e^{${a[0]}}`;
+          case 'pow': return `${prec(n.args[0]) < 9 ? paren(a[0]) : a[0]}^{${a[1]}}`;
+          case 'floor': return `\\left\\lfloor ${a[0]}\\right\\rfloor`;
+          case 'ceil': return `\\left\\lceil ${a[0]}\\right\\rceil`;
+          case 'log10': return `\\log_{10}${paren(a[0])}`;
+          case 'log2': return `\\log_{2}${paren(a[0])}`;
+          case 'ln': case 'log': return `\\ln${paren(a[0])}`;
+          case 'if': return `\\begin{cases}${a[1]} & \\text{if } ${a[0]}\\\\ ${a[2]} & \\text{otherwise}\\end{cases}`;
+          case 'asin': case 'acos': case 'atan': return `\\${n.n.replace('a', 'arc')}${paren(a[0])}`;
+          case 'sin': case 'cos': case 'tan': case 'sinh': case 'cosh': case 'tanh': case 'min': case 'max': return `\\${n.n}${paren(a.join(',\\,'))}`;
+          default: return `\\operatorname{${n.n}}${paren(a.join(',\\,'))}`;
+        }
+      }
+      case 'bin': {
+        const a = tex(n.a), b = tex(n.b), pa = prec(n.a), pb = prec(n.b);
+        if (n.op === '/') return n.a.t === 'un' && n.a.op === '-' ? `-\\frac{${tex(n.a.a)}}{${b}}` : `\\frac{${a}}{${b}}`;
+        if (n.op === '^') return `${pa < 9 || n.a.t === 'call' || (n.a.t === 'bin' && n.a.op === '/') || (n.a.t === 'num' && n.a.v < 0) ? paren(a) : a}^{${b}}`;
+        if (n.op === '*') { const l = pa < 6 ? paren(a) : a, r = pb < 6 ? paren(b) : b; return startsWithNumber(n.b) ? `${l}\\cdot ${r}` : `${l}\\,${r}`; }
+        const p = TEX_PREC[n.op], l = pa < p ? paren(a) : a, r = pb < p || (pb === p && (n.op === '-' || n.op === '%')) ? paren(b) : b;
+        return `${l} ${TEX_OP[n.op] ?? n.op} ${r}`;
+      }
+    }
+  };
+  return tex(parseExpr(src));
 }

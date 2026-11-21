@@ -4,7 +4,7 @@ import { Engine } from '../src/core/graph';
 import { EXAMPLES, Expected } from '../src/examples';
 import { setScriptRunner, SCRIPT_PRELUDE } from '../src/components/structure';
 import { optimize } from '../src/core/optimize';
-import type { DataTree } from '../src/core/tree';
+import { pickValue } from './pick';
 
 // In Node there is no Worker: run example scripts directly (the code under test is the examples, not the sandbox).
 setScriptRunner(async (code, inputs, outputs) => {
@@ -12,17 +12,6 @@ setScriptRunner(async (code, inputs, outputs) => {
   // eslint-disable-next-line @typescript-eslint/no-implied-eval
   return new Function(...names, `"use strict"; ${SCRIPT_PRELUDE} let ${outputs.join(', ')};\n${code}\nreturn {${outputs.join(', ')}};`)(...names.map(n => inputs[n]));
 });
-
-export function pickValue(t: DataTree | undefined, e: Expected): number {
-  const items = (t?.allItems() ?? []).map((x: any) => (e.comp ? x?.[e.comp] : typeof x === 'boolean' ? Number(x) : x)) as number[];
-  switch (e.pick) {
-    case 'count': return items.length;
-    case 'max': return Math.max(...items);
-    case 'min': return Math.min(...items);
-    case 'absmax': return Math.max(...items.map(Math.abs));
-    default: return items[0];
-  }
-}
 
 describe('example gallery', () => {
   it('contains the required examples and one entry per benchmark', () => {

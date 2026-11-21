@@ -20,7 +20,8 @@
   },
   "checks": [
     {
-      "label": "Tip deflection PL^3/3EI",
+      "label": "Tip deflection",
+      "tex": "\\frac{PL^3}{3EI}",
       "quantity": "tipDeflection",
       "tolerance": 1e-06,
       "unit": "m",
@@ -29,7 +30,8 @@
       }
     },
     {
-      "label": "Tip rotation PL^2/2EI",
+      "label": "Tip rotation",
+      "tex": "\\frac{PL^2}{2EI}",
       "quantity": "tipRotation",
       "tolerance": 1e-06,
       "unit": "rad",
@@ -38,7 +40,8 @@
       }
     },
     {
-      "label": "Base moment PL",
+      "label": "Base moment",
+      "tex": "PL",
       "quantity": "baseMoment",
       "tolerance": 1e-06,
       "unit": "N m",
@@ -47,7 +50,8 @@
       }
     },
     {
-      "label": "Timoshenko tip deflection PL^3/3EI + PL/(kGA)",
+      "label": "Tip deflection with shear (Timoshenko)",
+      "tex": "\\frac{PL^3}{3EI}+\\frac{PL}{\\kappa GA}",
       "quantity": "tipDeflection",
       "tolerance": 1e-06,
       "unit": "m",

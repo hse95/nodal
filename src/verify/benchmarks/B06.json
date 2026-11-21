@@ -20,7 +20,8 @@
   },
   "checks": [
     {
-      "label": "Fixed-end moment wL^2/8",
+      "label": "Fixed-end moment",
+      "tex": "\\frac{wL^2}{8}",
       "quantity": "baseMoment",
       "tolerance": 1e-06,
       "unit": "N m",
@@ -29,7 +30,8 @@
       }
     },
     {
-      "label": "Reaction at the prop 3wL/8",
+      "label": "Reaction at the prop",
+      "tex": "\\frac{3wL}{8}",
       "quantity": "rightReaction",
       "tolerance": 1e-06,
       "unit": "N",

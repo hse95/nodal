@@ -1,16 +1,16 @@
 # Progress
 
-Last updated 2026-11-19. Written so that a new session can pick up from here.
+Last updated 2026-11-21 (version 0.2.0). Written so that a new session can pick up from here.
 
 ## State
 
-Version 0.1.0 is built, tested and deployed. Live app: <https://hse95.github.io/nodal/> (deployed by `.github/workflows/ci.yml` on every push to `main`).
+Version 0.2.0 is built, tested and deployed. It changes the display and the editor only (see CHANGELOG.md); the solver in `src/fe` is unchanged since 0.1.0. Live app: <https://hse95.github.io/nodal/> (deployed by `.github/workflows/ci.yml` on every push to `main`).
 
 | Check | Result |
 |---|---|
 | `npm run typecheck` | clean (strict mode) |
-| `npm test` | 194 tests pass: data trees and engine (51), benchmarks (28), cross-check and sparse solver (59), components and geometry (12), examples (40), nonlinear (4) |
-| `npm run test:ui` | 12 browser tests pass in headless Chrome against the production build, each asserting an empty console |
+| `npm test` | 218 tests pass: data trees and engine (51), benchmarks (28), cross-check and sparse solver (59), components and geometry (12), examples (40), templates (11), editor helpers and formulas (13), nonlinear (4) |
+| `npm run test:ui` | 17 browser tests pass in headless Chrome against the production build, each asserting an empty console |
 | Verification | 28 of 28 benchmarks pass, 93 checks, in the tests and in the in-app panel |
 | CI | type check, tests, build, browser tests and deploy all green on GitHub |
 
@@ -33,8 +33,8 @@ Interface:
 | Target | Measured |
 |---|---|
 | Canvas about 60 fps with 500 components | 60 fps median while panning 500 components (headless Chrome, software rendering) |
-| First load under about 3 MB | 0.96 MB (946 kB script, 279 kB gzipped; 18 kB CSS) |
-| Heavy modules lazy | Manifold 0.59 MB and rhino3dm 2.75 MB load on first use only |
+| First load under about 3 MB | 1.04 MB (1,021 kB script, 303 kB gzipped; 22 kB CSS) |
+| Heavy modules lazy | Manifold 0.59 MB, rhino3dm 2.75 MB and KaTeX 0.29 MB (plus its fonts) load on first use only |
 | All 28 benchmarks in the browser | about 5 s |
 
 ## Not done, against the brief
@@ -59,6 +59,16 @@ Interface:
 - The utilization is a simplified stress ratio; there are no design-code checks.
 - Rotated supports are treated as global-axis supports for cable members in the nonlinear analysis.
 - The "duplicate elements" warning is the only guard against accidentally doubled geometry (it caught a doubled leg in the tower example during development).
+
+## Added in 0.2.0, and what is still rough there
+
+- `src/ui/preview.ts` decides which outputs are drawn (only the last stage of a structural chain). The rule works on what is wired, so two separate Result Views of the same model are both drawn on top of each other; switch one off.
+- Force diagrams label member ends and peaks. A member split into elements is recognized by collinear elements meeting at an unsupported node with no third member; values at such nodes are written only at a local peak.
+- Templates (`src/templates/index.ts`) are tested by `tests/templates.test.ts`. The three building blocks are not solved in the tests because they wait for wires.
+- Text size scales canvas components through the zoom, so on the canvas it has the same effect as zooming in. Legible zoom enlarges titles and port names when zoomed out, up to what fits; below about 45 % zoom text is still too small to read.
+- Typeset formulas need KaTeX to load once (about 0.3 MB); until then a plain-text form is shown.
+- The side panels still take about 480 px, so on a screen narrower than about 1300 px the canvas and the 3D view are cramped. The layout buttons (canvas only, 3D only, stacked) are the remedy for now.
+- The 3D view follows the model after a fit. This is not yet a setting.
 
 ## How to continue
 

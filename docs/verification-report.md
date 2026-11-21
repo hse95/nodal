@@ -52,12 +52,12 @@ Prismatic cantilever of length L along X, fixed at x = 0, point load P at the ti
 
 **Parameters:** E = 210000000000, nu = 0.3, A = 0.005, I = 0.00004, J = 0.000002, L = 3, n = 4, left = 2, right = 0, Ptip = 10000
 
-| Check | Computed | Reference | Error | Tolerance | Result |
-|---|---|---|---|---|---|
-| Tip deflection PL^3/3EI | 0.01071429 m | 0.01071429 m | < 1e-10 % | 0.0001 % | pass |
-| Tip rotation PL^2/2EI | 0.005357143 rad | 0.005357143 rad | < 1e-10 % | 0.0001 % | pass |
-| Base moment PL | 30000 N m | 30000 N m | < 1e-10 % | 0.0001 % | pass |
-| Timoshenko tip deflection PL^3/3EI + PL/(kGA) | 0.01080714 m | 0.01080714 m | < 1e-10 % | 0.0001 % | pass |
+| Check | Formula | Computed | Reference | Error | Tolerance | Result |
+|---|---|---|---|---|---|---|
+| Tip deflection | $\frac{PL^3}{3EI}$ | 0.01071429 m | 0.01071429 m | < 1e-10 % | 0.0001 % | pass |
+| Tip rotation | $\frac{PL^2}{2EI}$ | 0.005357143 rad | 0.005357143 rad | < 1e-10 % | 0.0001 % | pass |
+| Base moment | $PL$ | 30000 N m | 30000 N m | < 1e-10 % | 0.0001 % | pass |
+| Tip deflection with shear (Timoshenko) | $\frac{PL^3}{3EI}+\frac{PL}{\kappa GA}$ | 0.01080714 m | 0.01080714 m | < 1e-10 % | 0.0001 % | pass |
 
 <a id="b02"></a>
 ### B02 Cantilever with uniform load
@@ -68,10 +68,10 @@ Cantilever under a uniformly distributed load w.
 
 **Parameters:** E = 210000000000, nu = 0.3, A = 0.005, I = 0.00004, J = 0.000002, L = 3, n = 4, left = 2, right = 0, w = 5000
 
-| Check | Computed | Reference | Error | Tolerance | Result |
-|---|---|---|---|---|---|
-| Tip deflection wL^4/8EI | 0.006026786 m | 0.006026786 m | < 1e-10 % | 0.0001 % | pass |
-| Base moment wL^2/2 | 22500 N m | 22500 N m | < 1e-10 % | 0.0001 % | pass |
+| Check | Formula | Computed | Reference | Error | Tolerance | Result |
+|---|---|---|---|---|---|---|
+| Tip deflection | $\frac{wL^4}{8EI}$ | 0.006026786 m | 0.006026786 m | < 1e-10 % | 0.0001 % | pass |
+| Base moment | $\frac{wL^2}{2}$ | 22500 N m | 22500 N m | < 1e-10 % | 0.0001 % | pass |
 
 <a id="b03"></a>
 ### B03 Simply supported beam, uniform load
@@ -82,11 +82,11 @@ Pin and roller supports, uniform load w.
 
 **Parameters:** E = 210000000000, nu = 0.3, A = 0.005, I = 0.00004, J = 0.000002, L = 6, n = 4, left = 1, right = 1, w = 8000
 
-| Check | Computed | Reference | Error | Tolerance | Result |
-|---|---|---|---|---|---|
-| Midspan deflection 5wL^4/384EI | 0.01607143 m | 0.01607143 m | < 1e-10 % | 0.0001 % | pass |
-| Midspan moment wL^2/8 | 36000 N m | 36000 N m | < 1e-10 % | 0.0001 % | pass |
-| Support reaction wL/2 | 24000 N | 24000 N | < 1e-10 % | 0.0001 % | pass |
+| Check | Formula | Computed | Reference | Error | Tolerance | Result |
+|---|---|---|---|---|---|---|
+| Midspan deflection | $\frac{5wL^4}{384EI}$ | 0.01607143 m | 0.01607143 m | < 1e-10 % | 0.0001 % | pass |
+| Midspan moment | $\frac{wL^2}{8}$ | 36000 N m | 36000 N m | < 1e-10 % | 0.0001 % | pass |
+| Support reaction | $\frac{wL}{2}$ | 24000 N | 24000 N | < 1e-10 % | 0.0001 % | pass |
 
 <a id="b04"></a>
 ### B04 Simply supported beam, central point load
@@ -97,10 +97,10 @@ Pin and roller supports, point load P at midspan.
 
 **Parameters:** E = 210000000000, nu = 0.3, A = 0.005, I = 0.00004, J = 0.000002, L = 6, n = 4, left = 1, right = 1, Pmid = 30000
 
-| Check | Computed | Reference | Error | Tolerance | Result |
-|---|---|---|---|---|---|
-| Midspan deflection PL^3/48EI | 0.01607143 m | 0.01607143 m | < 1e-10 % | 0.0001 % | pass |
-| Midspan moment PL/4 | 45000 N m | 45000 N m | < 1e-10 % | 0.0001 % | pass |
+| Check | Formula | Computed | Reference | Error | Tolerance | Result |
+|---|---|---|---|---|---|---|
+| Midspan deflection | $\frac{PL^3}{48EI}$ | 0.01607143 m | 0.01607143 m | < 1e-10 % | 0.0001 % | pass |
+| Midspan moment | $\frac{PL}{4}$ | 45000 N m | 45000 N m | < 1e-10 % | 0.0001 % | pass |
 
 <a id="b05"></a>
 ### B05 Fixed-fixed beam, uniform load
@@ -111,11 +111,11 @@ Both ends built in, uniform load w.
 
 **Parameters:** E = 210000000000, nu = 0.3, A = 0.005, I = 0.00004, J = 0.000002, L = 6, n = 4, left = 2, right = 2, w = 8000
 
-| Check | Computed | Reference | Error | Tolerance | Result |
-|---|---|---|---|---|---|
-| End moment wL^2/12 | 24000 N m | 24000 N m | < 1e-10 % | 0.0001 % | pass |
-| Midspan deflection wL^4/384EI | 0.003214286 m | 0.003214286 m | < 1e-10 % | 0.0001 % | pass |
-| Midspan moment wL^2/24 | 12000 N m | 12000 N m | < 1e-10 % | 0.0001 % | pass |
+| Check | Formula | Computed | Reference | Error | Tolerance | Result |
+|---|---|---|---|---|---|---|
+| End moment | $\frac{wL^2}{12}$ | 24000 N m | 24000 N m | < 1e-10 % | 0.0001 % | pass |
+| Midspan deflection | $\frac{wL^4}{384EI}$ | 0.003214286 m | 0.003214286 m | < 1e-10 % | 0.0001 % | pass |
+| Midspan moment | $\frac{wL^2}{24}$ | 12000 N m | 12000 N m | < 1e-10 % | 0.0001 % | pass |
 
 <a id="b06"></a>
 ### B06 Propped cantilever, uniform load
@@ -126,10 +126,10 @@ Fixed at the left end, roller at the right end, uniform load w.
 
 **Parameters:** E = 210000000000, nu = 0.3, A = 0.005, I = 0.00004, J = 0.000002, L = 6, n = 4, left = 2, right = 1, w = 8000
 
-| Check | Computed | Reference | Error | Tolerance | Result |
-|---|---|---|---|---|---|
-| Fixed-end moment wL^2/8 | 36000 N m | 36000 N m | < 1e-10 % | 0.0001 % | pass |
-| Reaction at the prop 3wL/8 | 18000 N | 18000 N | < 1e-10 % | 0.0001 % | pass |
+| Check | Formula | Computed | Reference | Error | Tolerance | Result |
+|---|---|---|---|---|---|---|
+| Fixed-end moment | $\frac{wL^2}{8}$ | 36000 N m | 36000 N m | < 1e-10 % | 0.0001 % | pass |
+| Reaction at the prop | $\frac{3wL}{8}$ | 18000 N | 18000 N | < 1e-10 % | 0.0001 % | pass |
 
 <a id="b07"></a>
 ### B07 Two-span continuous beam, uniform load
@@ -140,11 +140,11 @@ Two equal spans L on three supports, uniform load w on both spans.
 
 **Parameters:** E = 210000000000, nu = 0.3, A = 0.005, I = 0.00004, J = 0.000002, L = 5, n = 4, spans = 2, left = 1, right = 1, w = 8000
 
-| Check | Computed | Reference | Error | Tolerance | Result |
-|---|---|---|---|---|---|
-| Interior support moment wL^2/8 | 25000 N m | 25000 N m | < 1e-10 % | 0.0001 % | pass |
-| Interior reaction 5wL/4 | 50000 N | 50000 N | < 1e-10 % | 0.0001 % | pass |
-| End reaction 3wL/8 | 15000 N | 15000 N | < 1e-10 % | 0.0001 % | pass |
+| Check | Formula | Computed | Reference | Error | Tolerance | Result |
+|---|---|---|---|---|---|---|
+| Interior support moment | $\frac{wL^2}{8}$ | 25000 N m | 25000 N m | < 1e-10 % | 0.0001 % | pass |
+| Interior reaction | $\frac{5wL}{4}$ | 50000 N | 50000 N | < 1e-10 % | 0.0001 % | pass |
+| End reaction | $\frac{3wL}{8}$ | 15000 N | 15000 N | < 1e-10 % | 0.0001 % | pass |
 
 <a id="b08"></a>
 ### B08 Circular shaft in torsion
@@ -155,9 +155,9 @@ Cantilever shaft with a torque T at the free end.
 
 **Parameters:** E = 210000000000, nu = 0.3, A = 0.005, I = 0.00004, J = 0.000002, L = 2, n = 3, left = 2, right = 0, T = 2000
 
-| Check | Computed | Reference | Error | Tolerance | Result |
-|---|---|---|---|---|---|
-| Tip twist TL/GJ | 0.0247619 rad | 0.0247619 rad | < 1e-10 % | 0.0001 % | pass |
+| Check | Formula | Computed | Reference | Error | Tolerance | Result |
+|---|---|---|---|---|---|---|
+| Tip twist | $\frac{TL}{GJ}$ | 0.0247619 rad | 0.0247619 rad | < 1e-10 % | 0.0001 % | pass |
 
 <a id="b09"></a>
 ### B09 Beam with an internal hinge
@@ -168,12 +168,12 @@ Fixed at A (x = 0), roller at C (x = L), moment hinge at x = a, uniform load w. 
 
 **Parameters:** E = 210000000000, nu = 0.3, A = 0.005, I = 0.00004, J = 0.000002, L = 5, n = 5, left = 2, right = 1, hinge = 2, w = 6000
 
-| Check | Computed | Reference | Error | Tolerance | Result |
-|---|---|---|---|---|---|
-| Roller reaction w(L-a)/2 | 9000 N | 9000 N | < 1e-10 % | 0.0001 % | pass |
-| Fixed-end reaction wa + w(L-a)/2 | 21000 N | 21000 N | < 1e-10 % | 0.0001 % | pass |
-| Fixed-end moment wa^2/2 + w(L-a)a/2 | 30000 N m | 30000 N m | < 1e-10 % | 0.0001 % | pass |
-| Moment at the hinge (zero) | 7.27596e-12 N m | 0 N m | 7.3e-12 (absolute) | 0.00001 (absolute) | pass |
+| Check | Formula | Computed | Reference | Error | Tolerance | Result |
+|---|---|---|---|---|---|---|
+| Roller reaction | $\frac{w(L-a)}{2}$ | 9000 N | 9000 N | < 1e-10 % | 0.0001 % | pass |
+| Fixed-end reaction | $wa+\frac{w(L-a)}{2}$ | 21000 N | 21000 N | < 1e-10 % | 0.0001 % | pass |
+| Fixed-end moment | $\frac{wa^2}{2}+\frac{w(L-a)\,a}{2}$ | 30000 N m | 30000 N m | < 1e-10 % | 0.0001 % | pass |
+| Moment at the hinge | $0$ | 7.27596e-12 N m | 0 N m | 7.3e-12 (absolute) | 0.00001 (absolute) | pass |
 
 <a id="b10"></a>
 ### B10 Triangular three-bar truss
@@ -184,12 +184,12 @@ Pin at A, roller at B, apex C loaded by P. Member forces from the method of join
 
 **Parameters:** E = 210000000000, nu = 0.3, A = 0.005, I = 0.00004, J = 0.000002, L = 6, h = 4, P = 100000
 
-| Check | Computed | Reference | Error | Tolerance | Result |
-|---|---|---|---|---|---|
-| Rafter force -P/(2 sin a) | -62500 N | -62500 N | < 1e-10 % | 0.0001 % | pass |
-| Tie force P L/(4 h) | 37500 N | 37500 N | < 1e-10 % | 0.0001 % | pass |
-| Support reaction P/2 | 50000 N | 50000 N | < 1e-10 % | 0.0001 % | pass |
-| Apex deflection (unit-load method) | 4.52381e-4 m | 4.52381e-4 m | < 1e-10 % | 0.0001 % | pass |
+| Check | Formula | Computed | Reference | Error | Tolerance | Result |
+|---|---|---|---|---|---|---|
+| Rafter force | $-\frac{P}{2\sin\alpha}$ | -62500 N | -62500 N | < 1e-10 % | 0.0001 % | pass |
+| Tie force | $\frac{PL}{4h}$ | 37500 N | 37500 N | < 1e-10 % | 0.0001 % | pass |
+| Support reaction | $\frac{P}{2}$ | 50000 N | 50000 N | < 1e-10 % | 0.0001 % | pass |
+| Apex deflection (unit-load method) |  | 4.52381e-4 m | 4.52381e-4 m | < 1e-10 % | 0.0001 % | pass |
 
 <a id="b11"></a>
 ### B11 Classic 10-bar planar truss
@@ -200,12 +200,12 @@ Two-bay cantilever truss with ten bars (the standard sizing-optimization test ge
 
 **Parameters:** E = 68950000000, nu = 0.3, A = 0.0064516, a = 9.144, P = 444822
 
-| Check | Computed | Reference | Error | Tolerance | Result |
-|---|---|---|---|---|---|
-| Tip deflection vs reference solver | 0.1000616 m | 0.1000616 m | < 1e-10 % | 1e-7 % | pass |
-| Largest displacement difference (relative) | 3.88339e-15  | 0  | 3.9e-15 (absolute) | 1e-9 (absolute) | pass |
-| Largest member-force difference (relative) | 3.70887e-15  | 0  | 3.7e-15 (absolute) | 1e-9 (absolute) | pass |
-| Equilibrium error (relative) | 1.85058e-15  | 0  | 1.9e-15 (absolute) | 1e-10 (absolute) | pass |
+| Check | Formula | Computed | Reference | Error | Tolerance | Result |
+|---|---|---|---|---|---|---|
+| Tip deflection vs reference solver |  | 0.1000616 m | 0.1000616 m | < 1e-10 % | 1e-7 % | pass |
+| Largest displacement difference (relative) |  | 3.88339e-15  | 0  | 3.9e-15 (absolute) | 1e-9 (absolute) | pass |
+| Largest member-force difference (relative) |  | 3.70887e-15  | 0  | 3.7e-15 (absolute) | 1e-9 (absolute) | pass |
+| Equilibrium error (relative) |  | 1.85058e-15  | 0  | 1.9e-15 (absolute) | 1e-10 (absolute) | pass |
 
 <a id="b12"></a>
 ### B12 Thermal load on a fixed-fixed bar
@@ -216,10 +216,10 @@ Uniform temperature rise dT in a bar restrained at both ends, and a through-dept
 
 **Parameters:** E = 210000000000, nu = 0.3, A = 0.005, I = 0.00004, J = 0.000002, alpha = 0.000012, L = 4, n = 2, left = 2, right = 2, dT = 40
 
-| Check | Computed | Reference | Error | Tolerance | Result |
-|---|---|---|---|---|---|
-| Axial force -EA alpha dT | -5.04000e+5 N | -5.04000e+5 N | < 1e-10 % | 0.0001 % | pass |
-| Restraint moment EI alpha gz | 5040 N m | 5040 N m | < 1e-10 % | 0.0001 % | pass |
+| Check | Formula | Computed | Reference | Error | Tolerance | Result |
+|---|---|---|---|---|---|---|
+| Axial force | $-EA\,\alpha\,\Delta T$ | -5.04000e+5 N | -5.04000e+5 N | < 1e-10 % | 0.0001 % | pass |
+| Restraint moment | $EI\,\alpha\,g_z$ | 5040 N m | 5040 N m | < 1e-10 % | 0.0001 % | pass |
 
 <a id="b13"></a>
 ### B13 Portal frame under lateral load
@@ -230,16 +230,16 @@ Single-bay portal frame with a horizontal load H at beam level. Pinned bases are
 
 **Parameters:** E = 210000000000, nu = 0.3, A = 1, L = 6, h = 4, Ic = 0.00008, Ib = 0.00012, H = 50000, n = 2, base = 1
 
-| Check | Computed | Reference | Error | Tolerance | Result |
-|---|---|---|---|---|---|
-| Pinned bases: base shear H/2 [note] | 25000.11 N | 25000 N | 0.000450 % | 0.01 % | pass |
-| Pinned bases: vertical reaction Hh/L | 33333.33 N | 33333.33 N | 5.31e-10 % | 0.0001 % | pass |
-| Pinned bases: knee moment Hh/2 [note] | 1.00000e+5 N m | 1.00000e+5 N m | 0.000450 % | 0.01 % | pass |
-| Pinned bases: sway vs reference solver | 0.04762025 m | 0.04762025 m | < 1e-10 % | 0.000001 % | pass |
-| Fixed bases: base moment (Hh/2)(3k+1)/(6k+1) [note] | 57144.68 N m | 57142.86 N m | 0.00320 % | 0.1 % | pass |
-| Fixed bases: knee moment (Hh/2)(3k)/(6k+1) | 42857.57 N m | 42857.14 N m | 0.000988 % | 0.1 % | pass |
-| Fixed bases: sway vs reference solver | 0.01133838 m | 0.01133838 m | < 1e-10 % | 0.000001 % | pass |
-| Fixed bases: displacement difference vs reference (relative) | 2.44793e-15  | 0  | 2.4e-15 (absolute) | 1e-8 (absolute) | pass |
+| Check | Formula | Computed | Reference | Error | Tolerance | Result |
+|---|---|---|---|---|---|---|
+| Pinned bases: base shear [note] | $\frac{H}{2}$ | 25000.11 N | 25000 N | 0.000450 % | 0.01 % | pass |
+| Pinned bases: vertical reaction | $\frac{Hh}{L}$ | 33333.33 N | 33333.33 N | 5.31e-10 % | 0.0001 % | pass |
+| Pinned bases: knee moment [note] | $\frac{Hh}{2}$ | 1.00000e+5 N m | 1.00000e+5 N m | 0.000450 % | 0.01 % | pass |
+| Pinned bases: sway vs reference solver |  | 0.04762025 m | 0.04762025 m | < 1e-10 % | 0.000001 % | pass |
+| Fixed bases: base moment [note] | $\frac{Hh}{2}\cdot\frac{3k+1}{6k+1}$ | 57144.68 N m | 57142.86 N m | 0.00320 % | 0.1 % | pass |
+| Fixed bases: knee moment | $\frac{Hh}{2}\cdot\frac{3k}{6k+1}$ | 42857.57 N m | 42857.14 N m | 0.000988 % | 0.1 % | pass |
+| Fixed bases: sway vs reference solver |  | 0.01133838 m | 0.01133838 m | < 1e-10 % | 0.000001 % | pass |
+| Fixed bases: displacement difference vs reference (relative) |  | 2.44793e-15  | 0  | 2.4e-15 (absolute) | 1e-8 (absolute) | pass |
 
 Note: Exact only for an inextensible beam; the model area is very large, leaving a difference of a few parts per million.
 
@@ -254,12 +254,12 @@ Irregular one-story 3D frame with a pyramid roof, two truss braces, mixed suppor
 
 **Parameters:** E = 210000000000, nu = 0.3, w = 8000, H = 20000
 
-| Check | Computed | Reference | Error | Tolerance | Result |
-|---|---|---|---|---|---|
-| Largest displacement difference (relative) | 3.74817e-14  | 0  | 3.7e-14 (absolute) | 1e-8 (absolute) | pass |
-| Largest reaction difference (relative) | 1.40236e-14  | 0  | 1.4e-14 (absolute) | 1e-8 (absolute) | pass |
-| Largest axial-force difference (relative) | 1.30838e-14  | 0  | 1.3e-14 (absolute) | 1e-8 (absolute) | pass |
-| Equilibrium error (relative) | 4.81333e-15  | 0  | 4.8e-15 (absolute) | 1e-10 (absolute) | pass |
+| Check | Formula | Computed | Reference | Error | Tolerance | Result |
+|---|---|---|---|---|---|---|
+| Largest displacement difference (relative) |  | 3.74817e-14  | 0  | 3.7e-14 (absolute) | 1e-8 (absolute) | pass |
+| Largest reaction difference (relative) |  | 1.40236e-14  | 0  | 1.4e-14 (absolute) | 1e-8 (absolute) | pass |
+| Largest axial-force difference (relative) |  | 1.30838e-14  | 0  | 1.3e-14 (absolute) | 1e-8 (absolute) | pass |
+| Equilibrium error (relative) |  | 4.81333e-15  | 0  | 4.8e-15 (absolute) | 1e-10 (absolute) | pass |
 
 <a id="b15"></a>
 ### B15 Curved beam approximated by straight elements
@@ -270,9 +270,9 @@ Quarter-circle cantilever of radius R, tip load P perpendicular to the tip tange
 
 **Parameters:** E = 210000000000, nu = 0.3, A = 0.005, I = 0.00004, J = 0.000002, R = 2, P = 10000, n = 64
 
-| Check | Computed | Reference | Error | Tolerance | Result |
-|---|---|---|---|---|---|
-| Tip deflection in the load direction (n = 64) | 0.007494003 m | 0.007494942 m | 0.0125 % | 0.1 % | pass |
+| Check | Formula | Computed | Reference | Error | Tolerance | Result |
+|---|---|---|---|---|---|---|
+| Tip deflection in the load direction (n = 64) | $\frac{\pi PR^3}{4EI}+\frac{\pi PR}{4EA}$ | 0.007494003 m | 0.007494942 m | 0.0125 % | 0.1 % | pass |
 
 Convergence of "Tip deflection in the load direction (n = 64)" with n:
 
@@ -292,14 +292,14 @@ Convergence of "Tip deflection in the load direction (n = 64)" with n:
 
 **Parameters:** E = 210000000000, nu = 0.3, A = 0.005, I = 0.00004, J = 0.000002, L = 3, e = 0.5, H = 20000
 
-| Check | Computed | Reference | Error | Tolerance | Result |
-|---|---|---|---|---|---|
-| Offset: horizontal displacement HL/EA + He^2L/EI | 0.001842857 m | 0.001842857 m | < 1e-10 % | 0.0001 % | pass |
-| Offset: vertical displacement -HeL^2/2EI | -0.005357143 m | -0.005357143 m | < 1e-10 % | 0.0001 % | pass |
-| Offset: base moment He | 10000 N m | 10000 N m | < 1e-10 % | 0.0001 % | pass |
-| Release: fixed-end moment wL^2/8 (acts as a propped cantilever) | 36000 N m | 36000 N m | < 1e-10 % | 0.0001 % | pass |
-| Release: reaction at the released end 3wL/8 | 18000 N | 18000 N | < 1e-10 % | 0.0001 % | pass |
-| Release: moment at the released end (zero) | 1.27329e-11 N m | 0 N m | 1.3e-11 (absolute) | 0.00001 (absolute) | pass |
+| Check | Formula | Computed | Reference | Error | Tolerance | Result |
+|---|---|---|---|---|---|---|
+| Offset: horizontal displacement | $\frac{HL}{EA}+\frac{He^2L}{EI}$ | 0.001842857 m | 0.001842857 m | < 1e-10 % | 0.0001 % | pass |
+| Offset: vertical displacement | $-\frac{HeL^2}{2EI}$ | -0.005357143 m | -0.005357143 m | < 1e-10 % | 0.0001 % | pass |
+| Offset: base moment | $He$ | 10000 N m | 10000 N m | < 1e-10 % | 0.0001 % | pass |
+| Release: fixed-end moment (acts as a propped cantilever) | $\frac{wL^2}{8}$ | 36000 N m | 36000 N m | < 1e-10 % | 0.0001 % | pass |
+| Release: reaction at the released end | $\frac{3wL}{8}$ | 18000 N | 18000 N | < 1e-10 % | 0.0001 % | pass |
+| Release: moment at the released end | $0$ | 1.27329e-11 N m | 0 N m | 1.3e-11 (absolute) | 0.00001 (absolute) | pass |
 
 ## Stability and dynamics
 
@@ -312,14 +312,14 @@ Column of length L under axial load with the four classical end conditions. 16 e
 
 **Parameters:** E = 210000000000, nu = 0.3, A = 0.005, I = 0.00004, J = 0.000002, L = 4, n = 16, P = 1, bc = 1
 
-| Check | Computed | Reference | Error | Tolerance | Result |
-|---|---|---|---|---|---|
-| Pinned-pinned  pi^2EI/L^2 | 5.18155e+6 N | 5.18154e+6 N | 0.000206 % | 0.1 % | pass |
-| Fixed-free  pi^2EI/(2L)^2 | 1.29539e+6 N | 1.29539e+6 N | 0.0000129 % | 0.1 % | pass |
-| Fixed-pinned  20.1907 EI/L^2 | 1.06002e+7 N | 1.06001e+7 N | 0.000860 % | 0.1 % | pass |
-| Fixed-fixed  pi^2EI/(0.5L)^2 | 2.07268e+7 N | 2.07262e+7 N | 0.00328 % | 0.1 % | pass |
+| Check | Formula | Computed | Reference | Error | Tolerance | Result |
+|---|---|---|---|---|---|---|
+| Pinned-pinned | $\frac{\pi^2EI}{L^2}$ | 5.18155e+6 N | 5.18154e+6 N | 0.000206 % | 0.1 % | pass |
+| Fixed-free | $\frac{\pi^2EI}{(2L)^2}$ | 1.29539e+6 N | 1.29539e+6 N | 0.0000129 % | 0.1 % | pass |
+| Fixed-pinned | $\frac{20.1907\,EI}{L^2}$ | 1.06002e+7 N | 1.06001e+7 N | 0.000860 % | 0.1 % | pass |
+| Fixed-fixed | $\frac{\pi^2EI}{(0.5L)^2}$ | 2.07268e+7 N | 2.07262e+7 N | 0.00328 % | 0.1 % | pass |
 
-Convergence of "Pinned-pinned  pi^2EI/L^2" with n:
+Convergence of "Pinned-pinned" with n:
 
 | n | 1 | 2 | 4 | 8 | 16 | 32 |
 |---|---|---|---|---|---|---|
@@ -337,13 +337,13 @@ First three bending frequencies of a cantilever, consistent mass, 20 elements.
 
 **Parameters:** E = 210000000000, nu = 0.3, rho = 7850, A = 0.0025, I = 5.2083333e-7, J = 8.8e-7, L = 3, n = 20, bc = 2
 
-| Check | Computed | Reference | Error | Tolerance | Result |
-|---|---|---|---|---|---|
-| Mode 1 (bL = 1.8751) | 4.641759 Hz | 4.641759 Hz | 0.00000533 % | 0.1 % | pass |
-| Mode 2 (bL = 4.6941) | 29.08947 Hz | 29.08941 Hz | 0.000210 % | 0.1 % | pass |
-| Mode 3 (bL = 7.8548) | 81.45251 Hz | 81.45118 Hz | 0.00164 % | 0.1 % | pass |
+| Check | Formula | Computed | Reference | Error | Tolerance | Result |
+|---|---|---|---|---|---|---|
+| Mode 1 | $\frac{1.8751^2}{2\pi L^2}\sqrt{\frac{EI}{\rho A}}$ | 4.641759 Hz | 4.641759 Hz | 0.00000533 % | 0.1 % | pass |
+| Mode 2 | $\frac{4.6941^2}{2\pi L^2}\sqrt{\frac{EI}{\rho A}}$ | 29.08947 Hz | 29.08941 Hz | 0.000210 % | 0.1 % | pass |
+| Mode 3 | $\frac{7.8548^2}{2\pi L^2}\sqrt{\frac{EI}{\rho A}}$ | 81.45251 Hz | 81.45118 Hz | 0.00164 % | 0.1 % | pass |
 
-Convergence of "Mode 3 (bL = 7.8548)" with n:
+Convergence of "Mode 3" with n:
 
 | n | 2 | 4 | 8 | 16 | 32 |
 |---|---|---|---|---|---|
@@ -361,12 +361,12 @@ First three bending frequencies of a simply supported beam, consistent mass, 20 
 
 **Parameters:** E = 210000000000, nu = 0.3, rho = 7850, A = 0.0025, I = 5.2083333e-7, J = 8.8e-7, L = 3, n = 20, bc = 1
 
-| Check | Computed | Reference | Error | Tolerance | Result |
-|---|---|---|---|---|---|
-| Mode 1 | 13.02962 Hz | 13.02961 Hz | 0.0000422 % | 0.1 % | pass |
-| Mode 2 | 52.11881 Hz | 52.11846 Hz | 0.000675 % | 0.1 % | pass |
-| Mode 3 | 117.2705 Hz | 117.2665 Hz | 0.00340 % | 0.1 % | pass |
-| Mode 1 with lumped mass | 13.02961 Hz | 13.02961 Hz | 0.0000425 % | 0.1 % | pass |
+| Check | Formula | Computed | Reference | Error | Tolerance | Result |
+|---|---|---|---|---|---|---|
+| Mode 1 | $\frac{\pi}{2L^2}\sqrt{\frac{EI}{\rho A}}$ | 13.02962 Hz | 13.02961 Hz | 0.0000422 % | 0.1 % | pass |
+| Mode 2 | $\frac{4\pi}{2L^2}\sqrt{\frac{EI}{\rho A}}$ | 52.11881 Hz | 52.11846 Hz | 0.000675 % | 0.1 % | pass |
+| Mode 3 | $\frac{9\pi}{2L^2}\sqrt{\frac{EI}{\rho A}}$ | 117.2705 Hz | 117.2665 Hz | 0.00340 % | 0.1 % | pass |
+| Mode 1 with lumped mass | $\frac{\pi}{2L^2}\sqrt{\frac{EI}{\rho A}}$ | 13.02961 Hz | 13.02961 Hz | 0.0000425 % | 0.1 % | pass |
 
 <a id="b20"></a>
 ### B20 P-Delta amplification of a cantilever column
@@ -377,11 +377,11 @@ Cantilever column with axial load P (about 31 % of the Euler load) and lateral t
 
 **Parameters:** E = 210000000000, nu = 0.3, A = 0.005, I = 0.00004, J = 0.000002, L = 4, n = 8, P = 400000, H = 10000, bc = 2, second = 1
 
-| Check | Computed | Reference | Error | Tolerance | Result |
-|---|---|---|---|---|---|
-| Tip sway vs exact beam-column solution | 0.03658991 m | 0.03658992 m | 0.0000283 % | 0.1 % | pass |
-| Base moment vs exact beam-column solution | 54635.96 N m | 54635.97 N m | 0.00000758 % | 0.1 % | pass |
-| Tip sway vs approximate factor 1/(1 - P/Pcr) [note] | 0.03658991 m | 0.03674247 m | 0.415 % | 2 % | pass |
+| Check | Formula | Computed | Reference | Error | Tolerance | Result |
+|---|---|---|---|---|---|---|
+| Tip sway vs exact beam-column solution |  | 0.03658991 m | 0.03658992 m | 0.0000283 % | 0.1 % | pass |
+| Base moment vs exact beam-column solution |  | 54635.96 N m | 54635.97 N m | 0.00000758 % | 0.1 % | pass |
+| Tip sway vs approximate amplification factor [note] | $\frac{HL^3}{3EI}\cdot\frac{1}{1-P/P_{cr}}$ | 0.03658991 m | 0.03674247 m | 0.415 % | 2 % | pass |
 
 Note: The amplification factor is itself an approximation, so a difference of about 1 % is expected.
 
@@ -394,11 +394,11 @@ Elastic cable with unstressed length L0 hung between level supports a distance `
 
 **Parameters:** span = 100, L0 = 102, E = 160000000000, A = 0.0005, rho = 7850, n = 40
 
-| Check | Computed | Reference | Error | Tolerance | Result |
-|---|---|---|---|---|---|
-| Midspan sag | 8.739324 m | 8.736624 m | 0.0309 % | 0.5 % | pass |
-| Horizontal reaction | 5560.299 N | 5561.918 N | 0.0291 % | 0.5 % | pass |
-| Maximum tension | 5880.494 N | 5898.176 N | 0.300 % | 0.5 % | pass |
+| Check | Formula | Computed | Reference | Error | Tolerance | Result |
+|---|---|---|---|---|---|---|
+| Midspan sag |  | 8.739324 m | 8.736624 m | 0.0309 % | 0.5 % | pass |
+| Horizontal reaction |  | 5560.299 N | 5561.918 N | 0.0291 % | 0.5 % | pass |
+| Maximum tension |  | 5880.494 N | 5898.176 N | 0.300 % | 0.5 % | pass |
 
 Convergence of "Midspan sag" with n:
 
@@ -420,10 +420,10 @@ Cylindrical roof (R = 25, L = 50, t = 0.25, 80 degree arc, E = 4.32e8, nu = 0) o
 
 **Parameters:** R = 25, L = 50, t = 0.25, theta = 40, E = 432000000, nu = 0, q = 90, n = 16
 
-| Check | Computed | Reference | Error | Tolerance | Result |
-|---|---|---|---|---|---|
-| Free-edge midpoint deflection, 16 x 16 quadrilaterals | 0.3017274  | 0.3024  | 0.222 % | 2 % | pass |
-| Same, 32 x 32 triangles | 0.2976384  | 0.3024  | 1.57 % | 5 % | pass |
+| Check | Formula | Computed | Reference | Error | Tolerance | Result |
+|---|---|---|---|---|---|---|
+| Free-edge midpoint deflection, 16 x 16 quadrilaterals |  | 0.3017274  | 0.3024  | 0.222 % | 2 % | pass |
+| Same, 32 x 32 triangles |  | 0.2976384  | 0.3024  | 1.57 % | 5 % | pass |
 
 Convergence of "Free-edge midpoint deflection, 16 x 16 quadrilaterals" with n:
 
@@ -443,9 +443,9 @@ Cylinder (R = 300, L = 600, t = 3, E = 3e6, nu = 0.3) with rigid end diaphragms,
 
 **Parameters:** R = 300, L = 600, t = 3, E = 3000000, nu = 0.3, P = 1, n = 32
 
-| Check | Computed | Reference | Error | Tolerance | Result |
-|---|---|---|---|---|---|
-| Displacement under the load, 32 x 32 quadrilaterals | 1.80555e-5  | 1.82480e-5  | 1.06 % | 5 % | pass |
+| Check | Formula | Computed | Reference | Error | Tolerance | Result |
+|---|---|---|---|---|---|---|
+| Displacement under the load, 32 x 32 quadrilaterals |  | 1.80555e-5  | 1.82480e-5  | 1.06 % | 5 % | pass |
 
 Convergence of "Displacement under the load, 32 x 32 quadrilaterals" with n:
 
@@ -465,10 +465,10 @@ Hemisphere (R = 10, t = 0.04, E = 6.825e7, nu = 0.3) with an 18 degree hole at t
 
 **Parameters:** R = 10, t = 0.04, E = 68250000, nu = 0.3, F = 1, hole = 18, n = 16
 
-| Check | Computed | Reference | Error | Tolerance | Result |
-|---|---|---|---|---|---|
-| Radial displacement at the outward load, 16 x 16 quadrilaterals | 0.09306745  | 0.093  | 0.0725 % | 3 % | pass |
-| Radial displacement at the inward load | 0.09306745  | 0.093  | 0.0725 % | 3 % | pass |
+| Check | Formula | Computed | Reference | Error | Tolerance | Result |
+|---|---|---|---|---|---|---|
+| Radial displacement at the outward load, 16 x 16 quadrilaterals |  | 0.09306745  | 0.093  | 0.0725 % | 3 % | pass |
+| Radial displacement at the inward load |  | 0.09306745  | 0.093  | 0.0725 % | 3 % | pass |
 
 Convergence of "Radial displacement at the outward load, 16 x 16 quadrilaterals" with n:
 
@@ -488,10 +488,10 @@ Thin square plate (t/a = 0.01) with hard simple supports under uniform pressure.
 
 **Parameters:** a = 2, t = 0.02, E = 200000000000, nu = 0.3, q = 1000, n = 16, bc = 1
 
-| Check | Computed | Reference | Error | Tolerance | Result |
-|---|---|---|---|---|---|
-| Center deflection, 16 x 16 quadrilaterals (MITC4) | 4.43278e-4 m | 4.43609e-4 m | 0.0746 % | 2 % | pass |
-| Center deflection, 16 x 16 x 2 triangles (DKT) | 4.42503e-4 m | 4.43609e-4 m | 0.249 % | 2 % | pass |
+| Check | Formula | Computed | Reference | Error | Tolerance | Result |
+|---|---|---|---|---|---|---|
+| Center deflection, 16 x 16 quadrilaterals (MITC4) |  | 4.43278e-4 m | 4.43609e-4 m | 0.0746 % | 2 % | pass |
+| Center deflection, 16 x 16 x 2 triangles (DKT) |  | 4.42503e-4 m | 4.43609e-4 m | 0.249 % | 2 % | pass |
 
 Convergence of "Center deflection, 16 x 16 quadrilaterals (MITC4)" with n:
 
@@ -511,10 +511,10 @@ Thin square plate (t/a = 0.01) with all edges clamped under uniform pressure.
 
 **Parameters:** a = 2, t = 0.02, E = 200000000000, nu = 0.3, q = 1000, n = 16, bc = 2
 
-| Check | Computed | Reference | Error | Tolerance | Result |
-|---|---|---|---|---|---|
-| Center deflection, 16 x 16 quadrilaterals (MITC4) | 1.38045e-4 m | 1.38173e-4 m | 0.0930 % | 2 % | pass |
-| Center deflection, 16 x 16 x 2 triangles (DKT) | 1.39240e-4 m | 1.38173e-4 m | 0.772 % | 2 % | pass |
+| Check | Formula | Computed | Reference | Error | Tolerance | Result |
+|---|---|---|---|---|---|---|
+| Center deflection, 16 x 16 quadrilaterals (MITC4) | $\frac{0.00126532\,qa^4}{D}$ | 1.38045e-4 m | 1.38173e-4 m | 0.0930 % | 2 % | pass |
+| Center deflection, 16 x 16 x 2 triangles (DKT) | $\frac{0.00126532\,qa^4}{D}$ | 1.39240e-4 m | 1.38173e-4 m | 0.772 % | 2 % | pass |
 
 Convergence of "Center deflection, 16 x 16 quadrilaterals (MITC4)" with n:
 
@@ -534,10 +534,10 @@ Plate strip (L = 10, b = 1, t = 0.1, nu = 0) clamped at one end with a tip load,
 
 **Parameters:** L = 10, b = 1, t = 0.1, E = 10000000, P = 10, n = 20, nb = 2
 
-| Check | Computed | Reference | Error | Tolerance | Result |
-|---|---|---|---|---|---|
-| Tip deflection, quadrilaterals (with shear term) | 3.99774 m | 4.00024 m | 0.0625 % | 0.5 % | pass |
-| Tip deflection, triangles (thin-plate theory) | 4.000195 m | 4 m | 0.00488 % | 0.5 % | pass |
+| Check | Formula | Computed | Reference | Error | Tolerance | Result |
+|---|---|---|---|---|---|---|
+| Tip deflection, quadrilaterals (with shear term) | $\frac{PL^3}{3EI}+\frac{PL}{\kappa GA}$ | 3.99774 m | 4.00024 m | 0.0625 % | 0.5 % | pass |
+| Tip deflection, triangles (thin-plate theory) | $\frac{PL^3}{3EI}$ | 4.000195 m | 4 m | 0.00488 % | 0.5 % | pass |
 
 Convergence of "Tip deflection, quadrilaterals (with shear term)" with n:
 
@@ -557,17 +557,17 @@ Five-element distorted patch (0.24 x 0.12). The boundary nodes are driven by a c
 
 **Parameters:** E = 1000000, nu = 0.25, t = 0.001, mode = 1
 
-| Check | Computed | Reference | Error | Tolerance | Result |
-|---|---|---|---|---|---|
-| Membrane, quadrilaterals: interior displacement error | 7.45149e-15  | 0  | 7.5e-15 (absolute) | 1e-9 (absolute) | pass |
-| Membrane, quadrilaterals: direct force error | 8.32667e-16  | 0  | 8.3e-16 (absolute) | 1e-9 (absolute) | pass |
-| Membrane, quadrilaterals: shear force error | 2.22045e-15  | 0  | 2.2e-15 (absolute) | 1e-9 (absolute) | pass |
-| Membrane force Nx = 1333.3 t | 1.333333 N/m | 1.333333 N/m | < 1e-10 % | 1e-7 % | pass |
-| Bending, quadrilaterals: interior displacement error | 2.57224e-12  | 0  | 2.6e-12 (absolute) | 1e-8 (absolute) | pass |
-| Bending, quadrilaterals: moment error | 5.70985e-12  | 0  | 5.7e-12 (absolute) | 1e-8 (absolute) | pass |
-| Bending, quadrilaterals: twisting moment error | 6.47166e-12  | 0  | 6.5e-12 (absolute) | 1e-8 (absolute) | pass |
-| Bending moment Mx = -1.111e-7 | -1.11111e-7 N m/m | -1.11111e-7 N m/m | 2.50e-10 % | 0.000001 % | pass |
-| Membrane, triangles: interior displacement error | 2.64051e-15  | 0  | 2.6e-15 (absolute) | 1e-9 (absolute) | pass |
-| Membrane, triangles: direct force error | 1.49880e-15  | 0  | 1.5e-15 (absolute) | 1e-9 (absolute) | pass |
-| Bending, triangles: interior displacement error | 4.06576e-16  | 0  | 4.1e-16 (absolute) | 1e-8 (absolute) | pass |
-| Bending, triangles: moment error | 4.76456e-15  | 0  | 4.8e-15 (absolute) | 1e-8 (absolute) | pass |
+| Check | Formula | Computed | Reference | Error | Tolerance | Result |
+|---|---|---|---|---|---|---|
+| Membrane, quadrilaterals: interior displacement error |  | 7.45149e-15  | 0  | 7.5e-15 (absolute) | 1e-9 (absolute) | pass |
+| Membrane, quadrilaterals: direct force error |  | 8.32667e-16  | 0  | 8.3e-16 (absolute) | 1e-9 (absolute) | pass |
+| Membrane, quadrilaterals: shear force error |  | 2.22045e-15  | 0  | 2.2e-15 (absolute) | 1e-9 (absolute) | pass |
+| Membrane force | $N_x=1333.3\,t$ | 1.333333 N/m | 1.333333 N/m | < 1e-10 % | 1e-7 % | pass |
+| Bending, quadrilaterals: interior displacement error |  | 2.57224e-12  | 0  | 2.6e-12 (absolute) | 1e-8 (absolute) | pass |
+| Bending, quadrilaterals: moment error |  | 5.70985e-12  | 0  | 5.7e-12 (absolute) | 1e-8 (absolute) | pass |
+| Bending, quadrilaterals: twisting moment error |  | 6.47166e-12  | 0  | 6.5e-12 (absolute) | 1e-8 (absolute) | pass |
+| Bending moment | $M_x=-1.111\times10^{-7}$ | -1.11111e-7 N m/m | -1.11111e-7 N m/m | 2.50e-10 % | 0.000001 % | pass |
+| Membrane, triangles: interior displacement error |  | 2.64051e-15  | 0  | 2.6e-15 (absolute) | 1e-9 (absolute) | pass |
+| Membrane, triangles: direct force error |  | 1.49880e-15  | 0  | 1.5e-15 (absolute) | 1e-9 (absolute) | pass |
+| Bending, triangles: interior displacement error |  | 4.06576e-16  | 0  | 4.1e-16 (absolute) | 1e-8 (absolute) | pass |
+| Bending, triangles: moment error |  | 4.76456e-15  | 0  | 4.8e-15 (absolute) | 1e-8 (absolute) | pass |

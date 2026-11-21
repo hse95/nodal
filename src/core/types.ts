@@ -116,3 +116,9 @@ export const TYPE_COLORS: Record<DType, string> = {
   material: '#c26a4a', section: '#b8574f', element: '#d4504c', support: '#8f6bd6', load: '#e0703a',
   model: '#d43d51', result: '#e64980',
 };
+
+/**
+ * A small table as a data item. A Panel shows it as a real table; elsewhere it reads as its summary.
+ * Cell text between dollar signs is typeset as mathematics.
+ */
+export interface TableValue { k: 'table'; title?: string; head: string[]; rows: string[][]; foot?: string; summary: string }

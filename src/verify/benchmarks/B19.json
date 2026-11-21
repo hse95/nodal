@@ -20,6 +20,7 @@
   "checks": [
     {
       "label": "Mode 1",
+      "tex": "\\frac{\\pi}{2L^2}\\sqrt{\\frac{EI}{\\rho A}}",
       "quantity": "f1",
       "tolerance": 0.001,
       "unit": "Hz",
@@ -29,6 +30,7 @@
     },
     {
       "label": "Mode 2",
+      "tex": "\\frac{4\\pi}{2L^2}\\sqrt{\\frac{EI}{\\rho A}}",
       "quantity": "f2",
       "tolerance": 0.001,
       "unit": "Hz",
@@ -38,6 +40,7 @@
     },
     {
       "label": "Mode 3",
+      "tex": "\\frac{9\\pi}{2L^2}\\sqrt{\\frac{EI}{\\rho A}}",
       "quantity": "f3",
       "tolerance": 0.001,
       "unit": "Hz",
@@ -47,6 +50,7 @@
     },
     {
       "label": "Mode 1 with lumped mass",
+      "tex": "\\frac{\\pi}{2L^2}\\sqrt{\\frac{EI}{\\rho A}}",
       "quantity": "f1",
       "tolerance": 0.001,
       "unit": "Hz",

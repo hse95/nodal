@@ -19,6 +19,7 @@
   "checks": [
     {
       "label": "Tip deflection in the load direction (n = 64)",
+      "tex": "\\frac{\\pi PR^3}{4EI}+\\frac{\\pi PR}{4EA}",
       "quantity": "tipDeflection",
       "tolerance": 0.001,
       "unit": "m",

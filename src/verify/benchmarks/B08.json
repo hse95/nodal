@@ -20,7 +20,8 @@
   },
   "checks": [
     {
-      "label": "Tip twist TL/GJ",
+      "label": "Tip twist",
+      "tex": "\\frac{TL}{GJ}",
       "quantity": "tipTwist",
       "tolerance": 1e-06,
       "unit": "rad",

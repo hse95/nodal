@@ -19,7 +19,8 @@
   },
   "checks": [
     {
-      "label": "Mode 1 (bL = 1.8751)",
+      "label": "Mode 1",
+      "tex": "\\frac{1.8751^2}{2\\pi L^2}\\sqrt{\\frac{EI}{\\rho A}}",
       "quantity": "f1",
       "tolerance": 0.001,
       "unit": "Hz",
@@ -28,7 +29,8 @@
       }
     },
     {
-      "label": "Mode 2 (bL = 4.6941)",
+      "label": "Mode 2",
+      "tex": "\\frac{4.6941^2}{2\\pi L^2}\\sqrt{\\frac{EI}{\\rho A}}",
       "quantity": "f2",
       "tolerance": 0.001,
       "unit": "Hz",
@@ -37,7 +39,8 @@
       }
     },
     {
-      "label": "Mode 3 (bL = 7.8548)",
+      "label": "Mode 3",
+      "tex": "\\frac{7.8548^2}{2\\pi L^2}\\sqrt{\\frac{EI}{\\rho A}}",
       "quantity": "f3",
       "tolerance": 0.001,
       "unit": "Hz",

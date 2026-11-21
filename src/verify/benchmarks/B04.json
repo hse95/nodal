@@ -20,7 +20,8 @@
   },
   "checks": [
     {
-      "label": "Midspan deflection PL^3/48EI",
+      "label": "Midspan deflection",
+      "tex": "\\frac{PL^3}{48EI}",
       "quantity": "midDeflection",
       "tolerance": 1e-06,
       "unit": "m",
@@ -29,7 +30,8 @@
       }
     },
     {
-      "label": "Midspan moment PL/4",
+      "label": "Midspan moment",
+      "tex": "\\frac{PL}{4}",
       "quantity": "midMoment",
       "tolerance": 1e-06,
       "unit": "N m",

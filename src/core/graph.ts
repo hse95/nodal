@@ -109,6 +109,21 @@ export function coerce(val: any, type: DType): any {
     default: return val && typeof val === 'object' && val.k === type ? val : fail();
   }
 }
+/** Whether data of type `from` can be used by an input of type `to`: the static counterpart of `coerce`, used when the editor proposes connections. */
+export function typesCompatible(from: DType, to: DType): boolean {
+  if (from === to || to === 'any' || from === 'any' || to === 'text') return true;
+  const scalar = ['number', 'integer', 'boolean'];
+  if (scalar.includes(to)) return scalar.includes(from) || from === 'text';
+  if (to === 'geometry') return ['point', 'vector', 'plane', 'curve', 'surface', 'mesh', 'brep'].includes(from);
+  if (from === 'geometry') return ['point', 'curve', 'surface', 'mesh', 'brep'].includes(to);
+  if (to === 'point' || to === 'vector') return ['point', 'vector', 'plane', 'text'].includes(from);
+  if (to === 'plane') return from === 'point' || from === 'vector';
+  if (to === 'mesh') return from === 'surface' || from === 'brep';
+  if (to === 'brep') return from === 'mesh' || from === 'surface';
+  if (to === 'domain') return from === 'number' || from === 'integer' || from === 'text';
+  if (to === 'color') return from === 'text';
+  return false;
+}
 export function fmtNum(n: number, digits = 6): string {
   if (!Number.isFinite(n)) return String(n);
   if (n === 0) return '0';

@@ -10,7 +10,9 @@ Contents: [Getting started](#1-getting-started) · [The canvas](#2-the-canvas) �
 
 The window has four parts: the **component list** on the left, the **canvas** where you build the graph, the **3D view**, and the **inspector** on the right. The top bar holds the menus, the solve status and the layout buttons.
 
-The quickest start is **Help → Take the tour**, which builds a small truss in five steps. To do the same by hand:
+The quickest start is a **template**: open the **Templates** tab on the left and click *Simply supported beam*. A complete model appears on the canvas, with sliders for the span and the load, and the 3D view shows the beam, its bending moment diagram and its deflection. Drag a slider to see everything update. Templates are described in section 2.
+
+**Help → Take the tour** builds a small truss in five steps. To do the same by hand:
 
 1. Double-click the canvas, type `slider`, press Enter. Do it twice: one slider for the span, one for the height.
 2. Add three `Construct Point` components. Leave the first at the origin; wire the span slider into the X of the second; wire the span (through a `Division` by 2) into the X of the third and the height slider into its Z.
@@ -28,10 +30,26 @@ The same model is in **Examples → Quick start: a simple truss**.
 
 ### Adding and connecting
 
-- **Add a component**: double-click the canvas and type (fuzzy search), click an entry in the component list, or press Ctrl/Cmd+K.
+- **Add a component**: double-click the canvas and type (fuzzy search), click an entry in the component list or drag it onto the canvas, or press Ctrl/Cmd+K.
 - **Connect**: drag from an output dot (right side) to an input dot (left side). A new wire replaces the old one on that input; hold **Shift** while dropping to add a second wire. Several wires into one input are merged in the order they were connected.
-- **Disconnect**: click a wire and press Delete.
+- **Connect without aiming**: let go of the wire anywhere on a component and it goes to the first free port that accepts that kind of data. Let go on **empty canvas** and a search opens that lists only the components that can take the wire; pick one and it is added and connected.
+- **Disconnect**: right-click a wire and choose *Delete wire*, or click the wire and press Delete. The same menu has *Show its data in a panel*, which is a quick way to see what a wire carries.
 - Wires are colored by data type. A thicker wire carries a list; a dashed thick wire carries a tree with several branches.
+
+### Templates
+
+A template is a group of connected components that is added to the project you have open (an example, by contrast, opens as a new project). The **Templates** tab of the left-hand list has two kinds:
+
+- **Complete models**: simply supported beam, cantilever, continuous beam, plane truss, portal frame, column buckling and a rectangular plate. Each has sliders for its main dimensions and loads, and panels with the key results. They are checked against hand calculations by the automated tests.
+- **Building blocks**: a material with a section, a set of load cases with a combination, and a results readout. These are meant to be wired into your own graph; the frame around each says where.
+
+Click a template to add it below what is already on the canvas, or drag it to where you want it. You can also right-click empty canvas and choose one under *Insert template here*, or type its name in the double-click search. The new components arrive selected and inside a group, so they can be moved together. Undo removes the whole template.
+
+### Text size
+
+**A−** and **A+** in the top bar (or **View → Text size**) make all text smaller or larger in five steps. The setting is remembered. It changes the menus, lists, inspector and 3D labels, and the size of the components on the canvas.
+
+When the canvas is zoomed out, component titles, port names and slider values are drawn larger than the zoom alone would make them, so a graph stays readable for longer.
 
 ### Moving around
 
@@ -42,9 +60,9 @@ The same model is in **Examples → Quick start: a simple truss**.
 ### Editing
 
 - Ctrl/Cmd+Z and Y undo and redo. Ctrl/Cmd+C, X, V copy, cut and paste; the clipboard also works between projects and browser tabs. Ctrl/Cmd+D duplicates.
-- **Right-click** a component for preview on/off, enable/disable, rename, group, cluster, the list-matching rule, and alignment of several selected components.
+- **Right-click** a component for preview on/off, enable/disable, rename, group, cluster, the list-matching rule, and alignment of several selected components. Double-click a component's title to rename it.
 - **Groups** (Ctrl/Cmd+G) draw a labeled frame around components. Double-click the label to rename it; right-click the label to remove the group.
-- **Notes** are free text on the canvas (`Note` in Params).
+- **Notes** are free text on the canvas (`Note` in Params). Text between dollar signs is typeset as a formula: `Midspan moment $\frac{wL^2}{8}$`. Double-click such a note to edit it.
 - **Clusters** pack a selection into one component with its own inputs and outputs (right-click → *Make cluster*). Wires crossing the selection boundary become the cluster's ports. A new cluster is also saved to *My clusters* in the component list, so it can be inserted into other projects. In the inspector a cluster can be renamed, saved again, or unpacked.
 
 ### States
@@ -61,6 +79,8 @@ The same model is in **Examples → Quick start: a simple truss**.
 ### Input widgets
 
 `Number Slider` (set the range in the inspector), `Boolean Toggle`, `Value List`, `Panel` (shows whatever is wired into it, or outputs the lines you type), `Graph Mapper`, `Color`.
+
+The `Expression` component evaluates a formula typed as on a calculator, such as `5*w*L^4/(384*E*I)`. Every name in it becomes an input. The formula is shown typeset on the component and in the inspector, so a misplaced bracket is easy to spot.
 
 ### The inspector
 
@@ -160,6 +180,28 @@ For second-order and buckling analyses, split each member into several elements 
 
 ## 5 Results
 
+### What is drawn
+
+A structure passes through several components: curves, elements, the assembled model, the analysis result and the Result View. Only the **last** of these that is on the canvas is drawn, so the model is never drawn underneath its own result. A component that is hidden for this reason says so in the inspector, and its *Preview in 3D* box is empty; tick the box to draw it as well, or just select that one component to see it highlighted. Switching off the preview of a Result View hides the whole chain.
+
+A model that lies in the vertical X–Z plane (a beam, a plane truss or frame) opens in the **Front** view, where loads and diagrams are seen square-on. Everything else opens in the 3D view. The buttons at the top of the 3D view switch between them.
+
+After **Fit** (and when a project is opened) the view keeps the whole model in sight as sliders change it. As soon as you turn, pan or zoom the view yourself it stays where you put it; press **Fit** to let it follow again.
+
+### Reading the picture
+
+- **Members** are bold lines. With a force diagram on, the bold line is the undeformed member and the deflected shape is a thin line; without a diagram the deflected shape is bold and the undeformed member is a faint line.
+- **Force diagrams** are filled bands: blue where the value is positive, red where it is negative, split at the zero crossings. Values are written at member ends and at peaks, and the largest value has a frame. Where two values would overlap, the larger one is kept.
+- **Axial force in truss and cable members** is shown by the member itself: blue for tension, red for compression, heavier for a larger force, with the value at mid-length.
+- **Loads** are orange, **reactions** purple, **supports** green. A triangle is a support that holds the node vertically; a second line under it means the node can slide (a roller); a cross in the triangle means rotation is held too. A node held only sideways has a short bar along the held direction. Equal loads on many nodes or members are labelled once.
+- **Section shapes** are see-through in a result view, so that they do not hide diagrams.
+
+### Quick controls
+
+The second row of buttons in the 3D view changes the Result View directly: load case or mode, member diagram, shell contour, and what to show (deformed shape, loads, reactions, values, sections, animation). If a result is on screen but there is no Result View yet, that row offers to add one.
+
+### Components and tables
+
 - **Result View** draws a result in 3D. In its inspector: load case or mode, deformed shape with scale (−1 = automatic) and animation, undeformed overlay, member diagrams (N, Vy, Vz, T, My, Mz) drawn on the member with end and extreme values, shell contours (displacements, membrane forces, moments, principal and von Mises stresses at the top, middle or bottom surface), principal directions, reactions, loads, supports, utilization colors, section shapes and local axes.
 - **Click** a node, member or shell in the 3D view to read all its values in the inspector.
 - **Result tables** (inspector of any analysis or Result View): nodal displacements, reactions, member forces, shell results; click a column to sort, type to filter, **CSV** to export.
@@ -203,6 +245,8 @@ Choose **SI** (kN, m, MPa; section sizes and displacements in mm) or **US custom
 Switching the unit system changes how the numbers in the graph are read; it does not convert them.
 
 ## 10 Verification
+
+Each check in the Verification panel shows its reference formula typeset next to the computed and reference values. Opening a benchmark as an example gives the same comparison as a table in a panel.
 
 **Verification** in the top bar runs all 28 benchmarks in your browser and lists computed value, reference value, error and tolerance for each check, with convergence plots for the mesh studies. **Open as example** loads a benchmark model into the canvas. The same suite runs in the automated tests; the full table is in `docs/verification-report.md`.
 

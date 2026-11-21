@@ -20,7 +20,8 @@
   },
   "checks": [
     {
-      "label": "Tip deflection wL^4/8EI",
+      "label": "Tip deflection",
+      "tex": "\\frac{wL^4}{8EI}",
       "quantity": "tipDeflection",
       "tolerance": 1e-06,
       "unit": "m",
@@ -29,7 +30,8 @@
       }
     },
     {
-      "label": "Base moment wL^2/2",
+      "label": "Base moment",
+      "tex": "\\frac{wL^2}{2}",
       "quantity": "baseMoment",
       "tolerance": 1e-06,
       "unit": "N m",

@@ -3,10 +3,11 @@
  * (examples, verification, help, about), the first-run tour and file commands.
  */
 import { createMemo, createSignal, For, onCleanup, onMount, Show, JSX } from 'solid-js';
-import { project, mutate, ui, setUi, openProject, saveProjectFile, pickFile, migrate, toast, download, engine, runTick, dirty, solvingNode, selection, setSelection, undo, redo, unwrap, registry, portsOf, loadAutosave, addNode } from './store';
+import { project, mutate, ui, setUi, openProject, saveProjectFile, pickFile, migrate, toast, download, engine, runTick, dirty, solvingNode, selection, setSelection, undo, redo, unwrap, registry, portsOf, loadAutosave, addNode, TEXT_SCALES, setTextScale, stepTextScale } from './store';
 import { emptyProject } from '../core/graph';
 import type { ProjectFile } from '../core/types';
-import { Canvas, Palette, layouts, CATEGORY_COLORS } from './Canvas';
+import { Canvas, Palette, layouts, CATEGORY_COLORS, setPaletteTab } from './Canvas';
+import { Tex, texToPlain } from './Tex';
 import { Viewport, viewportApi } from './Viewport';
 import { Inspector } from './Inspector';
 import { EXAMPLES } from '../examples';
@@ -17,7 +18,7 @@ import { cancelSolver } from './workers';
 import { TYPE_COLORS } from '../core/types';
 import { formatValue } from '../core/graph';
 
-const VERSION = '0.1.0';
+const VERSION = '0.2.0';
 const CREDIT = 'Built by Sam Smith at K-State (email me for feedback: samsmith@ksu.edu)';
 
 /** Geometry currently shown in the 3D view, for the export commands. */
@@ -127,14 +128,19 @@ export function App(): JSX.Element {
   const [menu, setMenu] = createSignal<string | null>(null);
   let main!: HTMLDivElement;
   const onKey = (e: KeyboardEvent) => {
-    const mod = e.ctrlKey || e.metaKey, k = e.key.toLowerCase();
-    if (mod && k === 'k') { e.preventDefault(); window.dispatchEvent(new CustomEvent('nodal:palette')); }
+    const mod = e.ctrlKey || e.metaKey, k = e.key.toLowerCase(), t = e.target as HTMLElement | null;
+    // Undo and redo work wherever the focus is, except while typing in a text box (which has its own undo).
+    const typing = !!t && (t.matches?.('input:not([type="range"]):not([type="checkbox"]), textarea, select') || t.isContentEditable);
+    if (mod && k === 'z' && !typing) { e.preventDefault(); if (e.shiftKey) redo(); else undo(); }
+    else if (mod && k === 'y' && !typing) { e.preventDefault(); redo(); }
+    else if (mod && k === 'k') { e.preventDefault(); window.dispatchEvent(new CustomEvent('nodal:palette')); }
     else if (mod && k === 's') { e.preventDefault(); saveProjectFile(); }
     else if (mod && k === 'o') { e.preventDefault(); void openFile(); }
     else if (e.key === 'Escape') { setMenu(null); if (ui.dialog) setUi('dialog', null); }
   };
   onMount(async () => {
     document.documentElement.dataset.theme = ui.theme;
+    document.documentElement.style.setProperty('--ts', String(ui.textScale));
     window.addEventListener('keydown', onKey);
     window.addEventListener('pointerdown', (e) => { if (!(e.target as HTMLElement).closest('.menubar')) setMenu(null); });
     window.addEventListener('beforeunload', (e) => { if (dirty() && project.graph.nodes.length && !localStorage.getItem('nodal.noUnloadPrompt')) e.preventDefault(); });
@@ -177,7 +183,8 @@ export function App(): JSX.Element {
             <Item label="CSV of the selected component" onClick={() => void exportAs('csv')} /><Item label="3D view as PNG" onClick={() => void exportAs('png-view')} /><Item label="3D view as SVG" onClick={() => void exportAs('svg-view')} /><Item label="Canvas as PNG" onClick={() => void exportAs('png-canvas')} /><Item label="Canvas as SVG" onClick={() => void exportAs('svg-canvas')} />
           </Menu>
           <Menu name="edit" label="Edit"><Item label="Undo" key="Ctrl Z" onClick={undo} /><Item label="Redo" key="Ctrl Y" onClick={redo} /><hr /><Item label="Add component…" key="Ctrl K" onClick={() => window.dispatchEvent(new CustomEvent('nodal:palette'))} /><Item label="Recompute everything" onClick={() => { engine.invalidate(); mutate(() => undefined, { undo: false }); }} /><Item label="Cancel running analysis" onClick={() => { cancelSolver(); engine.cancel(); }} /></Menu>
-          <button class="menu-btn" onClick={() => setUi('dialog', 'examples')}>Examples</button>
+          <button class="menu-btn" title="Ready-made groups of components to drop into this project" onClick={() => { setUi('palette', true); if (ui.layout === 'view') setUi('layout', 'split'); setPaletteTab('templates'); }}>Templates</button>
+          <button class="menu-btn" title="Complete models that open as a new project" onClick={() => setUi('dialog', 'examples')}>Examples</button>
           <button class="menu-btn" onClick={() => setUi('dialog', 'verification')}>Verification</button>
           <Menu name="units" label={`Units: ${project.units}`}>
             <Item label={(project.units === 'SI' ? '● ' : '○ ') + 'SI: kN, m, MPa (sections in mm)'} onClick={() => mutate(p => { p.units = 'SI'; })} />
@@ -187,7 +194,9 @@ export function App(): JSX.Element {
           <Menu name="view" label="View">
             <Item label="Canvas and 3D view side by side" onClick={() => setUi('layout', 'split')} /><Item label="Stacked" onClick={() => setUi('layout', 'stack')} /><Item label="Canvas only" onClick={() => setUi('layout', 'canvas')} /><Item label="3D view only" onClick={() => setUi('layout', 'view')} /><Item label="Swap sides" onClick={() => setUi('swap', !ui.swap)} /><hr />
             <Item label={(ui.palette ? 'Hide' : 'Show') + ' component list'} onClick={() => setUi('palette', !ui.palette)} /><Item label={(ui.inspector ? 'Hide' : 'Show') + ' inspector'} onClick={() => setUi('inspector', !ui.inspector)} /><hr />
-            <Item label={ui.theme === 'dark' ? 'Light theme' : 'Dark theme'} onClick={() => setTheme(ui.theme === 'dark' ? 'light' : 'dark')} />
+            <Item label={ui.theme === 'dark' ? 'Light theme' : 'Dark theme'} onClick={() => setTheme(ui.theme === 'dark' ? 'light' : 'dark')} /><hr />
+            <div class="menu-title">Text size</div>
+            <For each={TEXT_SCALES}>{([val, name]) => <Item label={(ui.textScale === val ? '● ' : '○ ') + name} onClick={() => setTextScale(val)} />}</For>
           </Menu>
           <Menu name="help" label="Help"><Item label="Take the tour" onClick={startTour} /><Item label="Keyboard shortcuts" onClick={() => setUi('dialog', 'shortcuts')} /><Item label="User guide" onClick={() => window.open('https://github.com/hse95/nodal/blob/main/docs/user-guide.md', '_blank', 'noopener')} /><Item label="Theory manual" onClick={() => window.open('https://github.com/hse95/nodal/blob/main/docs/theory-manual.md', '_blank', 'noopener')} /><Item label="About Nodal" onClick={() => setUi('dialog', 'about')} /></Menu>
         </nav>
@@ -195,6 +204,10 @@ export function App(): JSX.Element {
         <div class="status" role="status" aria-live="polite">
           <Show when={solvingNode()} fallback={<Show when={stats().err || stats().warn} fallback={<span class="ok">Ready</span>}><Show when={stats().err}><span class="bad">{stats().err} error{stats().err > 1 ? 's' : ''}</span></Show><Show when={stats().warn}><span class="warn">{stats().warn} warning{stats().warn > 1 ? 's' : ''}</span></Show></Show>}>
             <span class="busy">Solving {registry.get(project.graph.nodes.find(n => n.id === solvingNode())?.type ?? '')?.name ?? ''}…</span><button class="link" onClick={() => { cancelSolver(); engine.cancel(); }}>Cancel</button></Show>
+        </div>
+        <div class="layout-btns" role="group" aria-label="Text size">
+          <button title="Smaller text" aria-label="Smaller text" disabled={ui.textScale === TEXT_SCALES[0][0]} onClick={() => stepTextScale(-1)}><span style={{ 'font-size': '0.85em' }}>A</span>−</button>
+          <button title="Larger text" aria-label="Larger text" disabled={ui.textScale === TEXT_SCALES[TEXT_SCALES.length - 1][0]} onClick={() => stepTextScale(1)}><span style={{ 'font-size': '1.15em' }}>A</span>+</button>
         </div>
         <div class="layout-btns" role="group" aria-label="Layout">
           <button title="Side by side" aria-label="Side by side" classList={{ on: ui.layout === 'split' }} onClick={() => setUi('layout', 'split')}>▯▯</button>
@@ -222,9 +235,9 @@ export function App(): JSX.Element {
         <p>{CREDIT.replace('samsmith@ksu.edu)', '')}<a href="mailto:samsmith@ksu.edu">samsmith@ksu.edu</a>)</p>
         <p class="warnbox">This software is provided as is, without warranty. It is a tool for exploration and teaching. Check every result independently before using it for any real design. The utilization values are simplified stress checks and are not design-code verifications.</p>
         <p>Source code, user guide, theory manual and verification report: <a href="https://github.com/hse95/nodal" target="_blank" rel="noopener">github.com/hse95/nodal</a></p>
-        <p class="muted">Uses Solid, Three.js, Manifold and rhino3dm. See THIRD_PARTY_LICENSES.md in the repository.</p></div></Dialog></Show>
+        <p class="muted">Uses Solid, Three.js, KaTeX, Manifold and rhino3dm. See THIRD_PARTY_LICENSES.md in the repository.</p></div></Dialog></Show>
       <Show when={ui.dialog === 'shortcuts'}><Dialog title="Keyboard shortcuts"><table class="kv shortcuts"><tbody>
-        <For each={[['Double-click canvas', 'Add a component by name'], ['Ctrl/Cmd + K', 'Command palette'], ['Drag from a port', 'Connect (Shift adds a second wire)'], ['Mouse wheel', 'Zoom the canvas'], ['Right- or middle-drag, or Space + drag', 'Pan the canvas'], ['Drag on empty canvas', 'Box select'], ['Delete', 'Delete selection or selected wire'], ['Ctrl/Cmd + Z / Y', 'Undo / redo'], ['Ctrl/Cmd + C / X / V', 'Copy / cut / paste (also between projects)'], ['Ctrl/Cmd + D', 'Duplicate'], ['Ctrl/Cmd + A', 'Select all'], ['Ctrl/Cmd + G', 'Group selection'], ['Arrow keys', 'Nudge selection (Shift: larger steps)'], ['Alt while dragging', 'Move without snapping'], ['F', 'Zoom canvas to fit'], ['P', 'Toggle preview of the selection'], ['Ctrl/Cmd + S / O', 'Save / open project'], ['Right-click', 'Context menu'], ['Esc', 'Close menus and dialogs']]}>{([k, d]) => <tr><th><kbd>{k}</kbd></th><td>{d}</td></tr>}</For></tbody></table></Dialog></Show>
+        <For each={[['Double-click canvas', 'Add a component by name'], ['Ctrl/Cmd + K', 'Command palette'], ['Drag from a port', 'Connect (Shift adds a second wire)'], ['Drop a wire on empty canvas', 'Choose a component to connect it to'], ['Drop a wire on a component', 'Connect to its first fitting port'], ['Right-click a wire', 'Delete it, or show its data in a panel'], ['Double-click a title', 'Rename a component'], ['Drag from the left list', 'Place a component or a template'], ['Mouse wheel', 'Zoom the canvas'], ['Right- or middle-drag, or Space + drag', 'Pan the canvas'], ['Drag on empty canvas', 'Box select'], ['Delete', 'Delete selection or selected wire'], ['Ctrl/Cmd + Z / Y', 'Undo / redo'], ['Ctrl/Cmd + C / X / V', 'Copy / cut / paste (also between projects)'], ['Ctrl/Cmd + D', 'Duplicate'], ['Ctrl/Cmd + A', 'Select all'], ['Ctrl/Cmd + G', 'Group selection'], ['Arrow keys', 'Nudge selection (Shift: larger steps)'], ['Alt while dragging', 'Move without snapping'], ['F', 'Zoom canvas to fit'], ['P', 'Toggle preview of the selection'], ['Ctrl/Cmd + S / O', 'Save / open project'], ['Right-click', 'Context menu'], ['Esc', 'Close menus and dialogs']]}>{([k, d]) => <tr><th><kbd>{k}</kbd></th><td>{d}</td></tr>}</For></tbody></table></Dialog></Show>
       <Show when={ui.tour >= 0}><div class="tour" role="dialog" aria-label="Tour">
         <div class="tour-step">{ui.tour === 0 ? 'Tour' : `Step ${ui.tour} of ${TOUR.length - 1}`}</div><h3>{TOUR[ui.tour].title}</h3><p>{TOUR[ui.tour].text}</p>
         <div class="row"><button class="link" onClick={() => { endTour(); if (ui.tour < 0 && !project.graph.nodes.length) openExample('quick-truss'); }}>{ui.tour === TOUR.length - 1 ? 'Close' : 'Skip the tour'}</button><div class="spacer" />
@@ -271,7 +284,7 @@ function VerificationDialog(): JSX.Element {
     setProgress(''); setRunning(false);
   };
   const summary = () => { const r = results(), checks = r.flatMap(x => x.rows); return `${r.filter(x => x.pass).length} of ${r.length} benchmarks pass (${checks.filter(c => c.pass).length} of ${checks.length} checks)`; };
-  const csv = () => download('nodal-verification.csv', toCSV([['Benchmark', 'Check', 'Computed', 'Reference', 'Error', 'Tolerance', 'Unit', 'Pass'], ...results().flatMap(r => r.rows.map(c => [r.def.id + ' ' + r.def.title, c.label, c.computed, c.expected, c.absolute ? c.errorPct : c.errorPct + ' %', c.absolute ? c.tolerancePct : c.tolerancePct + ' %', c.unit, c.pass ? 'pass' : 'FAIL']))]), 'text/csv');
+  const csv = () => download('nodal-verification.csv', toCSV([['Benchmark', 'Check', 'Computed', 'Reference', 'Error', 'Tolerance', 'Unit', 'Pass'], ...results().flatMap(r => r.rows.map(c => [r.def.id + ' ' + r.def.title, c.label + (c.tex ? ` (${texToPlain(c.tex)})` : ''), c.computed, c.expected, c.absolute ? c.errorPct : c.errorPct + ' %', c.absolute ? c.tolerancePct : c.tolerancePct + ' %', c.unit, c.pass ? 'pass' : 'FAIL']))]), 'text/csv');
   onMount(() => void run());
   onCleanup(() => { stop = true; });
   return <Dialog title="Verification" wide>
@@ -281,8 +294,8 @@ function VerificationDialog(): JSX.Element {
       <div class="bench-head"><span class="pill" classList={{ pass: r.pass, fail: !r.pass }}>{r.pass ? 'PASS' : 'FAIL'}</span><b>{r.def.id} {r.def.title}</b><span class="muted">{r.ms.toFixed(0)} ms</span><button class="link" onClick={() => openExample('bench-' + r.def.id.toLowerCase())}>Open as example</button></div>
       <p class="muted">{r.def.description} <i>Reference: {r.def.source}</i></p>
       <Show when={r.error}><p class="msg error">{r.error}</p></Show>
-      <div class="bench-body"><table class="grid"><thead><tr><th>Check</th><th>Computed</th><th>Reference</th><th>Error</th><th>Tolerance</th><th /></tr></thead><tbody>
-        <For each={r.rows}>{c => <tr classList={{ failrow: !c.pass }} title={c.note ?? ''}><td>{c.label}{c.note ? ' *' : ''}</td><td>{fmtSci(c.computed)} {c.unit}</td><td>{fmtSci(c.expected)} {c.unit}</td><td>{c.absolute ? c.errorPct.toExponential(1) : c.errorPct.toPrecision(3) + ' %'}</td><td>{c.absolute ? c.tolerancePct : +c.tolerancePct.toPrecision(3) + ' %'}</td><td>{c.pass ? '✓' : '✗'}</td></tr>}</For></tbody></table>
+      <div class="bench-body"><table class="grid"><thead><tr><th>Check</th><th>Formula</th><th>Computed</th><th>Reference</th><th>Error</th><th>Tolerance</th><th /></tr></thead><tbody>
+        <For each={r.rows}>{c => <tr classList={{ failrow: !c.pass }} title={c.note ?? ''}><td>{c.label}{c.note ? ' *' : ''}</td><td class="fx">{c.tex ? <Tex tex={c.tex} big /> : ''}</td><td>{fmtSci(c.computed)} {c.unit}</td><td>{fmtSci(c.expected)} {c.unit}</td><td>{c.absolute ? c.errorPct.toExponential(1) : c.errorPct.toPrecision(3) + ' %'}</td><td>{c.absolute ? c.tolerancePct : +c.tolerancePct.toPrecision(3) + ' %'}</td><td>{c.pass ? '✓' : '✗'}</td></tr>}</For></tbody></table>
         <Show when={r.convergence}><ConvergencePlot r={r} /></Show></div>
     </section>}</For>
   </Dialog>;
