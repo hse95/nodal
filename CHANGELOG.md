@@ -9,6 +9,7 @@ A ribbon with icons, a more realistic 3D view, and verification models built fro
 - The component list on the left is replaced by a ribbon across the top, with a tab for each family of components and tabs for Templates, Examples and Verification.
 - Every component has its own icon (255 of them, drawn for Nodal), shown in the ribbon, on the component itself and in the search results. Hovering over an icon shows the name and a one-line description.
 - Click an icon to add the component, or drag it onto the canvas. The search field looks through all tabs.
+- Icons on canvas components are drawn as cached images, so a canvas with 500 components pans as fast as before.
 - The ribbon can be hidden with the arrow at its right end or from the View menu; the choice is remembered.
 - Templates and examples are cards with a thumbnail. A template can be clicked or dragged, and its thumbnail follows the pointer.
 

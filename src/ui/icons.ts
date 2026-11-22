@@ -345,6 +345,21 @@ export function iconFor(id: string, fallback = ''): string {
   if (m === undefined) { m = iconMarkup(I[id] ?? I[id.startsWith('cluster') ? 'cluster' : ''] ?? `t 12 16 ${fallback.length > 2 ? 8 : 11} ${fallback.slice(0, 3) || '?'}`); cache.set(key, m); }
   return m;
 }
+const uris = new Map<string, string>();
+/**
+ * The icon as a stand-alone image (a data URI) with its colors written in. A canvas with hundreds of
+ * components paints much faster with images than with inline SVG, and the image stays sharp at any zoom.
+ */
+export function iconUri(id: string, fallback: string, accent: string, ink: string): string {
+  const key = `${id}|${fallback}|${accent}|${ink}`;
+  let u = uris.get(key);
+  if (u === undefined) {
+    const css = `.ia{stroke:${accent}}.if{fill:${accent};fill-opacity:.22;fill-rule:evenodd}.is{fill:${accent};stroke:none}.id{fill:${ink};stroke:none}.it{fill:${ink};stroke:none;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-weight:650;text-anchor:middle}.ita{fill:${accent}}`;
+    u = 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 26 26" fill="none" stroke="${ink}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><style>${css}</style>${iconFor(id, fallback)}</svg>`);
+    uris.set(key, u);
+  }
+  return u;
+}
 /** SVG content for a thumbnail; benchmarks pass "b:" + the name of their model builder. */
 export function thumbFor(id: string): string {
   let m = cache.get('thumb|' + id);

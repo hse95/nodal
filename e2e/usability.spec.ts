@@ -110,7 +110,7 @@ test('templates and components come from the ribbon, by click and by dragging', 
   // A click on an icon adds the component too, and every node shows its icon.
   await page.locator('.rb-btn[aria-label="Panel"]').click();
   await expect(page.locator('.node')).toHaveCount(20);
-  await expect(page.locator('.node .hd svg.ico')).toHaveCount(20);
+  await expect(page.locator('.node .hd img.ico-img')).toHaveCount(20);
   expect(errors).toEqual([]);
 });
 

@@ -12,7 +12,7 @@ import { exprToTex } from '../core/expr';
 import { Tex, RichText, hasMath } from './Tex';
 import { TEMPLATES, Template } from '../templates';
 import { thumbFor } from './icons';
-import { Icon } from './Icon';
+import { Icon, IconImg } from './Icon';
 import { pathText } from '../core/tree';
 import { graphMap } from '../components/basic';
 import { unitSystem } from '../fe/units';
@@ -338,7 +338,7 @@ function NodeView(props: { n: NodeData; onDown: (e: PointerEvent, n: NodeData) =
       style={{ left: n.x + 'px', top: n.y + 'px', width: l().w + 'px', height: l().h + 'px', '--cat': CATEGORY_COLORS[def()?.category ?? ''] ?? '#888' }}
       onPointerDown={e => props.onDown(e, n)}>
       <Show when={def()?.widget !== 'note'}>
-        <div class="hd" title={title() + '\n\nDouble-click to rename.'} onDblClick={e => { e.stopPropagation(); const name = prompt('Label for this component', n.label ?? def()?.name ?? ''); if (name !== null) mutate(p => { const x = p.graph.nodes.find(q => q.id === n.id); if (x) x.label = name.trim() || undefined; }, { run: false }); }}><Icon id={n.type} nick={def()?.nick} color={CATEGORY_COLORS[def()?.category ?? '']} size={14} /><span class="nm">{n.label ?? def()?.name ?? n.type}</span>
+        <div class="hd" title={title() + '\n\nDouble-click to rename.'} onDblClick={e => { e.stopPropagation(); const name = prompt('Label for this component', n.label ?? def()?.name ?? ''); if (name !== null) mutate(p => { const x = p.graph.nodes.find(q => q.id === n.id); if (x) x.label = name.trim() || undefined; }, { run: false }); }}><IconImg id={n.type} nick={def()?.nick} color={CATEGORY_COLORS[def()?.category ?? '']} size={14} /><span class="nm">{n.label ?? def()?.name ?? n.type}</span>
           <Show when={n.matching && n.matching !== 'longest'}><span class="badge" title={`Matching: ${n.matching}`}>{n.matching === 'cross' ? '×' : '≤'}</span></Show>
           <Show when={status().state === 'error' || status().state === 'warning'}><span class="flag" title={status().messages.join('\n')}>!</span></Show></div>
       </Show>
