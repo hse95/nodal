@@ -37,7 +37,7 @@ function simpleBeam() {
   g.n('load', 'fe.load.line', 3, 5.5); g.w('wv', 'load', 'Load');
   g.n('model', 'fe.assemble', 4, 1.5); g.w('beam', 'model', 'Elements').w('sA', 'model', 'Supports').w('sB', 'model', 'Supports').w('load', 'model', 'Loads');
   g.n('static', 'fe.static', 5, 1.5); g.w('model', 'static', 'Model');
-  g.n('view', 'fe.view', 6, 0, { state: { diagram: 'My', sections: false } }); g.w('static', 'view', 'Result');
+  g.n('view', 'fe.view', 6, 0, { state: { diagram: 'My' } }); g.w('static', 'view', 'Result');
   g.n('env', 'fe.res.envelope', 6, 1.2, { consts: { Force: 'My' } }); g.w('static', 'env', 'Result');
   g.n('pm', 'param.panel', 7, 1.2, { label: 'Largest moment [kN m]', w: 190, h: 46 }); g.w('env', 'pm', 'Data', 'Highest');
   g.n('pd', 'param.panel', 7, 2.6, { label: 'Largest deflection [mm]', w: 190, h: 46 }); g.w('static', 'pd', 'Data', 'Max Displacement');
@@ -57,7 +57,7 @@ function cantilever() {
   g.n('load', 'fe.load.point', 3, 4.1); g.w('B', 'load', 'Point').w('F', 'load', 'Force');
   g.n('model', 'fe.assemble', 4, 1.5); g.w('beam', 'model', 'Elements').w('sup', 'model', 'Supports').w('load', 'model', 'Loads');
   g.n('static', 'fe.static', 5, 1.5); g.w('model', 'static', 'Model');
-  g.n('view', 'fe.view', 6, 0, { state: { diagram: 'My', sections: false } }); g.w('static', 'view', 'Result');
+  g.n('view', 'fe.view', 6, 0, { state: { diagram: 'My' } }); g.w('static', 'view', 'Result');
   g.n('env', 'fe.res.envelope', 6, 1.2, { consts: { Force: 'My' } }); g.w('static', 'env', 'Result');
   g.n('pm', 'param.panel', 7, 1.2, { label: 'Fixed-end moment [kN m]', w: 190, h: 46 }); g.w('env', 'pm', 'Data', 'Lowest');
   g.n('pd', 'param.panel', 7, 2.6, { label: 'Tip deflection [mm]', w: 190, h: 46 }); g.w('static', 'pd', 'Data', 'Max Displacement');
@@ -81,7 +81,7 @@ function continuousBeam() {
   g.n('load', 'fe.load.line', 5, 5.5); g.w('wv', 'load', 'Load');
   g.n('model', 'fe.assemble', 6, 1.5); g.w('beam', 'model', 'Elements').w('sAll', 'model', 'Supports').w('sA', 'model', 'Supports').w('load', 'model', 'Loads');
   g.n('static', 'fe.static', 7, 1.5); g.w('model', 'static', 'Model');
-  g.n('view', 'fe.view', 8, 0, { state: { diagram: 'My', sections: false } }); g.w('static', 'view', 'Result');
+  g.n('view', 'fe.view', 8, 0, { state: { diagram: 'My' } }); g.w('static', 'view', 'Result');
   g.n('env', 'fe.res.envelope', 8, 1.2, { consts: { Force: 'My' } }); g.w('static', 'env', 'Result');
   g.n('p1', 'param.panel', 9, 1.2, { label: 'Support moment [kN m]', w: 190, h: 46 }); g.w('env', 'p1', 'Data', 'Lowest');
   g.n('p2', 'param.panel', 9, 2.6, { label: 'Span moment [kN m]', w: 190, h: 46 }); g.w('env', 'p2', 'Data', 'Highest');
@@ -93,7 +93,7 @@ function planeTruss() {
   const g = new GB('Plane truss', '');
   trussBridge(g, 12, 2, 6, false);
   g.n('static', 'fe.static', 9, 3); g.w('model', 'static', 'Model');
-  g.n('view', 'fe.view', 10, 1.5, { state: { diagram: 'N', sections: false } }); g.w('static', 'view', 'Result');
+  g.n('view', 'fe.view', 10, 1.5, { state: { diagram: 'N' } }); g.w('static', 'view', 'Result');
   g.n('axial', 'fe.res.axial', 10, 3); g.w('static', 'axial', 'Result'); g.n('bnd', 'math.bounds', 11, 3, { label: 'Smallest and largest force' }); g.w('axial', 'bnd', 'Numbers', 'N');
   g.n('p1', 'param.panel', 12, 2.4, { label: 'Largest compression [kN]', w: 190, h: 46 }); g.w('bnd', 'p1', 'Data', 'Min');
   g.n('p2', 'param.panel', 12, 3.8, { label: 'Largest tension [kN]', w: 190, h: 46 }); g.w('bnd', 'p2', 'Data', 'Max');
@@ -119,7 +119,7 @@ function portalFrame() {
   g.n('Fv', 'vec.vector', 2, 7.4, { label: 'Side load vector' }); g.w('F', 'Fv', 'X'); g.n('pl', 'fe.load.point', 3, 8.3); g.w('k1', 'pl', 'Point').w('Fv', 'pl', 'Force');
   g.n('model', 'fe.assemble', 4, 2); g.w('cols', 'model', 'Elements').w('girder', 'model', 'Elements').w('sup', 'model', 'Supports').w('ll', 'model', 'Loads').w('pl', 'model', 'Loads');
   g.n('static', 'fe.static', 5, 2); g.w('model', 'static', 'Model');
-  g.n('view', 'fe.view', 6, 0.5, { state: { diagram: 'My', sections: false } }); g.w('static', 'view', 'Result');
+  g.n('view', 'fe.view', 6, 0.5, { state: { diagram: 'My' } }); g.w('static', 'view', 'Result');
   g.n('re', 'fe.res.react', 6, 1.8); g.w('static', 're', 'Result');
   g.n('p1', 'param.panel', 7, 1.8, { label: 'Sum of reactions [kN]', w: 200, h: 46 }); g.w('re', 'p1', 'Data', 'Sum');
   g.n('pd', 'param.panel', 7, 3.2, { label: 'Largest displacement [mm]', w: 200, h: 46 }); g.w('static', 'pd', 'Data', 'Max Displacement');
@@ -141,7 +141,7 @@ function columnBuckling() {
   g.n('load', 'fe.load.point', 3, 5.5); g.w('top', 'load', 'Point').w('F', 'load', 'Force');
   g.n('model', 'fe.assemble', 4, 1.5); g.w('col', 'model', 'Elements').w('s1', 'model', 'Supports').w('s2', 'model', 'Supports').w('load', 'model', 'Loads');
   g.n('buck', 'fe.buckling', 5, 1.5, { consts: { Modes: 2 } }); g.w('model', 'buck', 'Model');
-  g.n('view', 'fe.view', 6, 0, { state: { animate: true, sections: false, loads: false, reactions: false } }); g.w('buck', 'view', 'Result');
+  g.n('view', 'fe.view', 6, 0, { state: { animate: true, loads: false, reactions: false } }); g.w('buck', 'view', 'Result');
   g.n('first', 'list.item', 6, 1.6, { consts: { Index: 0 }, label: 'Lowest factor' }); g.w('buck', 'first', 'List', 'Factors');
   g.n('pcr', 'math.mul', 7, 2.8, { label: 'Critical load' }); g.w('first', 'pcr', 'A').w('P', 'pcr', 'B');
   g.n('p1', 'param.panel', 7, 1.4, { label: 'Buckling load factor', w: 190, h: 46 }); g.w('first', 'p1', 'Data');
@@ -188,7 +188,7 @@ function blockLoads() {
 }
 function blockResults() {
   const g = new GB('Results readout', '');
-  g.n('view', 'fe.view', 0, 0, { state: { diagram: 'My', sections: false } });
+  g.n('view', 'fe.view', 0, 0, { state: { diagram: 'My' } });
   g.n('re', 'fe.res.react', 0, 1.2); g.n('p1', 'param.panel', 1, 1.2, { label: 'Reactions [kN]', w: 220, h: 90 }); g.w('re', 'p1', 'Data', 'Forces');
   g.n('env', 'fe.res.envelope', 0, 3.6, { consts: { Force: 'My' } }); g.n('p2', 'param.panel', 1, 3.6, { label: 'Lowest moment [kN m]', w: 220, h: 46 }); g.w('env', 'p2', 'Data', 'Lowest'); g.n('p3', 'param.panel', 1, 5, { label: 'Highest moment [kN m]', w: 220, h: 46 }); g.w('env', 'p3', 'Data', 'Highest');
   g.group('Results: connect a Result to the three inputs R', Object.keys(g.ids), PURPLE);

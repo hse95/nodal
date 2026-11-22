@@ -63,12 +63,13 @@ test('formulas are typeset in the benchmark table, the verification panel and ex
   await box.fill('w*L^'); await box.press('Enter');
   await expect(page.locator('.expr-tex')).toContainText('not a valid formula');
   // The verification dialog has a formula column.
-  await page.locator('.menu-btn', { hasText: 'Verification' }).click();
+  await page.locator('.rb-tabs button[role="tab"]', { hasText: 'Verification' }).click();
+  await page.locator('.rb-body button', { hasText: 'Run all checks' }).click();
   await expect(page.locator('.bench').first().locator('td.fx .katex').first()).toBeVisible({ timeout: 30_000 });
   expect(errors).toEqual([]);
 });
 
-test('templates drop a working model onto the canvas, by button, by click and by dragging', async ({ page }) => {
+test('templates and components come from the ribbon, by click and by dragging', async ({ page }) => {
   const errors = watch(page);
   await open(page, 'quick-truss');
   await newProject(page);
@@ -79,22 +80,37 @@ test('templates drop a working model onto the canvas, by button, by click and by
   await expect(page.locator('.node', { hasText: 'Largest moment' }).locator('pre')).toContainText('45');
   await expect(page.locator('.node.error')).toHaveCount(0);
   // A second template is added below the first from the Templates tab.
-  await page.locator('.menu-btn', { hasText: 'Templates' }).click();
-  await page.locator('.pal-tpl', { hasText: 'Cantilever beam' }).click();
+  await page.locator('.rb-tabs button[role="tab"]', { hasText: 'Templates' }).click();
+  await expect(page.locator('.rb-card svg.thumb').first()).toBeVisible();          // every template has a thumbnail
+  await page.locator('.rb-card', { hasText: 'Cantilever beam' }).click();
   await ready(page);
   await expect(page.locator('.node')).toHaveCount(18 + 16);
   await expect(page.locator('.node', { hasText: 'Fixed-end moment' }).locator('pre')).toContainText('-30');
   await page.keyboard.press('Control+z');
   await expect(page.locator('.node')).toHaveCount(18);
-  // A single component is dragged from the list to a chosen place.
-  await page.locator('.pal-tabs button', { hasText: 'Components' }).click();
-  const item = page.locator('.pal-item', { hasText: 'Number Slider' }), ib = (await item.boundingBox())!, cb = (await page.locator('.canvas').boundingBox())!;
-  await page.mouse.move(ib.x + 30, ib.y + 8); await page.mouse.down();
+  // A template is dragged from the ribbon to a chosen place; its thumbnail follows the pointer.
+  const card = page.locator('.rb-card', { hasText: 'Portal frame' }), kb = (await card.boundingBox())!, cb = (await page.locator('.canvas').boundingBox())!;
+  await page.mouse.move(kb.x + 30, kb.y + 20); await page.mouse.down();
+  await page.mouse.move(cb.x + 200, cb.y + cb.height - 150, { steps: 8 });
+  await expect(page.locator('.drag-tag.with-thumb svg')).toBeVisible();
+  await page.mouse.up();
+  await ready(page);
+  await expect(page.locator('.node')).toHaveCount(18 + 26);
+  await page.keyboard.press('Control+z');
+  await expect(page.locator('.node')).toHaveCount(18);
+  // A single component is dragged from its icon in the ribbon.
+  await page.locator('.rb-tabs button[role="tab"]', { hasText: 'Params' }).click();
+  const item = page.locator('.rb-btn[aria-label="Number Slider"]'), ib = (await item.boundingBox())!;
+  await page.mouse.move(ib.x + 12, ib.y + 12); await page.mouse.down();
   await page.mouse.move(cb.x + 120, cb.y + cb.height - 120, { steps: 8 });
   await expect(page.locator('.drag-tag')).toHaveText('Number Slider');
   await page.mouse.up();
   await expect(page.locator('.node')).toHaveCount(19);
   await expect(page.locator('.drag-tag')).toHaveCount(0);
+  // A click on an icon adds the component too, and every node shows its icon.
+  await page.locator('.rb-btn[aria-label="Panel"]').click();
+  await expect(page.locator('.node')).toHaveCount(20);
+  await expect(page.locator('.node .hd svg.ico')).toHaveCount(20);
   expect(errors).toEqual([]);
 });
 
@@ -141,5 +157,71 @@ test('the text size can be changed and is remembered', async ({ page }) => {
   await page.locator('.menu-btn', { hasText: 'View' }).click();
   await page.locator('.menu-drop button', { hasText: 'Normal' }).click();
   expect((await size()).ts).toBe('1');
+  expect(errors).toEqual([]);
+});
+
+test('the ribbon has every component under its tab, can be searched and can be hidden', async ({ page }) => {
+  const errors = watch(page);
+  await open(page, 'quick-truss');
+  const tab = (name: string) => page.locator('.rb-tabs button[role="tab"]', { hasText: name });
+  let total = 0;
+  for (const name of ['Params', 'Math', 'Lists', 'Trees', 'Vector', 'Curve', 'Surface', 'Mesh', 'Transform', 'Display', 'Structure', 'Tools']) {
+    await tab(name).click();
+    const n = await page.locator('.rb-body .rb-btn').count();
+    expect(n, name).toBeGreaterThan(3);
+    expect(await page.locator('.rb-body .rb-btn svg.ico').count()).toBe(n);
+    total += n;
+  }
+  expect(total).toBe(254);                               // 255 components, less the Cluster itself (made from a selection)
+  // Hovering explains a component.
+  await tab('Structure').click();
+  await page.locator('.rb-btn[aria-label="Beam"]').hover();
+  await expect(page.locator('.rb-tip')).toContainText('Beam');
+  // Search across all tabs.
+  await page.locator('.rb-search').fill('buckl');
+  await expect(page.locator('.rb-body .rb-btn.wide').first()).toContainText('Buckling Analysis');
+  await page.locator('.rb-search').fill('');
+  // Hide and show.
+  await page.locator('.rb-toggle').click();
+  await expect(page.locator('.rb-body')).toHaveCount(0);
+  await page.reload(); await ready(page);
+  await expect(page.locator('.rb-body')).toHaveCount(0);  // remembered
+  await tab('Curve').click();
+  await expect(page.locator('.rb-btn[aria-label="Line"]')).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test('a verification model opens built from ordinary components and still passes its checks', async ({ page }) => {
+  const errors = watch(page);
+  await open(page, 'quick-truss');
+  await page.locator('.rb-tabs button[role="tab"]', { hasText: 'Verification' }).click();
+  await page.locator('.rb-body button', { hasText: 'As components' }).click();
+  await page.locator('.rb-card[aria-label^="B05"]').click();
+  await ready(page);
+  await expect(page.locator('.node', { hasText: 'Verification Model' })).toHaveCount(0);
+  for (const name of ['Member axes', 'Beam', 'Section: Test section', 'Custom Material', 'Support: fixed', 'Line Load', 'Assemble Model', 'Linear Static', 'Verification Check']) await expect(page.locator('.node .hd', { hasText: name }).first()).toBeVisible();
+  await expect(page.locator('.panel-table tbody tr')).toHaveCount(3);
+  await expect(page.locator('.panel-table b').first()).toContainText('pass');
+  await expect(page.locator('.node.error')).toHaveCount(0);
+  // The other way of opening is still there.
+  await page.locator('.rb-body button', { hasText: 'One component' }).click();
+  await page.locator('.rb-card[aria-label^="B01"]').click();
+  await ready(page);
+  await expect(page.locator('.node', { hasText: 'Verification Model' })).toHaveCount(1);
+  expect(errors).toEqual([]);
+});
+
+test('the 3D view fits on request and offers the display styles', async ({ page }) => {
+  const errors = watch(page);
+  await open(page, 'portal-building');
+  await expect(page.locator('.v-toolbar select[aria-label="Display mode"]')).toHaveValue('shaded');
+  for (const mode of ['lines', 'wireframe', 'ghosted', 'shaded']) await page.locator('.v-toolbar select[aria-label="Display mode"]').selectOption(mode);
+  await page.locator('.v-toolbar button.fit').click();
+  await page.locator('.viewport').press('f');
+  const auto = page.locator('.v-toolbar button', { hasText: 'Auto' });
+  await expect(auto).toHaveAttribute('aria-pressed', 'true');
+  await auto.click();
+  await expect(auto).toHaveAttribute('aria-pressed', 'false');
+  await auto.click();
   expect(errors).toEqual([]);
 });

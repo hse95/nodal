@@ -41,7 +41,7 @@ function ProjectPanel(): JSX.Element {
     <p class="muted">{project.graph.nodes.length} components, {project.graph.wires.length} wires. {stats().err ? `${stats().err} with errors. ` : ''}{stats().warn ? `${stats().warn} with warnings. ` : ''}Last solve {stats().ms.toFixed(0)} ms.</p>
     <p class="muted">Units: {project.units === 'SI' ? 'SI (kN, m, MPa; section sizes in mm)' : 'US customary (kip, ft, ksi; section sizes in inches)'}. One model unit is one {unitSystem(project.units).len.label === 'm' ? 'meter' : 'foot'}.</p>
     <h4>Getting around</h4>
-    <ul class="tips"><li>Double-click the canvas to add a component, or drag one from the list on the left.</li><li>The Templates tab on the left adds whole groups, such as a complete beam model.</li><li>Drag from an output dot to an input dot to connect. Let go on empty canvas to pick what to connect to.</li><li>Right-click a wire to delete it.</li><li>Select a component to see its settings and help here.</li><li>Click a node or member in the 3D view to read its results.</li><li>The A− and A+ buttons at the top change the text size.</li></ul>
+    <ul class="tips"><li>Pick a component from the ribbon at the top: click it, or drag it onto the canvas. Double-clicking the canvas searches by name.</li><li>The Templates tab of the ribbon adds whole groups, such as a complete beam model.</li><li>Drag from an output dot to an input dot to connect. Let go on empty canvas to pick what to connect to.</li><li>Right-click a wire to delete it.</li><li>Select a component to see its settings and help here.</li><li>Click a node or member in the 3D view to read its results. Press F there to fit the view.</li><li>The A− and A+ buttons at the top change the text size.</li></ul>
   </div>;
 }
 

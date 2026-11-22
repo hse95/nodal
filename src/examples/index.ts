@@ -261,7 +261,7 @@ function benchmarkExample(id: string) {
   const g = new GB(`${def.id} ${def.title}`, `${def.description}\n\nReference: ${def.source}`);
   g.n('bm', 'fe.benchmark', 0, 0, { state: { index } });
   const shell = def.group === 'Shells', modes = def.builder === 'vibration' || (def.builder === 'column' && !def.params.second);
-  g.n('view', 'fe.view', 1.3, 0, { state: { contour: shell ? 'disp' : 'none', diagram: shell || modes || def.builder === 'cable' ? 'none' : def.builder === 'triangleTruss' || def.builder === 'tenBarTruss' ? 'N' : 'My', values: !shell, loads: !shell, sections: false, animate: modes } }); g.w('bm', 'view', 'Result', 'Result');
+  g.n('view', 'fe.view', 1.3, 0, { state: { contour: shell ? 'disp' : 'none', diagram: shell || modes || def.builder === 'cable' ? 'none' : def.builder === 'triangleTruss' || def.builder === 'tenBarTruss' ? 'N' : 'My', values: !shell, loads: !shell, animate: modes } }); g.w('bm', 'view', 'Result', 'Result');
   g.n('panel', 'param.panel', 0, 2, { label: 'Computed vs reference', w: 520, h: 100 + 36 * def.checks.length }); g.w('bm', 'panel', 'Data', 'Table');
   return { project: g.p, expected: [g.exp('All checks of this benchmark pass', 'bm', 3, 'first', 1, 0, '')] };
 }

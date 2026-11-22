@@ -76,3 +76,14 @@ The headless layers (engine, geometry, solver, benchmarks) were built and tested
 - [x] Easier editing: wire dropped on a component or on empty canvas, drag from the list, quick result controls in the 3D view, undo from anywhere, rename by double-click, readable zoom on open
 - [~] Narrow screens: the side panels are slimmer below 1320 px, but there is no automatic collapse
 
+## 12 Version 0.3.0: ribbon, icons and a realistic view (requested)
+- [x] Ribbon with a tab per component family, plus Templates, Examples and Verification; search; hover help; can be hidden
+- [x] An icon for every component and a thumbnail for every template, example and benchmark, all drawn for Nodal
+- [x] Templates dragged from thumbnail cards
+- [x] Realistic display: section solids, material colors, shadows; Lines display kept
+- [x] Clear support symbols (fixed, pinned, roller, spring), better load and reaction arrows, moment arcs
+- [x] Deflected shape as a dashed line
+- [x] Fit all, Auto fit, F key; fit avoids the toolbar, notes and legend
+- [x] Verification models opened as ordinary components, with a Verification Check component; all 28 tested
+- [ ] Not done: icons have no text labels under them (hover shows the name); touch devices have no hover, so the search field is the fallback there
+

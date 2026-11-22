@@ -1,16 +1,16 @@
 # Progress
 
-Last updated 2026-11-21 (version 0.2.0). Written so that a new session can pick up from here.
+Last updated 2026-11-21 (version 0.3.0). Written so that a new session can pick up from here.
 
 ## State
 
-Version 0.2.0 is built, tested and deployed. It changes the display and the editor only (see CHANGELOG.md); the solver in `src/fe` is unchanged since 0.1.0. Live app: <https://hse95.github.io/nodal/> (deployed by `.github/workflows/ci.yml` on every push to `main`).
+Version 0.3.0 is built, tested and deployed. Versions 0.2.0 and 0.3.0 change the display, the editor and the verification tools only (see CHANGELOG.md); the solver in `src/fe` is unchanged since 0.1.0. Live app: <https://hse95.github.io/nodal/> (deployed by `.github/workflows/ci.yml` on every push to `main`).
 
 | Check | Result |
 |---|---|
 | `npm run typecheck` | clean (strict mode) |
-| `npm test` | 218 tests pass: data trees and engine (51), benchmarks (28), cross-check and sparse solver (59), components and geometry (12), examples (40), templates (11), editor helpers and formulas (13), nonlinear (4) |
-| `npm run test:ui` | 17 browser tests pass in headless Chrome against the production build, each asserting an empty console |
+| `npm test` | 247 tests pass: data trees and engine (51), benchmarks (28), benchmarks rebuilt from components (28), cross-check and sparse solver (59), components and geometry (12), examples (40), templates (11), editor helpers, formulas and icons (14), nonlinear (4) |
+| `npm run test:ui` | 20 browser tests pass in headless Chrome against the production build, each asserting an empty console |
 | Verification | 28 of 28 benchmarks pass, 93 checks, in the tests and in the in-app panel |
 | CI | type check, tests, build, browser tests and deploy all green on GitHub |
 

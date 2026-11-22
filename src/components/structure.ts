@@ -291,7 +291,7 @@ const clusterPorts = (node: NodeData, project: ProjectFile) => {
   }
   return { inputs: ins, outputs: outs };
 };
-C('cluster', 'Cluster', 'Cluster', 'Script', 'A reusable group of components with its own inputs and outputs. Make one by selecting components and choosing Cluster in the right-click menu; saved clusters appear in the component list.',
+C('cluster', 'Cluster', 'Cluster', 'Script', 'A reusable group of components with its own inputs and outputs. Make one by selecting components and choosing Cluster in the right-click menu; saved clusters appear under Tools in the ribbon.',
   [], [], null, { state: { clusterId: '' }, ports: clusterPorts, width: 150, solveTrees: async (trees, ctx) => {
     const def = ctx.project.clusters[ctx.node.state.clusterId];
     if (!def) throw new Error('This cluster definition is missing from the project');

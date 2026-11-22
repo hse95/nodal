@@ -58,10 +58,16 @@ function evaluate(def: BenchmarkDef, check: CheckDef, params: Params, cache: Map
   return { computed: q(hit.result), expected };
 }
 
-export function runBenchmark(def: BenchmarkDef): BenchmarkResult {
+/**
+ * Run a benchmark. With `given`, the checks on the benchmark's own model are evaluated on that result
+ * instead of solving the model here: this is how a benchmark rebuilt from ordinary components is
+ * verified. (Checks that use a different model or other parameters are still solved here.)
+ */
+export function runBenchmark(def: BenchmarkDef, given?: FEResult): BenchmarkResult {
   const t0 = performance.now(), rows: CheckResult[] = [];
   const cache = new Map<string, any>();
   try {
+    if (given) cache.set(def.builder + JSON.stringify({ ...def.params }), { built: BUILDERS[def.builder](def.params), result: given });
     for (const check of def.checks) {
       const { computed, expected } = evaluate(def, check, check.builder ? { ...(check.params ?? {}) } : { ...def.params, ...(check.params ?? {}) }, cache);
       const absolute = expected === 0 || (check.abs !== undefined && Math.abs(expected) < check.abs);
@@ -70,7 +76,7 @@ export function runBenchmark(def: BenchmarkDef): BenchmarkResult {
       rows.push({ label: check.label, tex: check.tex, computed, expected, errorPct: absolute ? err : err * 100, tolerancePct: absolute ? (check.abs ?? check.tolerance) : check.tolerance * 100, pass, unit: check.unit ?? '', note: check.note, absolute });
     }
     let convergence: BenchmarkResult['convergence'];
-    if (def.convergence) {
+    if (def.convergence && !given) {
       const c = def.convergence, check = def.checks[c.check];
       const points = c.values.map(x => {
         const r = evaluate(def, check, { ...def.params, ...(check.params ?? {}), [c.param]: x }, cache);

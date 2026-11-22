@@ -29,6 +29,7 @@ export function Viewport(): JSX.Element {
   const [turned, setTurned] = createSignal(false);
   const [failed, setFailed] = createSignal('');
   let renderer: THREE.WebGLRenderer, scene: THREE.Scene, persp: THREE.PerspectiveCamera, ortho: THREE.OrthographicCamera, camera: THREE.Camera, controls: OrbitControls;
+  let sun: THREE.DirectionalLight, ground: THREE.Mesh;
   let builder: SceneBuilder | null = null, grid: THREE.GridHelper | null = null, labels: Label[] = [], labelEls: HTMLDivElement[] = [];
   let labelSize: { w: number; h: number }[] = [], labelOrder: number[] = [];
   let needsRender = true, raf = 0, firstFit = true;
@@ -46,13 +47,22 @@ export function Viewport(): JSX.Element {
     const half = ortho.userData.half ?? 10;
     ortho.left = -half * w / h; ortho.right = half * w / h; ortho.top = half; ortho.bottom = -half; ortho.updateProjectionMatrix();
     invalidate();
+    // While the view still follows the model, a pane that changes shape (a moved divider, a new layout) is fitted again.
+    if (follow && Math.abs(w / h - shape) > 0.12 * shape) { shape = w / h; clearTimeout(refit); refit = window.setTimeout(() => { if (follow) fit(); }, 180); }
   };
+  let shape = 1, refit = 0;
   const viewDir = (name: ViewName) => (name === 'top' ? new THREE.Vector3(0, 0, 1) : name === 'front' ? new THREE.Vector3(0, -1, 0) : name === 'right' ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(1, -1.4, 0.9).normalize());
   /**
    * Zoom so that everything drawn fits the view. The eight corners of the bounding box are tested
    * against the view pyramid, which fits long, flat models (a beam, a bridge) much more tightly than
    * a bounding sphere does. A margin is left for value labels.
    */
+  /** How far the toolbar (top), the notes (bottom) and the legend (right) reach into the picture, in pixels. */
+  const insets = () => {
+    const top = (host.querySelector('.v-bars') as HTMLElement | null)?.offsetHeight ?? 0, info = host.querySelector('.v-info') as HTMLElement | null, lg = host.querySelector('.v-legend') as HTMLElement | null;
+    return { top, bottom: info ? info.offsetHeight + 34 : 24, side: lg && host.clientWidth > 760 ? lg.offsetWidth + 14 : 0 };
+  };
+  let fitInsets = 0;
   const fit = () => {
     if (!builder) return;
     const box = builder.bounds();
@@ -69,6 +79,11 @@ export function Viewport(): JSX.Element {
     // Test the drawn points themselves; when there were too many to keep, add the corners of the bounding box.
     const pts = builder.cloud.slice();
     if (pts.length >= 90000 || !pts.length) for (let k = 0; k < 8; k++) pts.push(k & 1 ? box.max.x : box.min.x, k & 2 ? box.max.y : box.min.y, k & 4 ? box.max.z : box.min.z);
+    // The toolbar at the top and the notes at the bottom lie over the picture, so the model is fitted into the
+    // clear band between them and a little is left at the sides for value labels.
+    const { top, bottom, side } = insets();
+    fitInsets = top + bottom + side;
+    const kv = Math.max(0.45, (h - top - bottom - 40) / h), kh = Math.max(0.5, 0.9 - side / w);
     let dist = 0, halfH = 0;
     // Two passes: the first finds the middle of what is seen from this direction, the second the distance.
     for (let pass = 0; pass < 2; pass++) {
@@ -78,19 +93,20 @@ export function Viewport(): JSX.Element {
         rel.set(pts[i], pts[i + 1], pts[i + 2]).sub(c);
         const x = rel.dot(right), y = rel.dot(up), z = rel.dot(dir);
         x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y);
-        dist = Math.max(dist, z + Math.max(Math.abs(x) / tanH, Math.abs(y) / tanV)); halfH = Math.max(halfH, Math.abs(y), Math.abs(x) / aspect);
+        dist = Math.max(dist, z + Math.max(Math.abs(x) / (tanH * kh), Math.abs(y) / (tanV * kv))); halfH = Math.max(halfH, Math.abs(y) / kv, Math.abs(x) / (aspect * kh));
       }
       if (pass === 0) c.addScaledVector(right, (x0 + x1) / 2).addScaledVector(up, (y0 + y1) / 2);
     }
-    // Room for labels, the toolbar and the notes at the bottom: more in a short pane.
-    const pad = 1.1 + Math.min(0.2, 70 / h);
-    dist = Math.max(dist * pad, r * 0.4); halfH = Math.max(halfH * pad, r * 0.05);
+    dist = Math.max(dist, r * 0.4); halfH = Math.max(halfH, r * 0.05);
+    // Move the middle of the model to the middle of the clear band.
+    const perPx = camera === persp ? 2 * dist * tanV / h : 2 * halfH / h;
+    c.addScaledVector(up, ((top - bottom) / 2) * perPx).addScaledVector(right, (side / 2) * perPx);
     controls.target.copy(c);
     camera.position.copy(c).addScaledVector(dir, camera === persp ? dist : r * 4);
     ortho.userData.half = halfH; ortho.zoom = 1;
     persp.near = Math.max(dist - r * 2, dist / 500); persp.far = dist + r * 20; ortho.near = -r * 50; ortho.far = r * 50;
     resize(); controls.update(); invalidate();
-    follow = true; fitted.copy(builder.bounds());
+    follow = true; fitted.copy(builder.bounds()); shape = Math.max(1, host.clientWidth) / Math.max(1, host.clientHeight);
   };
   /** Whether the drawn extent has changed enough since the last fit to be worth fitting again (2 % of its size). */
   const outgrown = (): boolean => {
@@ -113,7 +129,7 @@ export function Viewport(): JSX.Element {
   const rebuild = () => {
     if (!scene) return;
     const u = unitSystem(project.units), sel = new Set(selection()), proj = unwrap(project);
-    const next = new SceneBuilder(u, ui.theme === 'dark');
+    const next = new SceneBuilder(u, ui.theme === 'dark', ui.display !== 'lines');
     const plan = previewPlan();
     for (const n of project.graph.nodes) {
       const def = registry.get(n.type);
@@ -133,6 +149,7 @@ export function Viewport(): JSX.Element {
         for (const b of t.branches) for (const item of b.items) { if (count++ > 20000) break; try { next.draw(item, hi && p.type !== 'result' && (item as any)?.k !== 'feview', undefined, n.id); } catch (e) { console.warn('Preview failed', e); } }
       });
     }
+    next.finish();
     if (builder) { scene.remove(builder.group); builder.dispose(); }
     builder = next; scene.add(next.group);
     labels = next.labels; setLegend(next.legend); setInfo(next.info.filter(Boolean));
@@ -152,6 +169,7 @@ export function Viewport(): JSX.Element {
       scene.add(grid);
     }
     scene.background = new THREE.Color(ui.theme === 'dark' ? 0x171b21 : 0xf3f4f6);
+    placeLight();
     if (firstFit && !next.bounds().isEmpty()) {
       firstFit = false;
       // A model that lies in the vertical X-Z plane (a beam, a plane truss or frame) opens in the front view,
@@ -159,16 +177,31 @@ export function Viewport(): JSX.Element {
       const b = next.coreBounds(), sz = b.isEmpty() ? new THREE.Vector3() : b.getSize(new THREE.Vector3()), flat = Math.max(sz.x, sz.z) > 0 && sz.y < 1e-6 * Math.max(sz.x, sz.z);
       const want: ViewName = flat ? 'front' : 'perspective';
       if (want !== viewName() || want === 'perspective') setView(want); else fit();
-    } else if (follow && outgrown()) fit();
+    } else if ((follow || ui.autoFit) && outgrown()) fit();
+    // A legend or a longer note that appears with the results takes room too: fit again once it is laid out.
+    requestAnimationFrame(() => { if (!follow || !builder) return; const i = insets(); if (Math.abs(i.top + i.bottom + i.side - fitInsets) > 24) fit(); });
     invalidate();
+  };
+  /** Aim the sun at the model and size its shadow to it; the shadow ground lies just under the lowest point. */
+  const placeLight = () => {
+    if (!builder || !sun) return;
+    const b = builder.bounds();
+    if (b.isEmpty()) { ground.visible = false; return; }
+    const c = b.getCenter(new THREE.Vector3()), r = Math.max(b.getSize(new THREE.Vector3()).length() / 2, 0.5);
+    sun.target.position.copy(c); sun.position.copy(c).add(new THREE.Vector3(0.45, -0.6, 1).normalize().multiplyScalar(r * 3));
+    const cam = sun.shadow.camera; cam.left = cam.bottom = -r * 1.5; cam.right = cam.top = r * 1.5; cam.near = r * 0.2; cam.far = r * 6; cam.updateProjectionMatrix();
+    ground.scale.set(r * 8, r * 8, 1); ground.position.set(c.x, c.y, b.min.z - r * 0.002);
+    ground.visible = ui.display === 'shaded';
+    renderer.shadowMap.needsUpdate = true;
   };
   const applyDisplay = () => {
     if (!builder) return;
+    if (ground) ground.visible = ui.display === 'shaded' && !builder.bounds().isEmpty();
     builder.group.traverse(o => {
       const m = (o as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined;
       if (!m || !o.userData.shaded) return;
       m.wireframe = ui.display === 'wireframe';
-      if (ui.display === 'ghosted') { m.transparent = true; m.opacity = 0.3; m.depthWrite = false; } else if (m.userData.baseOpacity !== undefined || ui.display === 'shaded') { m.opacity = m.userData.baseOpacity ?? m.opacity; m.depthWrite = true; }
+      if (ui.display === 'ghosted') { m.transparent = true; m.opacity = 0.3; m.depthWrite = false; } else if (m.userData.baseOpacity !== undefined || ui.display === 'shaded' || ui.display === 'lines') { m.opacity = m.userData.baseOpacity ?? m.opacity; m.transparent = m.opacity < 1; m.depthWrite = m.opacity >= 1; }
       m.userData.baseOpacity ??= m.opacity; m.needsUpdate = true;
     });
     if (ui.sectionOn) {
@@ -189,8 +222,13 @@ export function Viewport(): JSX.Element {
     persp = new THREE.PerspectiveCamera(40, 1, 0.05, 5000); persp.up.set(0, 0, 1); persp.position.set(14, -18, 11);
     ortho = new THREE.OrthographicCamera(-10, 10, 10, -10, -1000, 1000); ortho.up.set(0, 0, 1);
     camera = persp;
-    scene.add(new THREE.HemisphereLight(0xffffff, 0x9aa0a8, 1.6));
-    const sun = new THREE.DirectionalLight(0xffffff, 1.4); sun.position.set(6, -9, 14); scene.add(sun);
+    scene.add(new THREE.HemisphereLight(0xffffff, 0xa3a9b3, 2.1));
+    sun = new THREE.DirectionalLight(0xffffff, 2.3); sun.position.set(6, -9, 14); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0004;
+    scene.add(sun); scene.add(sun.target);
+    const fill = new THREE.DirectionalLight(0xdfe8ff, 0.8); fill.position.set(-8, 6, 5); scene.add(fill);
+    // A ground that only shows shadows: it gives solids a footing without hiding the grid.
+    ground = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.ShadowMaterial({ opacity: 0.2 })); ground.receiveShadow = true; ground.visible = false; scene.add(ground);
+    renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     controls = new OrbitControls(persp, renderer.domElement);
     controls.enableDamping = false; controls.screenSpacePanning = true; controls.zoomToCursor = true;
     controls.addEventListener('change', invalidate);
@@ -233,7 +271,9 @@ export function Viewport(): JSX.Element {
     raf = requestAnimationFrame(loop);
     // Picking: a click without a drag selects the structural node / element under the cursor.
     let down = { x: 0, y: 0 };
-    renderer.domElement.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY }; });
+    renderer.domElement.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY }; host.focus({ preventScroll: true }); });
+    renderer.domElement.addEventListener('dblclick', () => fit());
+    host.addEventListener('keydown', e => { if (e.key.toLowerCase() === 'f' && !e.ctrlKey && !e.metaKey && !(e.target as HTMLElement).matches('input, select, textarea')) { e.preventDefault(); fit(); } });
     renderer.domElement.addEventListener('pointerup', e => {
       if (Math.hypot(e.clientX - down.x, e.clientY - down.y) > 4 || !builder) return;
       const r = renderer.domElement.getBoundingClientRect(), ray = new THREE.Raycaster();
@@ -246,7 +286,8 @@ export function Viewport(): JSX.Element {
       const hit = hits.sort((a, b) => rank(a) - rank(b) || a.distance - b.distance)[0];
       if (!hit) { setUi('pick', null); return; }
       const pk = hit.object.userData.pick;
-      const index = pk.kind === 'node' ? hit.index ?? 0 : pk.kind === 'beam' ? pk.ids[(hit.object as any).isLineSegments2 ? hit.faceIndex ?? 0 : Math.floor((hit.index ?? 0) / 2)] : pk.tri[hit.faceIndex ?? 0];
+      // Members can be hit on their line (one entry per segment) or on their solid (one entry per triangle).
+      const index = pk.kind === 'node' ? hit.index ?? 0 : pk.kind === 'beam' && !pk.tri ? pk.ids[(hit.object as any).isLineSegments2 ? hit.faceIndex ?? 0 : Math.floor((hit.index ?? 0) / 2)] : pk.tri[hit.faceIndex ?? 0];
       setUi('pick', { kind: pk.kind, index, nodeId: pk.nodeId }); setUi('inspector', true);
     });
     viewportApi.png = () => { renderer.render(scene, camera); return renderer.domElement.toDataURL('image/png'); };
@@ -287,19 +328,20 @@ export function Viewport(): JSX.Element {
   });
   // A newly opened project is fitted to the view once its first results are drawn.
   createEffect(() => { openTick(); firstFit = true; });
-  createEffect(() => { runTick(); selection(); void ui.theme; void ui.textScale; void ui.grid; void project.units; void project.graph.nodes.length; project.graph.nodes.forEach(n => { void n.preview; void n.enabled; }); rebuild(); });
+  createEffect(() => { runTick(); selection(); void ui.theme; void ui.textScale; void (ui.display === 'lines'); void ui.grid; void project.units; void project.graph.nodes.length; project.graph.nodes.forEach(n => { void n.preview; void n.enabled; }); rebuild(); });
   createEffect(() => { void ui.display; void ui.sectionOn; void ui.sectionAxis; void ui.sectionPos; if (renderer) applyDisplay(); });
 
   const Btn = (p: { label: string; title: string; on?: boolean; onClick: () => void }) => <button classList={{ on: !!p.on }} title={p.title} aria-label={p.title} aria-pressed={p.on} onClick={p.onClick}>{p.label}</button>;
   return (
-    <div class="viewport" ref={host}>
+    <div class="viewport" ref={host} tabIndex={0} aria-label="3D view">
       <div class="v-labels" ref={labelLayer} />
       <Show when={failed()}><div class="empty-state">{failed()}</div></Show>
       <div class="v-bars">
         <div class="v-toolbar" role="toolbar" aria-label="3D view">
           <div class="seg"><For each={['perspective', 'top', 'front', 'right'] as ViewName[]}>{n => <Btn label={n === 'perspective' ? '3D' : n[0].toUpperCase() + n.slice(1)} title={`${n[0].toUpperCase() + n.slice(1)} view`} on={viewName() === n && !turned()} onClick={() => setView(n)} />}</For></div>
-          <Btn label="Fit" title="Zoom to fit. The view then follows the model as it changes, until you move the view yourself." onClick={() => fit()} />
-          <select value={ui.display} title="How surfaces and solids are drawn" aria-label="Display mode" onChange={e => setUi('display', e.currentTarget.value as 'shaded')}><option value="shaded">Shaded</option><option value="wireframe">Wireframe</option><option value="ghosted">Ghosted</option></select>
+          <div class="seg"><button class="fit" title="Zoom so that everything fits the view (F, or double-click the background)" onClick={() => fit()}>⤢ Fit all</button>
+            <Btn label="Auto" title="Keep everything in view: fit again whenever the model changes" on={ui.autoFit} onClick={() => { const on = !ui.autoFit; setUi('autoFit', on); try { localStorage.setItem('nodal.autoFit', on ? '1' : '0'); } catch { /* storage unavailable */ } if (on) fit(); }} /></div>
+          <select value={ui.display} title="Realistic: members as solids with their cross-sections, with shadows. Lines: members as lines." aria-label="Display mode" onChange={e => setUi('display', e.currentTarget.value as 'shaded')}><option value="shaded">Realistic</option><option value="lines">Lines</option><option value="wireframe">Wireframe</option><option value="ghosted">See-through</option></select>
           <Btn label="Grid" title="Show or hide the ground grid" on={ui.grid} onClick={() => setUi('grid', !ui.grid)} />
           <Btn label="Section" title="Cut the view with a section plane" on={ui.sectionOn} onClick={() => setUi('sectionOn', !ui.sectionOn)} />
           <Show when={ui.sectionOn}><select value={ui.sectionAxis} onChange={e => setUi('sectionAxis', e.currentTarget.value as 'x')} aria-label="Section axis"><option value="x">X</option><option value="y">Y</option><option value="z">Z</option></select>

@@ -8,9 +8,11 @@ Contents: [Getting started](#1-getting-started) · [The canvas](#2-the-canvas) �
 
 ## 1 Getting started
 
-The window has four parts: the **component list** on the left, the **canvas** where you build the graph, the **3D view**, and the **inspector** on the right. The top bar holds the menus, the solve status and the layout buttons.
+The window has four parts: the **ribbon** across the top, the **canvas** where you build the graph, the **3D view**, and the **inspector** on the right. The top bar above the ribbon holds the menus, the solve status and the layout buttons.
 
-The quickest start is a **template**: open the **Templates** tab on the left and click *Simply supported beam*. A complete model appears on the canvas, with sliders for the span and the load, and the 3D view shows the beam, its bending moment diagram and its deflection. Drag a slider to see everything update. Templates are described in section 2.
+The ribbon has one tab for each family of components (Params, Math, Lists, Trees, Vector, Curve, Surface, Mesh, Transform, Display, Structure, Tools) and three more for **Templates**, **Examples** and **Verification**. Every component has its own icon; hover over one to see its name and what it does. Click an icon to add the component to the middle of the canvas, or drag it to where you want it. The search field at the right end of the ribbon looks through all tabs. The small arrow next to it hides the ribbon to leave more room (also **View → Hide ribbon**); click any tab to bring it back. The choice is remembered.
+
+The quickest start is a **template**: open the **Templates** tab of the ribbon and click *Simply supported beam*. A complete model appears on the canvas, with sliders for the span and the load, and the 3D view shows the beam, its bending moment diagram and its deflection. Drag a slider to see everything update. Templates are described in section 2.
 
 **Help → Take the tour** builds a small truss in five steps. To do the same by hand:
 
@@ -30,7 +32,7 @@ The same model is in **Examples → Quick start: a simple truss**.
 
 ### Adding and connecting
 
-- **Add a component**: double-click the canvas and type (fuzzy search), click an entry in the component list or drag it onto the canvas, or press Ctrl/Cmd+K.
+- **Add a component**: click its icon in the ribbon or drag the icon onto the canvas; or double-click the canvas and type (fuzzy search); or press Ctrl/Cmd+K.
 - **Connect**: drag from an output dot (right side) to an input dot (left side). A new wire replaces the old one on that input; hold **Shift** while dropping to add a second wire. Several wires into one input are merged in the order they were connected.
 - **Connect without aiming**: let go of the wire anywhere on a component and it goes to the first free port that accepts that kind of data. Let go on **empty canvas** and a search opens that lists only the components that can take the wire; pick one and it is added and connected.
 - **Disconnect**: right-click a wire and choose *Delete wire*, or click the wire and press Delete. The same menu has *Show its data in a panel*, which is a quick way to see what a wire carries.
@@ -38,12 +40,12 @@ The same model is in **Examples → Quick start: a simple truss**.
 
 ### Templates
 
-A template is a group of connected components that is added to the project you have open (an example, by contrast, opens as a new project). The **Templates** tab of the left-hand list has two kinds:
+A template is a group of connected components that is added to the project you have open (an example, by contrast, opens as a new project). The **Templates** tab of the ribbon shows each one as a card with a small picture of what it builds. There are two kinds:
 
 - **Complete models**: simply supported beam, cantilever, continuous beam, plane truss, portal frame, column buckling and a rectangular plate. Each has sliders for its main dimensions and loads, and panels with the key results. They are checked against hand calculations by the automated tests.
 - **Building blocks**: a material with a section, a set of load cases with a combination, and a results readout. These are meant to be wired into your own graph; the frame around each says where.
 
-Click a template to add it below what is already on the canvas, or drag it to where you want it. You can also right-click empty canvas and choose one under *Insert template here*, or type its name in the double-click search. The new components arrive selected and inside a group, so they can be moved together. Undo removes the whole template.
+Click a card to add the template below what is already on the canvas, or drag the card to where you want it; the picture follows the pointer while you drag. You can also right-click empty canvas and choose one under *Insert template here*, or type its name in the double-click search. The new components arrive selected and inside a group, so they can be moved together. Undo removes the whole template.
 
 ### Text size
 
@@ -186,15 +188,24 @@ A structure passes through several components: curves, elements, the assembled m
 
 A model that lies in the vertical X–Z plane (a beam, a plane truss or frame) opens in the **Front** view, where loads and diagrams are seen square-on. Everything else opens in the 3D view. The buttons at the top of the 3D view switch between them.
 
-After **Fit** (and when a project is opened) the view keeps the whole model in sight as sliders change it. As soon as you turn, pan or zoom the view yourself it stays where you put it; press **Fit** to let it follow again.
+**Fit all** brings everything that is drawn into view, clear of the toolbar, the notes and the legend. Double-clicking the 3D view, or pressing **F** while it has the focus, does the same. With **Auto** on (the default), the view fits again whenever the model outgrows it, for example when a slider makes the span longer. With Auto off, the view follows the model only until you turn, pan or zoom it yourself.
+
+The display list next to these buttons has four styles. **Realistic** (the default) draws members as solids with their real cross-sections, colored by material, with soft shadows on the ground. **Lines** draws members as bold lines, which is faster for very large models and closer to a textbook sketch. **Wireframe** and **See-through** are for looking inside solids and shells.
 
 ### Reading the picture
 
-- **Members** are bold lines. With a force diagram on, the bold line is the undeformed member and the deflected shape is a thin line; without a diagram the deflected shape is bold and the undeformed member is a faint line.
-- **Force diagrams** are filled bands: blue where the value is positive, red where it is negative, split at the zero crossings. Values are written at member ends and at peaks, and the largest value has a frame. Where two values would overlap, the larger one is kept.
+- **Members** are drawn in their undeformed position, as solids with their cross-section (Realistic) or as bold lines (Lines). A member that is split into several elements is drawn as one piece.
+- **The deflected shape** is a dashed blue line, drawn over the members so that it is never hidden. The scale factor is given in the note at the bottom of the view. Shell results keep the deformed, colored surface, with the undeformed mesh as faint lines.
+- **Force diagrams** are filled bands: blue where the value is positive, red where it is negative, split at the zero crossings. They are drawn over the members, so a diagram is readable in the Realistic display without switching to See-through. Values are written at member ends and at peaks, and the largest value has a frame. Where two values would overlap, the larger one is kept.
 - **Axial force in truss and cable members** is shown by the member itself: blue for tension, red for compression, heavier for a larger force, with the value at mid-length.
-- **Loads** are orange, **reactions** purple, **supports** green. A triangle is a support that holds the node vertically; a second line under it means the node can slide (a roller); a cross in the triangle means rotation is held too. A node held only sideways has a short bar along the held direction. Equal loads on many nodes or members are labelled once.
-- **Section shapes** are see-through in a result view, so that they do not hide diagrams.
+- **Supports** are green solids, sized so that a deep member never hides them:
+  - *fixed*: a block against the end of the member (a wall behind a beam, a footing under a column) with ground hatching behind it;
+  - *pinned*: a pyramid under the node, standing on a plate with hatching;
+  - *roller*: the same pyramid on two rollers, which lie across the direction the node is free to move in;
+  - *spring*: a zigzag down to a plate;
+  - a node held only sideways has a short bar along each held direction.
+- **Loads** are orange arrows with solid heads. A distributed load is a row of arrows joined by a line, with a light band down to the member; with solid members the arrows end on the member's surface. An applied moment is an arc with an arrowhead. Equal loads on many nodes or members are labelled once.
+- **Reactions** are purple: an arrow for the force, drawn clear of the support symbol, and an arc with its value for a moment.
 
 ### Quick controls
 
@@ -248,7 +259,12 @@ Switching the unit system changes how the numbers in the graph are read; it does
 
 Each check in the Verification panel shows its reference formula typeset next to the computed and reference values. Opening a benchmark as an example gives the same comparison as a table in a panel.
 
-**Verification** in the top bar runs all 28 benchmarks in your browser and lists computed value, reference value, error and tolerance for each check, with convergence plots for the mesh studies. **Open as example** loads a benchmark model into the canvas. The same suite runs in the automated tests; the full table is in `docs/verification-report.md`.
+The **Verification** tab of the ribbon lists the 28 benchmarks. **Run all checks** solves them all in your browser and lists computed value, reference value, error and tolerance for each check, with convergence plots for the mesh studies.
+
+Clicking a benchmark opens it as a project, in one of two ways, chosen with the switch at the left of the tab:
+
+- **One component**: a single *Verification Model* component that builds the model internally, wired to a Result View and the comparison table. Quick to open and always in step with the benchmark file.
+- **As components**: the same model written out with the ordinary components you would use yourself: panels of coordinates, Line or Construct Mesh, Custom Material, a section, Beam, Truss, Cable or Shell, supports, loads, Assemble Model and the analysis. A *Verification Check* component at the end compares the result of that graph with the reference values. You can change any number and see the check respond, or copy parts of the graph into your own project. All 28 benchmarks are rebuilt this way and solved in the automated tests, and they pass the same checks. The same suite runs in the automated tests; the full table is in `docs/verification-report.md`.
 
 ## 11 Troubleshooting
 

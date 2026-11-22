@@ -30,11 +30,17 @@ export const [ui, setUi] = createStore({
   panX: 60, panY: 60, zoom: 1,
   /** Text size chosen in the View menu: scales the interface text and the base size of canvas components. */
   textScale: readTextScale(),
-  palette: true, inspector: true,
+  /** The ribbon (components, templates, examples) is open, and which of its tabs is shown. */
+  ribbon: localStorage.getItem('nodal.ribbon') !== '0', ribbonTab: 'Structure',
+  inspector: true,
   dialog: null as null | 'examples' | 'verification' | 'about' | 'shortcuts' | 'help',
   toast: '', tour: -1,
   pick: null as Pick | null,
-  display: 'shaded' as 'shaded' | 'wireframe' | 'ghosted', sectionOn: false, sectionAxis: 'x' as 'x' | 'y' | 'z', sectionPos: 0.5, grid: true,
+  /** How the 3D view draws: realistic solids with shadows, simple lines, wireframe, or see-through. */
+  display: 'shaded' as 'shaded' | 'lines' | 'wireframe' | 'ghosted',
+  /** Keep the 3D view fitted to the model whenever the model changes. */
+  autoFit: localStorage.getItem('nodal.autoFit') !== '0',
+  sectionOn: false, sectionAxis: 'x' as 'x' | 'y' | 'z', sectionPos: 0.5, grid: true,
 });
 /**
  * Change the text size. Interface text follows the CSS variable --ts. Canvas components keep their
@@ -288,7 +294,7 @@ export function clusterSelection(): void {
   });
   setSelection([node.id]);
   saveClusterToLibrary(def);
-  toast('Cluster created. It is also saved to your cluster library in the component list.');
+  toast('Cluster created. It is also saved to your cluster library, under Tools in the ribbon.');
 }
 /** User cluster library (kept in this browser), so clusters can be reused in other projects. */
 export function clusterLibrary(): ClusterDef[] { try { return JSON.parse(localStorage.getItem('nodal.clusters') ?? '[]'); } catch { return []; } }

@@ -11,6 +11,8 @@ import { formatValue, typesCompatible } from '../core/graph';
 import { exprToTex } from '../core/expr';
 import { Tex, RichText, hasMath } from './Tex';
 import { TEMPLATES, Template } from '../templates';
+import { thumbFor } from './icons';
+import { Icon } from './Icon';
 import { pathText } from '../core/tree';
 import { graphMap } from '../components/basic';
 import { unitSystem } from '../fe/units';
@@ -90,13 +92,18 @@ export function insertTemplate(t: Template, at?: { x: number; y: number }): void
  * Start dragging a list entry (a component or a template) toward the canvas. A small tag follows the
  * pointer; releasing over the canvas calls `drop` with the canvas position, a plain click calls `click`.
  */
-export function dragToCanvas(e: PointerEvent, label: string, drop: (x: number, y: number) => void, click: () => void): void {
+/** A place near the middle of the visible canvas for a component added by a click (each one a little further along, so they do not stack). */
+export function canvasCenter(): { x: number; y: number } {
+  const el = document.querySelector('.canvas') as HTMLElement | null, r = el?.getBoundingClientRect(), k = project.graph.nodes.length % 6;
+  return { x: (r ? (r.width / 2 - ui.panX) / ui.zoom : 100) - 70 + k * 24, y: (r ? (r.height / 2 - ui.panY) / ui.zoom : 100) - 40 + k * 24 };
+}
+export function dragToCanvas(e: PointerEvent, label: string, drop: (x: number, y: number) => void, click: () => void, thumb?: string): void {
   if (e.button !== 0) return;
   const x0 = e.clientX, y0 = e.clientY;
   let tag: HTMLDivElement | null = null;
   const mv = (ev: PointerEvent) => {
     if (!tag && Math.hypot(ev.clientX - x0, ev.clientY - y0) < 6) return;
-    if (!tag) { tag = document.createElement('div'); tag.className = 'drag-tag'; tag.textContent = label; document.body.appendChild(tag); }
+    if (!tag) { tag = document.createElement('div'); tag.className = 'drag-tag'; if (thumb) { tag.classList.add('with-thumb'); tag.innerHTML = `<svg class="ico thumb" viewBox="0 0 48 32">${thumbFor(thumb)}</svg>`; } tag.appendChild(document.createTextNode(label)); document.body.appendChild(tag); }
     tag.style.transform = `translate(${ev.clientX + 12}px, ${ev.clientY + 10}px)`;
   };
   const up = (ev: PointerEvent) => {
@@ -260,7 +267,7 @@ export function Canvas(): JSX.Element {
         <Show when={band()}>{b => <div class="band" style={{ left: b().x0 + 'px', top: b().y0 + 'px', width: b().x1 - b().x0 + 'px', height: b().y1 - b().y0 + 'px' }} />}</Show>
       </div>
       <Show when={!project.graph.nodes.length && ui.tour < 0}><div class="empty-state"><h3>Start with a template, or add a component</h3><p>A template drops a small complete model onto the canvas. To build from scratch, double-click anywhere and type a name, such as <b>line</b>, <b>slider</b> or <b>beam</b>.</p>
-        <div class="row center"><button class="primary" onClick={() => insertTemplate(TEMPLATES[0], { x: 60, y: 60 })}>Insert a simply supported beam</button><button onClick={() => { setUi('palette', true); setPaletteTab('templates'); }}>All templates</button><button onClick={() => setUi('dialog', 'examples')}>Examples</button></div></div></Show>
+        <div class="row center"><button class="primary" onClick={() => insertTemplate(TEMPLATES[0], { x: 60, y: 60 })}>Insert a simply supported beam</button><button onClick={() => setUi({ ribbon: true, ribbonTab: 'Templates' })}>All templates</button><button onClick={() => setUi('dialog', 'examples')}>Examples</button></div></div></Show>
       <Show when={search()}>{s => {
         const results = createMemo(() => searchAll(s().q, s().link, 10));
         const pick = (f: Found) => {
@@ -279,7 +286,7 @@ export function Canvas(): JSX.Element {
             onInput={e => setSearch(v => v && { ...v, q: e.currentTarget.value, i: 0 })}
             onKeyDown={e => { e.stopPropagation(); const r = results(); if (e.key === 'Escape') { setSearch(null); root.focus(); } else if (e.key === 'ArrowDown') { setSearch(v => v && { ...v, i: Math.min(r.length - 1, v.i + 1) }); e.preventDefault(); } else if (e.key === 'ArrowUp') { setSearch(v => v && { ...v, i: Math.max(0, v.i - 1) }); e.preventDefault(); } else if (e.key === 'Enter' && r[s().i]) pick(r[s().i]); }} />
           <div class="results" role="listbox"><For each={results()}>{(f, i) => (f.kind === 'component'
-            ? <div class="result" role="option" classList={{ on: i() === s().i }} onPointerDown={() => pick(f)}><i style={{ background: CATEGORY_COLORS[f.d.category] }} /><b>{f.d.name}</b><span>{f.d.category}</span><small>{f.d.desc}</small></div>
+            ? <div class="result" role="option" classList={{ on: i() === s().i }} onPointerDown={() => pick(f)}><Icon id={f.d.id} nick={f.d.nick} color={CATEGORY_COLORS[f.d.category]} size={18} /><b>{f.d.name}</b><span>{f.d.category}</span><small>{f.d.desc}</small></div>
             : <div class="result" role="option" classList={{ on: i() === s().i }} onPointerDown={() => pick(f)}><i class="tpl" /><b>{f.t.title}</b><span>Template</span><small>{f.t.summary}</small></div>)}</For>
             <Show when={!results().length}><div class="result none">{s().link ? 'No component takes this kind of data under that name.' : `Nothing matches “${s().q}”.`}</div></Show></div>
         </div>;
@@ -331,7 +338,7 @@ function NodeView(props: { n: NodeData; onDown: (e: PointerEvent, n: NodeData) =
       style={{ left: n.x + 'px', top: n.y + 'px', width: l().w + 'px', height: l().h + 'px', '--cat': CATEGORY_COLORS[def()?.category ?? ''] ?? '#888' }}
       onPointerDown={e => props.onDown(e, n)}>
       <Show when={def()?.widget !== 'note'}>
-        <div class="hd" title={title() + '\n\nDouble-click to rename.'} onDblClick={e => { e.stopPropagation(); const name = prompt('Label for this component', n.label ?? def()?.name ?? ''); if (name !== null) mutate(p => { const x = p.graph.nodes.find(q => q.id === n.id); if (x) x.label = name.trim() || undefined; }, { run: false }); }}><span class="nm">{n.label ?? def()?.name ?? n.type}</span>
+        <div class="hd" title={title() + '\n\nDouble-click to rename.'} onDblClick={e => { e.stopPropagation(); const name = prompt('Label for this component', n.label ?? def()?.name ?? ''); if (name !== null) mutate(p => { const x = p.graph.nodes.find(q => q.id === n.id); if (x) x.label = name.trim() || undefined; }, { run: false }); }}><Icon id={n.type} nick={def()?.nick} color={CATEGORY_COLORS[def()?.category ?? '']} size={14} /><span class="nm">{n.label ?? def()?.name ?? n.type}</span>
           <Show when={n.matching && n.matching !== 'longest'}><span class="badge" title={`Matching: ${n.matching}`}>{n.matching === 'cross' ? '×' : '≤'}</span></Show>
           <Show when={status().state === 'error' || status().state === 'warning'}><span class="flag" title={status().messages.join('\n')}>!</span></Show></div>
       </Show>
@@ -424,45 +431,4 @@ function Minimap(props: { getRoot: () => HTMLDivElement }): JSX.Element {
       <rect class="mm-view" x={view().x} y={view().y} width={view().w} height={view().h} />
     </svg>;
   }}</Show>;
-}
-
-export const [paletteTab, setPaletteTab] = createSignal<'components' | 'templates'>('components');
-/**
- * Left-hand list with two tabs: single components by category, and templates (ready-made groups of
- * components). Click an entry to add it, or drag it onto the canvas to choose where it goes.
- */
-export function Palette(): JSX.Element {
-  const [q, setQ] = createSignal('');
-  const [open, setOpen] = createSignal<Record<string, boolean>>({ Params: true, Structure: true });
-  const cats = createMemo(() => { const m = new Map<string, ComponentDef[]>(); for (const d of registry.all()) { if (d.id === 'cluster' || d.id.startsWith('cluster.')) continue; const l = m.get(d.category); if (l) l.push(d); else m.set(d.category, [d]); } return [...m.entries()]; });
-  const center = () => {
-    const el = document.querySelector('.canvas') as HTMLElement | null, r = el?.getBoundingClientRect(), k = project.graph.nodes.length % 6;
-    return { x: (r ? (r.width / 2 - ui.panX) / ui.zoom : 100) - 70 + k * 24, y: (r ? (r.height / 2 - ui.panY) / ui.zoom : 100) - 40 + k * 24 };
-  };
-  const Item = (p: { d: ComponentDef }) => <button class="pal-item" title={p.d.desc + (p.d.example ? '\n\nExample: ' + p.d.example : '') + '\n\nClick to add, or drag onto the canvas.'}
-    onPointerDown={e => dragToCanvas(e, p.d.name, (x, y) => addNode(p.d.id, x - 20, y - 12), () => { const c = center(); addNode(p.d.id, c.x, c.y); })}
-    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); const c = center(); addNode(p.d.id, c.x, c.y); } }}><i style={{ background: CATEGORY_COLORS[p.d.category] }} />{p.d.name}</button>;
-  const tplGroups = createMemo(() => { const f = q().toLowerCase(), m = new Map<string, Template[]>(); for (const t of TEMPLATES) { if (f && !(t.title + ' ' + t.summary).toLowerCase().includes(f)) continue; const l = m.get(t.group); if (l) l.push(t); else m.set(t.group, [t]); } return [...m.entries()]; });
-  return <aside class="palette" aria-label="Components and templates">
-    <div class="pal-tabs" role="tablist"><For each={[['components', 'Components'], ['templates', 'Templates']] as ['components' | 'templates', string][]}>{([k, label]) => <button role="tab" aria-selected={paletteTab() === k} classList={{ on: paletteTab() === k }} onClick={() => setPaletteTab(k)}>{label}</button>}</For></div>
-    <input class="pal-search" type="search" placeholder={paletteTab() === 'components' ? 'Search components' : 'Search templates'} value={q()} onInput={e => setQ(e.currentTarget.value)} aria-label="Search" />
-    <div class="pal-list">
-      <Show when={paletteTab() === 'components'} fallback={<>
-        <p class="pal-note">A template adds a group of connected components to this project. Click to add it below your graph, or drag it onto the canvas.</p>
-        <For each={tplGroups()}>{([group, list]) => <section><div class="pal-cat static">{group}</div>
-          <For each={list}>{t => <button class="pal-tpl" title="Click to add, or drag onto the canvas"
-            onPointerDown={e => dragToCanvas(e, t.title, (x, y) => insertTemplate(t, { x, y }), () => insertTemplate(t))}
-            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); insertTemplate(t); } }}><b>{t.title}</b><small>{t.summary}</small></button>}</For></section>}</For>
-        <Show when={!tplGroups().length}><p class="pal-note">No template matches “{q()}”.</p></Show>
-      </>}>
-        <Show when={!q()} fallback={<For each={searchComponents(q(), 40)}>{d => <Item d={d} />}</For>}>
-          <For each={cats()}>{([cat, defs]) => <section>
-            <button class="pal-cat" aria-expanded={!!open()[cat]} onClick={() => setOpen(o => ({ ...o, [cat]: !o[cat] }))}><i style={{ background: CATEGORY_COLORS[cat] }} />{cat}<span>{defs.length}</span></button>
-            <Show when={open()[cat]}><For each={defs}>{d => <Item d={d} />}</For></Show>
-          </section>}</For>
-          <Show when={clusterLibrary().length}><section><div class="pal-cat static">My clusters</div><For each={clusterLibrary()}>{c => <button class="pal-item" onClick={() => insertCluster(c, (300 - ui.panX) / ui.zoom, (200 - ui.panY) / ui.zoom)}><i style={{ background: '#5f6b7a' }} />{c.name}</button>}</For></section></Show>
-        </Show>
-      </Show>
-    </div>
-  </aside>;
 }

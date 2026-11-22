@@ -3612,7 +3612,7 @@ _Example:_ Custom formula over lists
 
 ### Cluster
 
-A reusable group of components with its own inputs and outputs. Make one by selecting components and choosing Cluster in the right-click menu; saved clusters appear in the component list.
+A reusable group of components with its own inputs and outputs. Make one by selecting components and choosing Cluster in the right-click menu; saved clusters appear under Tools in the ribbon.
 
 Inputs and outputs depend on the settings of the component (see its description).
 

@@ -61,3 +61,21 @@ describe('port type compatibility (what the editor offers when a wire is dropped
     expect(typesCompatible('model', 'result')).toBe(false);
   });
 });
+
+describe('icons', () => {
+  it('every component has its own icon, and every icon and thumbnail is well formed', async () => {
+    await import('../src/components');
+    const { registry } = await import('../src/core/graph');
+    const { hasIcon, iconIds, thumbIds, iconFor, thumbFor, hasThumb } = await import('../src/ui/icons');
+    const missing = registry.all().filter(d => !hasIcon(d.id)).map(d => d.id);
+    expect(missing).toEqual([]);
+    for (const id of iconIds()) expect(iconFor(id), id).toMatch(/^(<(path|circle|rect|text)[^>]*(\/>|>[^<]*<\/text>))+$/);
+    for (const id of thumbIds()) expect(thumbFor(id), id).toMatch(/^(<(path|circle|rect|text)[^>]*(\/>|>[^<]*<\/text>))+$/);
+    const { TEMPLATES } = await import('../src/templates');
+    const { EXAMPLES } = await import('../src/examples');
+    const { BENCHMARKS } = await import('../src/verify/load');
+    expect(TEMPLATES.filter(t => !hasThumb(t.id)).map(t => t.id)).toEqual([]);
+    expect(EXAMPLES.filter(e => !e.id.startsWith('bench-') && !hasThumb(e.id)).map(e => e.id)).toEqual([]);
+    expect(BENCHMARKS.filter(b => !hasThumb('b:' + b.builder)).map(b => b.builder)).toEqual([]);
+  });
+});

@@ -65,7 +65,8 @@ test('examples gallery opens a shell example and shows a contour legend', async 
   const errors = watch(page);
   await page.goto('/?example=quick-truss');
   await ready(page);
-  await page.locator('.menu-btn', { hasText: 'Examples' }).click();
+  await page.locator('.rb-tabs button[role="tab"]', { hasText: 'Examples' }).click();
+  await page.locator('.rb-card.more').click();
   await expect(page.locator('.ex-card')).toHaveCount(38);
   await page.locator('.ex-card', { hasText: 'Hypar shell roof' }).click();
   await ready(page);
@@ -78,7 +79,8 @@ test('verification panel runs every benchmark in the browser and all pass', asyn
   const errors = watch(page);
   await page.goto('/?example=quick-truss');
   await ready(page);
-  await page.locator('.menu-btn', { hasText: 'Verification' }).click();
+  await page.locator('.rb-tabs button[role="tab"]', { hasText: 'Verification' }).click();
+  await page.locator('.rb-body button', { hasText: 'Run all checks' }).click();
   await expect(page.locator('.bench')).toHaveCount(28, { timeout: 110_000 });
   await expect(page.locator('.pill.fail')).toHaveCount(0);
   await expect(page.locator('.dialog')).toContainText('28 of 28 benchmarks pass');

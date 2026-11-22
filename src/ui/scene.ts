@@ -39,6 +39,59 @@ function discTexture(): THREE.Texture {
   return disc;
 }
 
+/**
+ * Collects triangles with a color per vertex, so that many small solids (member sections, support
+ * symbols, arrow heads) become one mesh and one draw call. `owner` records, per triangle, which
+ * structural element it belongs to, for picking.
+ */
+class Batch {
+  pos: number[] = []; col: number[] = []; idx: number[] = []; owner: number[] = [];
+  private c = new THREE.Color();
+  get empty(): boolean { return !this.idx.length; }
+  color(hex: number | string | THREE.Color): this { this.c.set(hex as any); return this; }
+  vert(p: V3): number { this.pos.push(p.x, p.y, p.z); this.col.push(this.c.r, this.c.g, this.c.b); return this.pos.length / 3 - 1; }
+  tri(a: number, b: number, c: number, owner = -1): void { this.idx.push(a, b, c); this.owner.push(owner); }
+  quad(a: number, b: number, c: number, d: number, owner = -1): void { this.tri(a, b, c, owner); this.tri(a, c, d, owner); }
+  /** Box from its center and three half-edge vectors. */
+  box(c: V3, x: V3, y: V3, z: V3): void {
+    const q: number[] = [];
+    for (const sz of [-1, 1]) for (const sy of [-1, 1]) for (const sx of [-1, 1]) q.push(this.vert(add(c, add(mul(x, sx), add(mul(y, sy), mul(z, sz))))));
+    for (const [a, b, d, e] of [[0, 1, 3, 2], [4, 6, 7, 5], [0, 4, 5, 1], [2, 3, 7, 6], [0, 2, 6, 4], [1, 5, 7, 3]]) this.quad(q[a], q[b], q[d], q[e]);
+  }
+  /** Cone (or pyramid when n = 4): apex, center of the base, and two radius vectors of the base. */
+  cone(apex: V3, base: V3, u: V3, w: V3, n = 10): void {
+    const a = this.vert(apex), c0 = this.vert(base), ring: number[] = [];
+    for (let i = 0; i < n; i++) { const t = 2 * Math.PI * (i + (n === 4 ? 0.5 : 0)) / n; ring.push(this.vert(add(base, add(mul(u, Math.cos(t)), mul(w, Math.sin(t)))))); }
+    for (let i = 0; i < n; i++) { const j = (i + 1) % n; this.tri(a, ring[i], ring[j]); this.tri(c0, ring[j], ring[i]); }
+  }
+  /** Cylinder between two points, with two radius vectors perpendicular to its axis. */
+  cylinder(a: V3, b: V3, u: V3, w: V3, n = 12): void {
+    const ra: number[] = [], rb: number[] = [], ca = this.vert(a), cb = this.vert(b);
+    for (let i = 0; i < n; i++) { const t = 2 * Math.PI * i / n, r = add(mul(u, Math.cos(t)), mul(w, Math.sin(t))); ra.push(this.vert(add(a, r))); rb.push(this.vert(add(b, r))); }
+    for (let i = 0; i < n; i++) { const j = (i + 1) % n; this.quad(ra[i], ra[j], rb[j], rb[i]); this.tri(ca, ra[j], ra[i]); this.tri(cb, rb[i], rb[j]); }
+  }
+  build(opt: { opacity?: number; metalness?: number; roughness?: number } = {}): THREE.Mesh {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(this.pos, 3));
+    g.setAttribute('color', new THREE.Float32BufferAttribute(this.col, 3));
+    g.setIndex(this.idx);
+    const opacity = opt.opacity ?? 1;
+    const o = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, side: THREE.DoubleSide, roughness: opt.roughness ?? 0.62, metalness: opt.metalness ?? 0.12, transparent: opacity < 1, opacity, depthWrite: opacity >= 1 }));
+    o.castShadow = opacity >= 1;
+    return o;
+  }
+}
+
+/** A plausible surface color for a material, judged by its density and stiffness. */
+function materialColor(mat: { rho: number; E: number } | undefined): number {
+  if (!mat) return 0x8b98ab;
+  if (mat.rho > 7000) return 0x93a1b5;                       // steel
+  if (mat.rho > 2600 && mat.E > 5e10) return 0xc2c8d0;       // aluminum
+  if (mat.rho > 1500) return 0xbcb8ae;                       // concrete, masonry
+  if (mat.rho > 0) return 0xb98d5a;                          // timber
+  return 0x8b98ab;
+}
+
 export class SceneBuilder {
   group = new THREE.Group();
   labels: Label[] = [];
@@ -50,7 +103,17 @@ export class SceneBuilder {
   info: string[] = [];
   private box = new THREE.Box3();
   private labelKeys = new Set<string>();
-  constructor(private u: UnitSystem, private dark: boolean) {}
+  /** `solid` = draw members with their cross-sections as solids (the realistic display); false = lines only. */
+  constructor(private u: UnitSystem, private dark: boolean, private solid = true) {}
+  /** Support symbols and arrow heads of everything drawn; built into one mesh by finish(). */
+  private glyphs = new Batch();
+  private shafts = new Map<number, number[]>();
+  /** Call once after the last draw: builds the batched symbols. */
+  finish(): void {
+    for (const [color, seg] of this.shafts) { const g = new LineSegmentsGeometry(); g.setPositions(seg); this.group.add(new LineSegments2(g, new LineMaterial({ color, linewidth: 1.7 }))); }
+    this.shafts.clear();
+    if (!this.glyphs.empty) { const o = this.glyphs.build(); o.userData.shaded = true; this.group.add(o); this.glyphs = new Batch(); }
+  }
 
   /** Bounds of the geometry and structure only, without arrows, support symbols, diagrams and other annotation. */
   private core = new THREE.Box3();
@@ -94,12 +157,29 @@ export class SceneBuilder {
     if (opt.edges !== false) { const s: number[] = []; for (const [a, b] of ms.meshEdges(m)) s.push(m.v[3 * a], m.v[3 * a + 1], m.v[3 * a + 2], m.v[3 * b], m.v[3 * b + 1], m.v[3 * b + 2]); const e = this.lines(s, this.dark ? 0x10141a : 0x3a4350, 0.35); e.userData.edgeOf = o; }
     return o;
   }
+  /** Arrow with a solid cone head. Shafts and heads of all arrows are batched (see finish()). */
   arrow(from: V3, to: V3, color: number, head = 0.22): void {
     const d = sub(to, from), L = len(d);
     if (L < 1e-12) return;
     const n = unit(d), side = unit(cross(n, Math.abs(n.z) < 0.9 ? v(0, 0, 1) : v(1, 0, 0))), side2 = cross(n, side), h = L * head, b = add(to, mul(n, -h));
-    const s = [from, to, to, add(b, mul(side, h * 0.4)), to, add(b, mul(side, -h * 0.4)), to, add(b, mul(side2, h * 0.4)), to, add(b, mul(side2, -h * 0.4))];
-    this.lines(s.flatMap(p => [p.x, p.y, p.z]), color);
+    const seg = this.shafts.get(color) ?? []; if (!seg.length) this.shafts.set(color, seg);
+    seg.push(from.x, from.y, from.z, b.x, b.y, b.z);
+    this.glyphs.color(color).cone(to, b, mul(side, h * 0.34), mul(side2, h * 0.34), 8);
+    this.track(from); this.track(to);
+  }
+  /**
+   * Curved arrow for a moment: three quarters of a circle around the moment vector, turning the way the
+   * moment acts (right-hand rule). Returns a point on the arc where its value can be written.
+   */
+  private momentArc(p: V3, m: V3, color: number, r: number): V3 {
+    const n = unit(m), a = unit(cross(Math.abs(n.z) < 0.9 ? v(0, 0, 1) : v(1, 0, 0), n)), b = cross(n, a), N = 20, t0 = -0.25 * Math.PI, t1 = 1.25 * Math.PI;
+    const at = (t: number) => add(p, add(mul(a, r * Math.cos(t)), mul(b, r * Math.sin(t)))), seg: number[] = [];
+    for (let i = 0; i < N; i++) { const q0 = at(t0 + (t1 - t0) * i / N), q1 = at(t0 + (t1 - t0) * (i + 1) / N); seg.push(q0.x, q0.y, q0.z, q1.x, q1.y, q1.z); this.track(q0); }
+    const list = this.shafts.get(color) ?? []; if (!list.length) this.shafts.set(color, list);
+    list.push(...seg);
+    const end = at(t1), tan = add(mul(a, -Math.sin(t1)), mul(b, Math.cos(t1))), h = r * 0.55;
+    this.glyphs.color(color).cone(add(end, mul(tan, h)), end, mul(n, h * 0.36), mul(unit(sub(end, p)), h * 0.36), 8);
+    return at(0.5 * Math.PI);
   }
   /** Add a label; an identical label at the same place is added only once (members meeting at a node report the same value). */
   label(p: V3, text: string, cls = '', size?: number, pri = 1, off?: V3): void {
@@ -113,11 +193,27 @@ export class SceneBuilder {
    * Thick line segments with a width in screen pixels, used for structural members so that they read
    * clearly at any zoom. (Plain WebGL lines are always one pixel wide.)
    */
-  fat(segs: number[], opt: { color?: number | string; colors?: number[]; width?: number; opacity?: number } = {}): LineSegments2 {
+  fat(segs: number[], opt: { color?: number | string; colors?: number[]; width?: number; opacity?: number; dash?: number; overlay?: boolean } = {}): LineSegments2 {
     const g = new LineSegmentsGeometry();
     g.setPositions(segs);
     if (opt.colors) g.setColors(opt.colors);
-    const o = new LineSegments2(g, new LineMaterial({ color: opt.colors ? 0xffffff : opt.color ?? C.beam, vertexColors: !!opt.colors, linewidth: opt.width ?? 2.6, transparent: (opt.opacity ?? 1) < 1, opacity: opt.opacity ?? 1 }));
+    const mat = new LineMaterial({ color: opt.colors ? 0xffffff : opt.color ?? C.beam, vertexColors: !!opt.colors, linewidth: opt.width ?? 2.6, transparent: (opt.opacity ?? 1) < 1, opacity: opt.opacity ?? 1 });
+    const o = new LineSegments2(g, mat);
+    if (opt.dash) {
+      // Dash lengths run on along consecutive segments (a curve drawn as many short pieces), and start again where a new line begins.
+      mat.dashed = true; mat.dashSize = opt.dash; mat.gapSize = opt.dash * 0.65; mat.defines.USE_DASH = ''; mat.needsUpdate = true;
+      const n = segs.length / 6, dist = new Float32Array(2 * n);
+      let run = 0;
+      for (let i = 0; i < n; i++) {
+        const k = 6 * i, joined = i > 0 && Math.abs(segs[k] - segs[k - 3]) + Math.abs(segs[k + 1] - segs[k - 2]) + Math.abs(segs[k + 2] - segs[k - 1]) < 1e-9;
+        if (!joined) run = 0;
+        dist[2 * i] = run; run += Math.hypot(segs[k + 3] - segs[k], segs[k + 4] - segs[k + 1], segs[k + 5] - segs[k + 2]); dist[2 * i + 1] = run;
+      }
+      const buf = new THREE.InstancedInterleavedBuffer(dist, 2, 1);
+      g.setAttribute('instanceDistanceStart', new THREE.InterleavedBufferAttribute(buf, 1, 0));
+      g.setAttribute('instanceDistanceEnd', new THREE.InterleavedBufferAttribute(buf, 1, 1));
+    }
+    if (opt.overlay) { mat.depthTest = false; o.renderOrder = 6; }
     for (let i = 0; i < segs.length; i += 3) this.track(v(segs[i], segs[i + 1], segs[i + 2]));
     this.group.add(o);
     return o;
@@ -141,8 +237,8 @@ export class SceneBuilder {
       case 'result': this.result(g as FEResult, { caseIndex: 0, scale: -1, deformed: true, undeformed: true, diagram: 'none', contour: (g as FEResult).model.shells.length ? 'disp' : 'none', layer: 'top', reactions: true, loads: false, supports: true, utilization: false, mode: 0, animate: false, values: true, sections: false, localAxes: false, principal: false }, nodeId); return;
       case 'feview': this.result(g.result, g.opts, nodeId); return;
       case 'element': this.element(g, col); return;
-      case 'support': { const p = mul(g.p, 1 / this.u.len.f); this.points([p], C.support, 10); return; }
-      case 'load': if (g.kind === 'point') { const p = mul(g.p, 1 / this.u.len.f); this.points([p], C.load, 8); } return;
+      case 'support': { const p = mul(g.p, 1 / this.u.len.f); this.track(p); this.annotate(() => this.supportSymbol(p, g.fix, !!g.spring, v(0, 0, 1), this.size * 0.03, false)); return; }
+      case 'load': if (g.kind === 'point') { const p = mul(g.p, 1 / this.u.len.f), mag = len(g.f); this.track(p); if (mag > 0) this.annotate(() => this.arrow(sub(p, mul(g.f, this.size * 0.09 / mag)), p, C.load)); else this.points([p], C.load, 8); } return;
     }
   }
   private element(e: any, col: number | string): void {
@@ -166,7 +262,8 @@ export class SceneBuilder {
       const o3 = this.fat(g.seg, { color: hi ? C.hi : this.memberColor(key), width: key === 'beam' ? 2.8 : 2.4 });
       o3.userData.pick = { kind: 'beam', ids: g.ids, nodeId }; this.pickables.push(o3);
     }
-    if (o.sections && !ghost && m.beams.length <= 4000) this.sectionSolids(m, hi, 1);
+    this.skin = false;
+    if (o.sections && !ghost) this.sectionSolids(m, hi, nodeId);
     if (m.shells.length) {
       const mesh: ms.Mesh = { k: 'mesh', v: m.nodes.map(x => x * f), f: m.shells.map(s => s.n) };
       if (ghost) { const s: number[] = []; for (const [a, b] of ms.meshEdges(mesh)) s.push(mesh.v[3 * a], mesh.v[3 * a + 1], mesh.v[3 * a + 2], mesh.v[3 * b], mesh.v[3 * b + 1], mesh.v[3 * b + 2]); this.lines(s, C.ghost, 0.35); }
@@ -194,69 +291,153 @@ export class SceneBuilder {
   /** For each triangle of a triangulated mesh, the index of the face it came from. */
   private triMap(m: ms.Mesh): number[] { const map: number[] = []; m.f.forEach((q, i) => { for (let k = 0; k < Math.max(1, q.length - 2); k++) map.push(i); }); return map; }
   /**
-   * Extruded cross-section outlines so that member sizes and orientations are visible.
-   * With opacity below 1 the solids are see-through, so diagrams and deformed shapes drawn
-   * in the same place stay readable.
+   * Members drawn as solids: each cross-section outline is extruded along its member, with end caps,
+   * the hole of a hollow section, and thin edge lines. The color follows the material (steel, concrete,
+   * timber, aluminum), or `colors` per member when given (utilization).
    */
-  private sectionSolids(m: FEModel, hi: boolean, opacity: number): void {
-    const f = 1 / this.u.len.f, vs: number[] = [], idx: number[] = [];
-    m.beams.forEach((b) => {
-      const outline = m.sections[b.sec].shape?.outer;
-      if (!outline || b.type === 'cable') return;
-      const [a, c] = beamEnds(m, b), R = memberAxes(a, c, b.ref, b.angle), y = v(R[3], R[4], R[5]), z = v(R[6], R[7], R[8]), base = vs.length / 3, n = outline.length;
-      for (const end of [a, c]) for (const [py, pz] of outline) { const p = mul(add(end, add(mul(y, py), mul(z, pz))), f); vs.push(p.x, p.y, p.z); }
-      for (let i = 0; i < n; i++) { const j = (i + 1) % n; idx.push(base + i, base + j, base + n + j, base + i, base + n + j, base + n + i); }
+  /** True while the model being drawn has its members shown as solids, so loads and supports are placed on the surface. */
+  private skin = false;
+  /** Distance from a member's axis to its surface in the direction `dir` (model units); zero when members are drawn as lines. */
+  private surface(m: FEModel, e: number, dir: V3): number {
+    const b = m.beams[e], shape = m.sections[b.sec].shape;
+    if (!this.skin || !shape?.outer || b.type === 'cable') return 0;
+    const [a, c] = beamEnds(m, b), R = memberAxes(a, c, b.ref, b.angle), dy = dir.x * R[3] + dir.y * R[4] + dir.z * R[5], dz = dir.x * R[6] + dir.y * R[7] + dir.z * R[8];
+    let r = 0; for (const q of shape.outer) r = Math.max(r, q[0] * dy + q[1] * dz);
+    return r;
+  }
+  private sectionSolids(m: FEModel, hi: boolean, nodeId: string, colors?: (number | string)[]): void {
+    if (!this.solid || !m.beams.length || m.beams.length > 4000) return;
+    const f = 1 / this.u.len.f, batch = new Batch(), edges: number[] = [];
+    const caps = new Map<number, number[][]>();
+    // A member split into several elements is drawn as one piece: the outline is drawn at an element end
+    // only where the member really ends or changes direction or section.
+    const at = new Map<number, { e: number; sec: number; d: V3 }[]>();
+    m.beams.forEach((b, e) => { const [a, c] = beamEnds(m, b), d = unit(sub(c, a)); for (const n of b.n) { const l = at.get(n); if (l) l.push({ e, sec: b.sec, d }); else at.set(n, [{ e, sec: b.sec, d }]); } });
+    const runsOn = (n: number, e: number, sec: number, d: V3) => (at.get(n) ?? []).some(o => o.e !== e && o.sec === sec && Math.abs(o.d.x * d.x + o.d.y * d.y + o.d.z * d.z) > 0.9995);
+    m.beams.forEach((b, e) => {
+      const shape = m.sections[b.sec].shape;
+      if (!shape?.outer || b.type === 'cable') return;
+      const [a, c] = beamEnds(m, b), R = memberAxes(a, c, b.ref, b.angle), y = v(R[3], R[4], R[5]), z = v(R[6], R[7], R[8]);
+      const dir = unit(sub(c, a)), ring0 = !runsOn(b.n[0], e, b.sec, dir), ring1 = !runsOn(b.n[1], e, b.sec, dir);
+      batch.color(hi ? C.hi : colors ? colors[e] : materialColor(m.materials[b.mat]));
+      const rings = [shape.outer, ...(shape.inner ? [shape.inner] : [])], first: number[][] = [];
+      for (const ring of rings) {
+        const n = ring.length, i0: number[] = [], i1: number[] = [], p0: V3[] = [], p1: V3[] = [];
+        for (const [py, pz] of ring) { const off = add(mul(y, py), mul(z, pz)); p0.push(mul(add(a, off), f)); p1.push(mul(add(c, off), f)); i0.push(batch.vert(p0[p0.length - 1])); i1.push(batch.vert(p1[p1.length - 1])); }
+        for (let i = 0; i < n; i++) {
+          const j = (i + 1) % n, h = (i + n - 1) % n;
+          batch.quad(i0[i], i0[j], i1[j], i1[i], e);
+          if (ring0) edges.push(p0[i].x, p0[i].y, p0[i].z, p0[j].x, p0[j].y, p0[j].z);
+          if (ring1) edges.push(p1[i].x, p1[i].y, p1[i].z, p1[j].x, p1[j].y, p1[j].z);
+          // A line along the member at each sharp corner of the outline (not along the facets of a round section).
+          const ax = ring[i][0] - ring[h][0], ay = ring[i][1] - ring[h][1], bx = ring[j][0] - ring[i][0], by = ring[j][1] - ring[i][1];
+          if (Math.abs(ax * by - ay * bx) > 0.5 * Math.hypot(ax, ay) * Math.hypot(bx, by)) edges.push(p0[i].x, p0[i].y, p0[i].z, p1[i].x, p1[i].y, p1[i].z);
+        }
+        first.push(i0, i1);
+      }
+      // End caps: the outline triangulated once per section, holes included.
+      let tris = caps.get(b.sec);
+      if (!tris) { tris = THREE.ShapeUtils.triangulateShape(shape.outer.map(q => new THREE.Vector2(q[0], q[1])), shape.inner ? [shape.inner.map(q => new THREE.Vector2(q[0], q[1]))] : []); caps.set(b.sec, tris); }
+      const nOut = shape.outer.length, idx = (end: 0 | 1, k: number) => (k < nOut ? first[end][k] : first[2 + end][k - nOut]);
+      for (const t of tris) { batch.tri(idx(0, t[0]), idx(0, t[1]), idx(0, t[2]), e); batch.tri(idx(1, t[0]), idx(1, t[2]), idx(1, t[1]), e); }
     });
-    if (!idx.length) return;
-    const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.Float32BufferAttribute(vs, 3)); g.setIndex(idx); g.computeVertexNormals();
-    const o = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: hi ? C.hi : 0x9aa7b8, side: THREE.DoubleSide, roughness: 0.7, metalness: 0.1, flatShading: true, transparent: opacity < 1, opacity, depthWrite: opacity >= 1 }));
-    o.userData.shaded = true;
+    if (batch.empty) return;
+    this.skin = true;
+    const o = batch.build({ metalness: 0.05, roughness: 0.6 });
+    o.userData.shaded = true; o.userData.pick = { kind: 'beam', tri: batch.owner, nodeId }; this.pickables.push(o);
     this.group.add(o);
+    if (edges.length) { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(edges, 3)); this.group.add(new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: this.dark ? 0x0d1116 : 0x2b3440, transparent: true, opacity: 0.55 }))); }
   }
   /**
-   * Support symbols. A node held vertically (or in all three directions) gets a triangle under it, with a
-   * second line below when it can still slide (a roller). A node held only sideways gets a short bar along
-   * each held direction, which keeps models with many such restraints readable. A small square at the node
-   * marks restrained rotation.
+   * Support symbols, drawn as small solids so that the kind of support is clear at a glance:
+   *
+   *   fixed    a block with ground hatching behind it, placed against the end of the member
+   *            (a wall for a beam, a footing for a column)
+   *   pinned   a pyramid under the node standing on a base plate with hatching
+   *   roller   the same pyramid on two rollers
+   *   spring   a zigzag down to a base plate
+   *
+   * A node that is held only sideways gets a short bar along each held direction instead, which keeps
+   * models with many such restraints readable.
    */
   private supports(m: FEModel, size: number): void {
-    const s = size * (m.supports.length > 24 ? 0.012 : 0.022), seg: number[] = [];
-    const line = (a: V3, b: V3) => seg.push(a.x, a.y, a.z, b.x, b.y, b.z);
-    for (const sp of m.supports) {
-      const p = this.P(m, sp.node), [fx, fy, fz] = sp.fix, rot = sp.fix.slice(3).some(Boolean);
-      if (fz) {
-        const z = p.z - 1.6 * s, b = [v(p.x - s, p.y - s, z), v(p.x + s, p.y - s, z), v(p.x + s, p.y + s, z), v(p.x - s, p.y + s, z)];
-        for (let i = 0; i < 4; i++) { line(p, b[i]); line(b[i], b[(i + 1) % 4]); }
-        if (!fx || !fy) { const z2 = z - 0.45 * s; for (let i = 0; i < 4; i++) line(v(b[i].x, b[i].y, z2), v(b[(i + 1) % 4].x, b[(i + 1) % 4].y, z2)); }
-        if (rot) for (const q of [-1, 1]) line(v(p.x + q * s, p.y - s, z), v(p.x - q * s, p.y + s, z));
-      } else {
-        if (fx) { line(v(p.x - s, p.y, p.z), v(p.x + s, p.y, p.z)); line(v(p.x - s, p.y, p.z - 0.4 * s), v(p.x - s, p.y, p.z + 0.4 * s)); line(v(p.x + s, p.y, p.z - 0.4 * s), v(p.x + s, p.y, p.z + 0.4 * s)); }
-        if (fy) { line(v(p.x, p.y - s, p.z), v(p.x, p.y + s, p.z)); line(v(p.x, p.y - s, p.z - 0.4 * s), v(p.x, p.y - s, p.z + 0.4 * s)); line(v(p.x, p.y + s, p.z - 0.4 * s), v(p.x, p.y + s, p.z + 0.4 * s)); }
-      }
-      if (rot && !fz && fx && fy) { const h = s * 0.5; for (const [a, b] of [[-1, -1, 1, -1], [1, -1, 1, 1], [1, 1, -1, 1], [-1, 1, -1, -1]].map(q => [v(p.x + q[0] * h, p.y, p.z + q[1] * h), v(p.x + q[2] * h, p.y, p.z + q[3] * h)])) line(a, b); }
-      if (!sp.fix.some(Boolean) && sp.spring) { for (let k = 0; k < 6; k++) seg.push(p.x + (k % 2 ? s : -s) * 0.5, p.y, p.z - k * s * 0.3, p.x + (k % 2 ? -s : s) * 0.5, p.y, p.z - (k + 1) * s * 0.3); }
+    const many = m.supports.length > 24, s = size * (many ? 0.011 : 0.026);
+    // Direction from each supported node into the structure, so that a fixed support sits behind the member end.
+    const into = new Map<number, V3>();
+    // Half the largest section dimension meeting each node, so that a symbol is never hidden inside a deep member.
+    const half = new Map<number, number>(), ext = new Map<number, number>(), f = 1 / this.u.len.f;
+    for (const b of m.beams) {
+      const [a, c] = beamEnds(m, b), d = unit(sub(c, a)); into.set(b.n[0], add(into.get(b.n[0]) ?? v(), d)); into.set(b.n[1], sub(into.get(b.n[1]) ?? v(), d));
+      if (!this.skin || b.type === 'cable') continue;
+      let r = ext.get(b.sec);
+      if (r === undefined) { r = 0; for (const q of m.sections[b.sec].shape?.outer ?? []) r = Math.max(r, Math.abs(q[0]), Math.abs(q[1])); r *= f; ext.set(b.sec, r); }
+      for (const n of b.n) half.set(n, Math.max(half.get(n) ?? 0, r));
     }
-    if (seg.length) { if (m.supports.length > 24) this.lines(seg, C.support, 0.9); else this.fat(seg, { color: C.support, width: 1.6 }); }
+    for (const sp of m.supports) {
+      const sum = into.get(sp.node), d = sum && len(sum) > 0.5 ? unit(sum) : v(0, 0, 1);
+      this.supportSymbol(this.P(m, sp.node), sp.fix, !!sp.spring, d, s, many, Math.min(half.get(sp.node) ?? 0, size * 0.12));
+    }
+  }
+  private supportSymbol(p: V3, fix: boolean[], spring: boolean, d: V3, s0: number, simple: boolean, member = 0): void {
+    const s = Math.max(s0, member * 0.75);
+    const g = this.glyphs, [fx, fy, fz] = fix, allT = fx && fy && fz, allR = fix[3] && fix[4] && fix[5];
+    const X = v(1, 0, 0), Y = v(0, 1, 0), Z = v(0, 0, 1), body = C.support, plate = this.dark ? 0x5c6877 : 0x6b7684;
+    const seg: number[] = [], line = (a: V3, b: V3) => seg.push(a.x, a.y, a.z, b.x, b.y, b.z);
+    /** Ground hatching: short slanted strokes leaving a plate on the side away from the structure. */
+    const hatch = (c: V3, along: V3, away: V3, half: number, n = 2) => { const k = half / (n + 0.2); line(add(c, mul(along, -half)), add(c, mul(along, half))); for (let i = -n; i <= n; i++) { const q = add(c, mul(along, i * k)); line(q, add(q, add(mul(away, 0.8 * k), mul(along, -0.65 * k)))); } };
+    if (allT && allR) {
+      // Fixed: a plate square to the member, with its face on the node.
+      const u1 = unit(cross(Math.abs(d.z) < 0.9 ? Y : X, d)), u2 = cross(d, u1), h = Math.max(1.8 * s0, 1.7 * member), t = Math.max(0.3 * s0, 0.14 * h), c = add(p, mul(d, -t));
+      g.color(body).box(c, mul(d, t), mul(u1, h), mul(u2, simple ? h * 0.6 : h));
+      if (!simple) { const back = add(p, mul(d, -2 * t)); hatch(back, u1, mul(d, -1), h, 4); if (Math.abs(d.z) > 0.9) hatch(back, u2, mul(d, -1), h, 4); }
+    } else if (fz) {
+      const hgt = 1.5 * s, base = add(p, mul(Z, -hgt)), w = 0.95 * s * Math.SQRT2;
+      g.color(body).cone(p, base, mul(X, w), mul(Y, w), 4);
+      let under = base;
+      if (!(fx && fy)) {
+        // Roller: two rollers under the pyramid, with their axes across the direction that is free to move.
+        const axis = fx ? X : Y, roll = fx ? Y : X, r = 0.24 * s;
+        g.color(plate);
+        for (const q of [-0.5, 0.5]) { const c = add(base, add(mul(roll, q * s), mul(Z, -r))); g.cylinder(add(c, mul(axis, -0.9 * s)), add(c, mul(axis, 0.9 * s)), mul(roll, r), mul(Z, r), 10); }
+        under = add(base, mul(Z, -2 * r));
+      }
+      if (!simple) { g.color(plate).box(add(under, mul(Z, -0.1 * s)), mul(X, 1.35 * s), mul(Y, 1.35 * s), mul(Z, 0.1 * s)); hatch(add(under, mul(Z, -0.2 * s)), X, mul(Z, -1), 1.35 * s); }
+      if (allR) g.color(body).box(p, mul(X, 0.35 * s), mul(Y, 0.35 * s), mul(Z, 0.35 * s));
+    } else {
+      if (fx) { line(add(p, mul(X, -s)), add(p, mul(X, s))); for (const q of [-1, 1]) line(add(p, v(q * s, 0, -0.4 * s)), add(p, v(q * s, 0, 0.4 * s))); }
+      if (fy) { line(add(p, mul(Y, -s)), add(p, mul(Y, s))); for (const q of [-1, 1]) line(add(p, v(0, q * s, -0.4 * s)), add(p, v(0, q * s, 0.4 * s))); }
+      if (allR && (fx || fy)) g.color(body).box(p, mul(X, 0.3 * s), mul(Y, 0.3 * s), mul(Z, 0.3 * s));
+      if (!fix.some(Boolean) && spring) {
+        for (let k = 0; k < 6; k++) line(add(p, v((k % 2 ? 1 : -1) * 0.45 * s, 0, -k * 0.3 * s)), add(p, v((k % 2 ? -1 : 1) * 0.45 * s, 0, -(k + 1) * 0.3 * s)));
+        g.color(plate).box(add(p, mul(Z, -1.9 * s)), mul(X, s), mul(Y, s), mul(Z, 0.1 * s));
+      }
+    }
+    const reach = Math.max(1.6 * s, 1.9 * member);
+    for (const q of [add(p, v(-reach, -reach, -Math.max(2.4 * s, reach))), add(p, v(reach, reach, Math.max(0.4 * s, reach)))]) this.track(q);
+    if (seg.length) { const list = this.shafts.get(plate) ?? []; if (!list.length) this.shafts.set(plate, list); list.push(...seg); }
   }
   private loads(m: FEModel, lc: number, size: number, values: boolean): void {
     const f = 1 / this.u.len.f, caseIdx = Math.min(lc, m.cases.length - 1), list = m.loads.filter(l => l.lc === caseIdx);
     let maxP = 0, maxW = 0, maxQ = 0;
     for (const l of list) { if (l.t === 'node') maxP = Math.max(maxP, Math.hypot(l.f[0], l.f[1], l.f[2])); if (l.t === 'line') maxW = Math.max(maxW, Math.hypot(...l.w1), Math.hypot(...l.w2)); if (l.t === 'pressure') maxQ = Math.max(maxQ, Math.abs(l.p)); }
+    const band: number[] = [];
     const L = size * 0.09, lineLabels = new Map<string, { mid: V3; base: V3 }[]>(), pointLabels = new Map<string, { mid: V3; base: V3 }[]>();
-    let shown = 0;
+    let shown = 0, byNode: Map<number, number[]> | null = null;
+    const atNode = () => { if (!byNode) { byNode = new Map(); if (this.skin) m.beams.forEach((b, e) => { for (const n of b.n) { const q = byNode!.get(n); if (q) q.push(e); else byNode!.set(n, [e]); } }); } return byNode; };
     for (const l of list) {
       if (l.t === 'node') {
-        const p = this.P(m, l.node), mag = Math.hypot(l.f[0], l.f[1], l.f[2]);
-        if (mag > 0) { const d = mul(v(l.f[0], l.f[1], l.f[2]), L * (0.45 + 0.55 * mag / maxP) / mag), text = `${fmtNum(mag / this.u.force.f, 4)} ${this.u.force.label}`; this.arrow(sub(p, d), p, C.load); if (values) { const l2 = pointLabels.get(text); if (l2) l2.push({ mid: sub(p, d), base: p }); else pointLabels.set(text, [{ mid: sub(p, d), base: p }]); } }
+        const p0 = this.P(m, l.node), p = p0, mag = Math.hypot(l.f[0], l.f[1], l.f[2]);
+        if (mag > 0) { const back = mul(v(l.f[0], l.f[1], l.f[2]), -1 / mag); let off = 0; for (const e of atNode().get(l.node) ?? []) off = Math.max(off, this.surface(m, e, back)); const p = add(p0, mul(back, off * f)); const d = mul(v(l.f[0], l.f[1], l.f[2]), L * (0.45 + 0.55 * mag / maxP) / mag), text = `${fmtNum(mag / this.u.force.f, 4)} ${this.u.force.label}`; this.arrow(sub(p, d), p, C.load); if (values) { const l2 = pointLabels.get(text); if (l2) l2.push({ mid: sub(p, d), base: p }); else pointLabels.set(text, [{ mid: sub(p, d), base: p }]); } }
         const mm = Math.hypot(l.f[3], l.f[4], l.f[5]);
-        if (mm > 0 && values) this.label(p, `M ${fmtNum(mm / this.u.moment.f, 4)} ${this.u.moment.label}`, 'load', undefined, 2);
+        if (mm > 0) { const at = this.momentArc(p, v(l.f[3], l.f[4], l.f[5]), C.load, L * 0.42); if (values) this.label(at, `${fmtNum(mm / this.u.moment.f, 4)} ${this.u.moment.label}`, 'load', undefined, 2, sub(at, p)); }
       } else if (l.t === 'line' && shown < 3000) {
         const b = m.beams[l.el], [a, c] = beamEnds(m, b), R = memberAxes(a, c, b.ref, b.angle);
         const glob = (w: number[]) => (l.sys === 'local' ? v(R[0] * w[0] + R[3] * w[1] + R[6] * w[2], R[1] * w[0] + R[4] * w[1] + R[7] * w[2], R[2] * w[0] + R[5] * w[1] + R[8] * w[2]) : v(w[0], w[1], w[2]));
-        const n = 4, tops: V3[] = [];
-        for (let i = 0; i <= n; i++) { const t = i / n, w = add(mul(glob(l.w1), 1 - t), mul(glob(l.w2), t)), mag = len(w), p = mul(add(mul(a, 1 - t), mul(c, t)), f); if (mag <= 0) { tops.push(p); continue; } const d = mul(w, L * 0.6 * (mag / maxW) / mag); this.arrow(sub(p, d), p, C.load, 0.3); tops.push(sub(p, d)); shown++; }
+        const n = 4, tops: V3[] = [], feet: V3[] = [];
+        for (let i = 0; i <= n; i++) { const t = i / n, w = add(mul(glob(l.w1), 1 - t), mul(glob(l.w2), t)), mag = len(w), p = mul(add(mul(a, 1 - t), mul(c, t)), f); feet[i] = p; if (mag <= 0) { tops.push(p); continue; } const d = mul(w, L * 0.6 * (mag / maxW) / mag), q = add(p, mul(w, -this.surface(m, l.el, mul(w, -1 / mag)) * f / mag)); feet[i] = q; this.arrow(sub(q, d), q, C.load, 0.3); tops.push(sub(q, d)); shown++; }
         this.polyline(tops, C.load);
+        // A light band between the member and the tops of the arrows, so a distributed load reads as one block.
+        for (let i = 0; i < n; i++) { const p0 = feet[i], p1 = feet[i + 1]; for (const q of [p0, p1, tops[i + 1], p0, tops[i + 1], tops[i]]) band.push(q.x, q.y, q.z); }
         const w0 = Math.hypot(...l.w1), w1 = Math.hypot(...l.w2), text = (Math.abs(w0 - w1) < 1e-9 * Math.max(w0, w1, 1) ? fmtNum(w0 / this.u.lineLoad.f, 4) : `${fmtNum(w0 / this.u.lineLoad.f, 4)} to ${fmtNum(w1 / this.u.lineLoad.f, 4)}`) + ' ' + this.u.lineLoad.label;
         if (values && Math.max(w0, w1) > 0) { const mid = tops[n / 2], base = mul(add(a, c), 0.5 * f); const l2 = lineLabels.get(text); if (l2) l2.push({ mid, base }); else lineLabels.set(text, [{ mid, base }]); }
       } else if (l.t === 'pressure' && shown < 1500) {
@@ -269,6 +450,7 @@ export class SceneBuilder {
       }
     }
     // Each distinct line-load value is labelled once, on the middle one of the members that carry it.
+    if (band.length) { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(band, 3)); const o3 = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: C.load, side: THREE.DoubleSide, transparent: true, opacity: 0.12, depthWrite: false })); o3.renderOrder = 1; this.group.add(o3); }
     // Equal point loads on many nodes (a loaded chord, a roof grid) are labelled once as well.
     for (const [text, at] of pointLabels) for (const q of at.length > 2 ? [at[Math.floor(at.length / 2)]] : at) this.label(q.mid, at.length > 2 ? `${text} each` : text, 'load', undefined, 2, sub(q.mid, q.base));
     for (const [text, at] of lineLabels) { const q = at[Math.floor(at.length / 2)]; this.label(q.mid, text, 'load', undefined, 2, sub(q.mid, q.base)); }
@@ -292,11 +474,13 @@ export class SceneBuilder {
     this.info.push((mode ? mode.label : cr ? `Case ${cr.name}` : '') + (scale > 0 ? ` · deformation ×${fmtNum(scale, 3)}${mode ? '' : `, largest ${fmtNum(umax / this.u.dim.f, 4)} ${this.u.dim.label}`}` : ''));
     this.animated = !!o.animate && scale > 0;
     const diagram = !!cr && o.diagram !== 'none' && DIAGRAM_INDEX[o.diagram] !== undefined;
-    // A force diagram is drawn on the undeformed member, so in that case the undeformed member is the
-    // bold line and the deflected shape is a thin one. Without a diagram it is the other way round.
-    const boldUndeformed = diagram && scale > 0;
-    if (o.undeformed && scale > 0 && !boldUndeformed) this.model(m, o, false, nodeId, true);
-    if (o.sections && m.beams.length <= 4000) this.sectionSolids(m, false, 0.22);
+    // The structure itself is drawn as it was built (bold lines, or solid sections); the deflected shape is a
+    // dashed line on top of it. Shells are the exception: their deflected surface carries the contour colors.
+    if (o.undeformed && scale > 0 && m.shells.length) {
+      const g: ms.Mesh = { k: 'mesh', v: m.nodes.map(x => x * f), f: m.shells.map(s => s.n) }, seg: number[] = [];
+      for (const [a, b] of ms.meshEdges(g)) seg.push(g.v[3 * a], g.v[3 * a + 1], g.v[3 * a + 2], g.v[3 * b], g.v[3 * b + 1], g.v[3 * b + 2]);
+      this.lines(seg, C.ghost, 0.35);
+    }
 
     // Line elements: sampled deflected curves.
     const nSeg = 8, util = o.utilization && cr ? m.beams.map((_, e) => post.memberUtilization(m, cr, e).util) : null;
@@ -321,12 +505,17 @@ export class SceneBuilder {
       });
       const pos = new Float32Array(base.length);
       for (let i = 0; i < pos.length; i++) pos[i] = base[i] + delta[i];
-      const o3 = boldUndeformed ? this.fat(Array.from(pos), { color: this.dark ? 0x8fa3bd : 0x6f7f95, width: 1.5 }) : this.fat(Array.from(pos), { colors, width: 2.8 });
-      o3.frustumCulled = false;
-      o3.userData.pick = { kind: 'beam', ids, nodeId }; this.pickables.push(o3);
-      const buf = (o3.geometry.getAttribute('instanceStart') as THREE.InterleavedBufferAttribute).data;
-      this.morphs.push({ array: buf.array as Float32Array, touch: () => { buf.needsUpdate = true; }, base: Float32Array.from(base), delta: Float32Array.from(delta) });
-      if (boldUndeformed) this.fat(straight, { colors: straightColors, width: 2.8 });
+      const members = this.fat(straight, { colors: straightColors, width: 2.8 });
+      members.userData.pick = { kind: 'beam', ids: m.beams.map((_, e) => e), nodeId }; this.pickables.push(members);
+      this.skin = false;
+      if (o.sections) this.sectionSolids(m, false, nodeId, util || cr?.active ? m.beams.map((b, e) => (cr?.active && !cr.active[e] ? 0xb8bec7 : util ? rampColor(Math.min(1, util[e])) : materialColor(m.materials[b.mat]))) : undefined);
+      if (scale > 0) {
+        const o3 = this.fat(Array.from(pos), { color: this.dark ? 0x9fc0ff : 0x1d4ed8, width: 1.9, dash: size * 0.011, overlay: true });
+        o3.frustumCulled = false;
+        o3.userData.pick = { kind: 'beam', ids, nodeId }; this.pickables.push(o3);
+        const buf = (o3.geometry.getAttribute('instanceStart') as THREE.InterleavedBufferAttribute).data;
+        this.morphs.push({ array: buf.array as Float32Array, touch: () => { buf.needsUpdate = true; }, base: Float32Array.from(base), delta: Float32Array.from(delta) });
+      }
       if (util) this.legend = { title: 'Utilization (stress-based, simplified)', min: 0, max: 1, unit: '' };
     }
     // Shells: deformed mesh, optionally colored by a result quantity.
@@ -443,12 +632,13 @@ export class SceneBuilder {
       const color = key === 'pos' ? C.pos : C.neg;
       if (fill[key].length) {
         const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(fill[key], 3));
-        const mesh = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide, transparent: true, opacity: 0.2, depthWrite: false }));
-        mesh.renderOrder = 2; this.group.add(mesh);
+        // Diagrams are an overlay: they are not hidden by the solid members they start from.
+        const mesh = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide, transparent: true, opacity: 0.22, depthWrite: false, depthTest: false }));
+        mesh.renderOrder = 4; this.group.add(mesh);
         for (let i = 0; i < fill[key].length; i += 3) this.track(v(fill[key][i], fill[key][i + 1], fill[key][i + 2]));
       }
-      if (edge[key].length) this.fat(edge[key], { color, width: 1.6 });
-      if (ord[key].length) this.lines(ord[key], color, 0.45);
+      if (edge[key].length) this.fat(edge[key], { color, width: 1.6, overlay: true });
+      if (ord[key].length) { const o3 = this.lines(ord[key], color, 0.45); (o3.material as THREE.Material).depthTest = false; o3.renderOrder = 5; }
     }
     for (const [key, seg] of Object.entries(bars)) { const o3 = this.fat(seg, { color: key.startsWith('pos') ? C.pos : C.neg, width: 1.2 + 1.5 * Number(key.slice(3)) }); o3.material.depthTest = false; o3.renderOrder = 3; }
     if (values && cands.length && m.beams.length <= 150) {
@@ -460,16 +650,22 @@ export class SceneBuilder {
     this.info.push(`${name[which]}: ${fmtNum(clean(lo), 4)} to ${fmtNum(clean(hi), 4)} ${un.label} (${which === 'N' ? 'blue tension, red compression' : 'blue +, red −'}${which.startsWith('M') ? ', drawn on the tension side' : ''}${Object.keys(bars).length ? '; a heavier line is a larger force' : ''})`);
   }
   private reactions(m: FEModel, cr: CaseResult, size: number, values: boolean): void {
-    let maxR = 0;
-    for (const s of m.supports) maxR = Math.max(maxR, Math.hypot(cr.reactions[6 * s.node], cr.reactions[6 * s.node + 1], cr.reactions[6 * s.node + 2]));
-    if (maxR <= 0) return;
-    const L = size * 0.1;
+    let maxR = 0, maxM = 0;
+    for (const s of m.supports) { const k = 6 * s.node, r = cr.reactions; maxR = Math.max(maxR, Math.hypot(r[k], r[k + 1], r[k + 2])); maxM = Math.max(maxM, Math.hypot(r[k + 3], r[k + 4], r[k + 5])); }
+    const L = size * 0.1, few = m.supports.length <= 80;
     for (const s of m.supports) {
-      const q = post.nodeReaction(cr, s.node), mag = Math.hypot(q[0], q[1], q[2]);
-      if (mag < 1e-6 * maxR) continue;
-      const p = this.P(m, s.node), d = mul(v(q[0], q[1], q[2]), L * (0.4 + 0.6 * mag / maxR) / mag);
-      this.arrow(sub(p, d), p, C.react);
-      if (values && m.supports.length <= 80) this.label(sub(p, d), `${fmtNum(mag / this.u.force.f, 4)} ${this.u.force.label}`, 'react', undefined, 2, mul(d, -1));
+      const q = post.nodeReaction(cr, s.node), mag = Math.hypot(q[0], q[1], q[2]), mm = Math.hypot(q[3], q[4], q[5]), p = this.P(m, s.node);
+      if (maxR > 0 && mag > 1e-6 * maxR) {
+        // The arrow points at the node from the side the reaction pushes from, clear of the support symbol.
+        const d = mul(v(q[0], q[1], q[2]), L * (0.4 + 0.6 * mag / maxR) / mag), tip = sub(p, mul(d, 0.42 * size * 0.1 / len(d)));
+        this.arrow(sub(tip, d), tip, C.react);
+        if (values && few) this.label(sub(tip, d), `${fmtNum(mag / this.u.force.f, 4)} ${this.u.force.label}`, 'react', undefined, 2, mul(d, -1));
+      }
+      // Moment reactions (fixed supports): a curved arrow with its value. Tiny values from in-plane restraints are skipped.
+      if (maxM > 0 && mm > 1e-6 * maxM && mm > 1e-9 * Math.max(maxR, 1) && few) {
+        const at = this.momentArc(p, v(q[3], q[4], q[5]), C.react, L * 0.5);
+        if (values) this.label(at, `${fmtNum(mm / this.u.moment.f, 4)} ${this.u.moment.label}`, 'react', undefined, 2, sub(at, p));
+      }
     }
   }
   /** Move animated geometry: factor in [-1, 1]. */

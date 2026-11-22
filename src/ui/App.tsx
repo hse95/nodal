@@ -6,7 +6,10 @@ import { createMemo, createSignal, For, onCleanup, onMount, Show, JSX } from 'so
 import { project, mutate, ui, setUi, openProject, saveProjectFile, pickFile, migrate, toast, download, engine, runTick, dirty, solvingNode, selection, setSelection, undo, redo, unwrap, registry, portsOf, loadAutosave, addNode, TEXT_SCALES, setTextScale, stepTextScale } from './store';
 import { emptyProject } from '../core/graph';
 import type { ProjectFile } from '../core/types';
-import { Canvas, Palette, layouts, CATEGORY_COLORS, setPaletteTab } from './Canvas';
+import { Canvas, layouts, CATEGORY_COLORS } from './Canvas';
+import { Ribbon } from './Ribbon';
+import { benchmarkAsComponents } from '../verify/explode';
+
 import { Tex, texToPlain } from './Tex';
 import { Viewport, viewportApi } from './Viewport';
 import { Inspector } from './Inspector';
@@ -18,7 +21,7 @@ import { cancelSolver } from './workers';
 import { TYPE_COLORS } from '../core/types';
 import { formatValue } from '../core/graph';
 
-const VERSION = '0.2.0';
+const VERSION = '0.3.0';
 const CREDIT = 'Built by Sam Smith at K-State (email me for feedback: samsmith@ksu.edu)';
 
 /** Geometry currently shown in the 3D view, for the export commands. */
@@ -107,9 +110,17 @@ export function openExample(id: string): void {
 }
 
 // ---- first-run tour --------------------------------------------------------------------
+/** Open a verification benchmark: as its single component, or rebuilt from ordinary components. */
+export function openBenchmark(id: string, asComponents: boolean): void {
+  if (!asComponents) { openExample('bench-' + id.toLowerCase()); return; }
+  const def = BENCHMARKS.find(b => b.id === id);
+  if (!def) return;
+  try { openProject(benchmarkAsComponents(def)); setUi('dialog', null); setSelection([]); } catch (e) { toast((e as Error).message); }
+}
+
 const TOUR: { title: string; text: string; keys: string[] }[] = [
   { title: 'Welcome to Nodal', text: 'Nodal is a canvas of components joined by wires. Data flows from left to right, and the 3D view updates as you go. This short tour builds a small truss in five steps. You can skip it at any time.', keys: [] },
-  { title: '1. Geometry from sliders', text: 'Two sliders set the span and the height. Three points are built from them, and three lines join the points. To add components yourself, double-click the canvas and type a name.', keys: ['span', 'height', 'half', 'A', 'B', 'C', 'l1', 'l2', 'l3'] },
+  { title: '1. Geometry from sliders', text: 'Two sliders set the span and the height. Three points are built from them, and three lines join the points. To add components yourself, pick them from the ribbon at the top, or double-click the canvas and type a name.', keys: ['span', 'height', 'half', 'A', 'B', 'C', 'l1', 'l2', 'l3'] },
   { title: '2. Structural elements', text: 'A Tube Section and a Truss component turn the three lines into bars. Element components always need a curve and a cross-section; the material defaults to steel.', keys: ['sec', 'truss'] },
   { title: '3. Supports and a load', text: 'Supports and loads are placed by position: each one attaches to the node at its point. Here a pin, a roller, and a 10 kN load at the apex. Because the truss is flat, the apex is also held against moving out of its plane.', keys: ['sA', 'sB', 'sC', 'load', 'neg', 'F', 'pl'] },
   { title: '4. Assemble and analyze', text: 'Assemble Model joins everything at shared nodes and checks the model. Linear Static solves it in a background worker and reports an equilibrium check.', keys: ['model', 'static'] },
@@ -183,9 +194,6 @@ export function App(): JSX.Element {
             <Item label="CSV of the selected component" onClick={() => void exportAs('csv')} /><Item label="3D view as PNG" onClick={() => void exportAs('png-view')} /><Item label="3D view as SVG" onClick={() => void exportAs('svg-view')} /><Item label="Canvas as PNG" onClick={() => void exportAs('png-canvas')} /><Item label="Canvas as SVG" onClick={() => void exportAs('svg-canvas')} />
           </Menu>
           <Menu name="edit" label="Edit"><Item label="Undo" key="Ctrl Z" onClick={undo} /><Item label="Redo" key="Ctrl Y" onClick={redo} /><hr /><Item label="Add component…" key="Ctrl K" onClick={() => window.dispatchEvent(new CustomEvent('nodal:palette'))} /><Item label="Recompute everything" onClick={() => { engine.invalidate(); mutate(() => undefined, { undo: false }); }} /><Item label="Cancel running analysis" onClick={() => { cancelSolver(); engine.cancel(); }} /></Menu>
-          <button class="menu-btn" title="Ready-made groups of components to drop into this project" onClick={() => { setUi('palette', true); if (ui.layout === 'view') setUi('layout', 'split'); setPaletteTab('templates'); }}>Templates</button>
-          <button class="menu-btn" title="Complete models that open as a new project" onClick={() => setUi('dialog', 'examples')}>Examples</button>
-          <button class="menu-btn" onClick={() => setUi('dialog', 'verification')}>Verification</button>
           <Menu name="units" label={`Units: ${project.units}`}>
             <Item label={(project.units === 'SI' ? '● ' : '○ ') + 'SI: kN, m, MPa (sections in mm)'} onClick={() => mutate(p => { p.units = 'SI'; })} />
             <Item label={(project.units === 'US' ? '● ' : '○ ') + 'US: kip, ft, ksi (sections in inches)'} onClick={() => mutate(p => { p.units = 'US'; })} />
@@ -193,12 +201,12 @@ export function App(): JSX.Element {
           </Menu>
           <Menu name="view" label="View">
             <Item label="Canvas and 3D view side by side" onClick={() => setUi('layout', 'split')} /><Item label="Stacked" onClick={() => setUi('layout', 'stack')} /><Item label="Canvas only" onClick={() => setUi('layout', 'canvas')} /><Item label="3D view only" onClick={() => setUi('layout', 'view')} /><Item label="Swap sides" onClick={() => setUi('swap', !ui.swap)} /><hr />
-            <Item label={(ui.palette ? 'Hide' : 'Show') + ' component list'} onClick={() => setUi('palette', !ui.palette)} /><Item label={(ui.inspector ? 'Hide' : 'Show') + ' inspector'} onClick={() => setUi('inspector', !ui.inspector)} /><hr />
+            <Item label={(ui.ribbon ? 'Hide' : 'Show') + ' ribbon'} onClick={() => { const open = !ui.ribbon; setUi('ribbon', open); try { localStorage.setItem('nodal.ribbon', open ? '1' : '0'); } catch { /* storage unavailable */ } }} /><Item label={(ui.inspector ? 'Hide' : 'Show') + ' inspector'} onClick={() => setUi('inspector', !ui.inspector)} /><hr />
             <Item label={ui.theme === 'dark' ? 'Light theme' : 'Dark theme'} onClick={() => setTheme(ui.theme === 'dark' ? 'light' : 'dark')} /><hr />
             <div class="menu-title">Text size</div>
             <For each={TEXT_SCALES}>{([val, name]) => <Item label={(ui.textScale === val ? '● ' : '○ ') + name} onClick={() => setTextScale(val)} />}</For>
           </Menu>
-          <Menu name="help" label="Help"><Item label="Take the tour" onClick={startTour} /><Item label="Keyboard shortcuts" onClick={() => setUi('dialog', 'shortcuts')} /><Item label="User guide" onClick={() => window.open('https://github.com/hse95/nodal/blob/main/docs/user-guide.md', '_blank', 'noopener')} /><Item label="Theory manual" onClick={() => window.open('https://github.com/hse95/nodal/blob/main/docs/theory-manual.md', '_blank', 'noopener')} /><Item label="About Nodal" onClick={() => setUi('dialog', 'about')} /></Menu>
+          <Menu name="help" label="Help"><Item label="Take the tour" onClick={startTour} /><Item label="Examples…" onClick={() => setUi('dialog', 'examples')} /><Item label="Verification…" onClick={() => setUi('dialog', 'verification')} /><Item label="Keyboard shortcuts" onClick={() => setUi('dialog', 'shortcuts')} /><Item label="User guide" onClick={() => window.open('https://github.com/hse95/nodal/blob/main/docs/user-guide.md', '_blank', 'noopener')} /><Item label="Theory manual" onClick={() => window.open('https://github.com/hse95/nodal/blob/main/docs/theory-manual.md', '_blank', 'noopener')} /><Item label="About Nodal" onClick={() => setUi('dialog', 'about')} /></Menu>
         </nav>
         <div class="spacer" />
         <div class="status" role="status" aria-live="polite">
@@ -218,8 +226,8 @@ export function App(): JSX.Element {
           <button title={ui.theme === 'dark' ? 'Light theme' : 'Dark theme'} aria-label="Toggle theme" onClick={() => setTheme(ui.theme === 'dark' ? 'light' : 'dark')}>{ui.theme === 'dark' ? '☀' : '☾'}</button>
         </div>
       </header>
+      <Ribbon onExample={openExample} onAllExamples={() => setUi('dialog', 'examples')} onVerify={() => setUi('dialog', 'verification')} onBenchmark={openBenchmark} />
       <div class="body">
-        <Show when={ui.palette && ui.layout !== 'view'}><Palette /></Show>
         <main class="main" ref={main}>
           <div class="pane" style={paneStyle('canvas')}><Canvas /></div>
           <Show when={ui.layout === 'split' || ui.layout === 'stack'}><div class="divider" style={{ order: 1 }} role="separator" aria-label="Resize panes" onPointerDown={startSplit} /></Show>
@@ -291,7 +299,7 @@ function VerificationDialog(): JSX.Element {
     <p class="muted">Every benchmark is solved here, in your browser, by the same solver the app uses, and compared with a closed-form solution, a published reference value, or the independent reference solver. The same suite runs in the automated tests.</p>
     <div class="row"><button class="primary" disabled={running()} onClick={() => void run()}>Run all again</button><Show when={running()}><button onClick={() => { stop = true; }}>Stop</button></Show><Show when={results().length}><button onClick={csv}>Download CSV</button></Show><span class="muted">{progress() || (results().length ? summary() : '')}</span></div>
     <For each={results()}>{r => <section class="bench" classList={{ fail: !r.pass }}>
-      <div class="bench-head"><span class="pill" classList={{ pass: r.pass, fail: !r.pass }}>{r.pass ? 'PASS' : 'FAIL'}</span><b>{r.def.id} {r.def.title}</b><span class="muted">{r.ms.toFixed(0)} ms</span><button class="link" onClick={() => openExample('bench-' + r.def.id.toLowerCase())}>Open as example</button></div>
+      <div class="bench-head"><span class="pill" classList={{ pass: r.pass, fail: !r.pass }}>{r.pass ? 'PASS' : 'FAIL'}</span><b>{r.def.id} {r.def.title}</b><span class="muted">{r.ms.toFixed(0)} ms</span><button class="link" onClick={() => openBenchmark(r.def.id, false)}>Open</button><button class="link" title="Open this model built from ordinary components" onClick={() => openBenchmark(r.def.id, true)}>Open as components</button></div>
       <p class="muted">{r.def.description} <i>Reference: {r.def.source}</i></p>
       <Show when={r.error}><p class="msg error">{r.error}</p></Show>
       <div class="bench-body"><table class="grid"><thead><tr><th>Check</th><th>Formula</th><th>Computed</th><th>Reference</th><th>Error</th><th>Tolerance</th><th /></tr></thead><tbody>

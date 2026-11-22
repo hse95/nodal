@@ -21,15 +21,21 @@ Parametric structural design usually needs a CAD package, a visual programming a
 
 ### Start from a template
 
-The Templates tab drops a complete small model onto the canvas: a beam, a continuous beam, a truss, a portal frame, a column or a plate. Each one has sliders for its size and loads and is checked against a hand calculation.
+The Templates tab of the ribbon shows each template with a small picture. Click or drag one to drop a complete small model onto the canvas: a beam, a continuous beam, a truss, a portal frame, a column or a plate. Each one has sliders for its size and loads and is checked against a hand calculation.
 
 [![Inserting a simply supported beam and a portal frame from the Templates tab and moving their sliders](docs/media/templates.gif)](docs/media/templates.gif)
 
 ### Results that read like a textbook figure
 
-A plane model opens square-on. Diagrams are filled bands with values at the peaks, loads and reactions are labelled once, and formulas are typeset.
+A plane model opens square-on. Members are drawn as solids with their real cross-sections, supports look like what they are (a fixed end is a block with hatching, a pin is a pyramid, a roller sits on rollers), the deflected shape is a dashed line, and diagrams are filled bands with values at the peaks.
 
 [![A fixed-fixed beam with its bending moment diagram and a table comparing computed values with the closed-form formulas](docs/media/beam.png)](docs/media/beam.png)
+
+### See how a verification model is built
+
+Each of the 28 benchmarks can be opened written out with ordinary components, with a check at the end that compares the result with the reference values. Change a number and the check responds.
+
+[![The portal frame benchmark opened as ordinary components: points, lines, sections, beams, supports, a load, the analysis and a table of computed and reference values](docs/media/components.png)](docs/media/components.png)
 
 ### Geometry, structure and results on one canvas
 
@@ -74,7 +80,9 @@ The evolutionary optimizer changes the width and depth of a beam to minimize its
 - **250+ components** in 14 categories: parameters, math, lists, data trees, vectors and planes, curves, surfaces and solids, meshes, transforms, display, structure, form-finding, optimization and scripting.
 - **Data trees** with longest-list, shortest-list and cross-reference matching, plus graft, flatten, simplify, reverse, path mapping and branch extraction.
 - **Canvas tools**: fuzzy search on double-click, command palette (Ctrl/Cmd+K), wires colored by type, groups, notes, reusable clusters, undo/redo, copy and paste between projects, minimap, snapping, and help for every component.
-- **Templates**: ten ready-made groups of components (seven complete models and three building blocks) that drop into the open project.
+- **Ribbon**: every component has its own icon, grouped in tabs by family, with search and a hover description. Click or drag to add. The ribbon can be hidden.
+- **Templates**: ten ready-made groups of components (seven complete models and three building blocks) that drop into the open project, each with a thumbnail.
+- **Verification models as components**: any of the 28 benchmarks can be opened written out with ordinary components, so you can see how it is built and change it.
 - **Easy wiring**: drop a wire on a component or on empty canvas and Nodal offers what fits; right-click a wire to delete it.
 - **Readable**: adjustable text size, labels that stay legible when zoomed out, and typeset formulas (KaTeX) in expressions, notes and tables.
 - **Geometry**: lines, polylines, arcs, NURBS curves and surfaces, lofts, sweeps, revolves, meshes, Delaunay triangulation and solid booleans.

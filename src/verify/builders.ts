@@ -27,7 +27,9 @@ export interface Built {
 }
 export type Builder = (p: Params) => Built;
 
-const mk = (els: ElementPart[], sups: SupportPart[], loads: LoadPart[], tol = 1e-6) => buildModel(els, sups, loads, tol);
+/** The parts (elements, supports, loads) the most recent builder call assembled, kept so that a benchmark can be rebuilt from components. */
+export let lastParts: { els: ElementPart[]; sups: SupportPart[]; loads: LoadPart[]; tol: number } | null = null;
+const mk = (els: ElementPart[], sups: SupportPart[], loads: LoadPart[], tol = 1e-6) => { lastParts = { els, sups, loads, tol }; return buildModel(els, sups, loads, tol); };
 const uAt = (r: FEResult, p: V3, d: number, c = 0) => r.cases[c].u[6 * nearestNode(r.model, p) + d];
 const rAt = (r: FEResult, p: V3, d: number, c = 0) => r.cases[c].reactions[6 * nearestNode(r.model, p) + d];
 /** Internal force component k at global position x on a straight member along X built from equal elements. */
