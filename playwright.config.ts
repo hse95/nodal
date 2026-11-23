@@ -6,6 +6,9 @@ export default defineConfig({
   testDir: 'e2e',
   timeout: 120_000,
   retries: process.env.CI ? 1 : 0,
+  // One test at a time on the build machine: two of the tests measure speed (canvas frame rate, an optimizer run)
+  // and fail when another test, such as the path-traced render, is using the processor at the same time.
+  workers: process.env.CI ? 1 : undefined,
   use: {
     baseURL: 'http://localhost:4173',
     channel: 'chrome',
