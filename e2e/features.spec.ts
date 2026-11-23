@@ -170,13 +170,15 @@ test('canvas stays responsive with 500 components', async ({ page }) => {
     const steady = frames.slice(5).sort((a, b) => a - b);
     return { times: frames.slice(5).map(x => Math.round(x)).join(' '), median: 1000 / steady[Math.floor(steady.length / 2)], p95: 1000 / steady[Math.floor(steady.length * 0.95)] };
   });
-  const diag = !!(process.env.CI || process.env.NODAL_DIAG), browser = page.context().browser()!;
+  const diag = !!process.env.NODAL_DIAG, browser = page.context().browser()!;
   if (diag) await browser.startTracing(page, { categories: ['devtools.timeline', 'disabled-by-default-devtools.timeline', 'cc', 'gpu', 'viz', 'blink'] });
   const gl0 = await page.evaluate(() => (window as any).__gl as number);
   const fps = await measure();
   const gl1 = await page.evaluate(() => (window as any).__gl as number);
+  // Dragging the canvas must not make the 3D view draw anything.
+  expect(gl1 - gl0).toBe(0);
   if (diag) {
-    // Record where the time goes, so the log of a slow machine says what was slow.
+    // NODAL_DIAG=1 records where the time goes, to find out what is slow on a slow machine.
     const events: any[] = JSON.parse((await browser.stopTracing()).toString()).traceEvents;
     const threads = new Map<string, string>(), totals = new Map<string, number>();
     for (const e of events) if (e.ph === 'M' && e.name === 'thread_name') threads.set(`${e.pid}:${e.tid}`, e.args?.name ?? '');

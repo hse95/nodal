@@ -51,6 +51,11 @@ Familiar ground for Grasshopper users, design aids, a more realistic view with r
 
 - 321 unit tests (new: design benchmarks, new components, step-by-step method, PDF writer, aliases, icon uniqueness) and 31 browser tests.
 
+**Speed**
+
+- Dragging a large canvas is smoother on computers without a graphics card: the canvas now moves as one picture while it is dragged instead of being redrawn every frame.
+- The canvas speed test now compares against the machine's own baseline and checks that the 3D view stays idle while the canvas is dragged.
+
 ## 0.4.0 (2026-11-22)
 
 An optional AI assistant, and a side panel that can be hidden. No change to the solver.
