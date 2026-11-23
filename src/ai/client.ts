@@ -23,11 +23,21 @@ const sleep = (ms: number, signal?: AbortSignal) => new Promise<void>((res, rej)
 /** Delays between attempts when the service is busy (overridden in tests). */
 export const retry = { delays: [1500, 4000, 9000] };
 
+/**
+ * From the second round of a turn on, mark the end of the conversation so far as cacheable. Each round
+ * resends everything before it; with the mark, Anthropic bills that repeated part at the lower cached rate.
+ */
+function withCacheMark(messages: Message[]): unknown[] {
+  if (messages.length < 2) return messages;
+  const last = messages[messages.length - 1], blocks = last.content;
+  if (!blocks.length) return messages;
+  return [...messages.slice(0, -1), { ...last, content: blocks.map((b, i) => (i === blocks.length - 1 ? { ...b, cache_control: { type: 'ephemeral' } } : b)) }];
+}
 export async function send(req: Request): Promise<Reply> {
   const body = JSON.stringify({
     model: req.model, max_tokens: req.maxTokens ?? 8000, stream: true,
     system: [{ type: 'text', text: req.system, cache_control: { type: 'ephemeral' } }],
-    tools: req.tools, messages: req.messages,
+    tools: req.tools, messages: withCacheMark(req.messages),
   });
   for (let attempt = 0; ; attempt++) {
     if (req.signal?.aborted) throw new ApiError('Stopped.', 'cancelled');

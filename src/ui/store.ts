@@ -329,3 +329,22 @@ export function insertCluster(def: ClusterDef, x: number, y: number): void {
   setSelection([node.id]);
 }
 export { registry, portsOf, unwrap };
+
+// ---- slider animation ---------------------------------------------------------------------------
+const sweeps = new Map<string, number>();
+export const [animated, setAnimated] = createSignal<ReadonlySet<string>>(new Set());
+/** Sweep a slider back and forth between its limits (one sweep takes about four seconds). The changes are not undo steps. */
+export function toggleSliderAnimation(id: string): void {
+  const running = sweeps.get(id);
+  if (running !== undefined) { clearInterval(running); sweeps.delete(id); setAnimated(new Set(sweeps.keys())); return; }
+  let dir = 1;
+  const timer = window.setInterval(() => {
+    const n = nodeById(id);
+    if (!n || registry.get(n.type)?.widget !== 'slider') { clearInterval(timer); sweeps.delete(id); setAnimated(new Set(sweeps.keys())); return; }
+    const { min, max, integer } = n.state as { min: number; max: number; integer: boolean }, span = max - min, step = integer ? Math.max(1, Math.round(span / 50)) : span / 50;
+    let v = Number(n.state.value) + dir * step;
+    if (v >= max) { v = max; dir = -1; } else if (v <= min) { v = min; dir = 1; }
+    mutate(p => { const t = p.graph.nodes.find(x => x.id === id); if (t) t.state.value = integer ? Math.round(v) : Number(v.toPrecision(6)); }, { undo: false });
+  }, 80);
+  sweeps.set(id, timer); setAnimated(new Set(sweeps.keys()));
+}

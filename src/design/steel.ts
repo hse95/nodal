@@ -66,8 +66,9 @@ export function checkW(s: WShape, o: SteelInput): SteelCheck {
   const slend = Math.max(o.Lcx / s.rx, o.Lcy / s.ry), Fe = slend > 0 ? Math.PI ** 2 * E / slend ** 2 : Infinity;
   const Fcr = slend <= 4.71 * rootEF ? Math.pow(0.658, Fy / Fe) * Fy : 0.877 * Fe;
   const slenderC = lamF > 0.56 * rootEF || lamW > 1.49 * rootEF, Ae = slenderC ? effectiveArea(s, Fy, E, Fcr) : s.A, Pn = Fcr * Ae, Pc = avail(Pn, 0.9, 1.67);
-  if (slend > 200) notes.push(`The slenderness ${slend.toFixed(0)} is above 200, the limit AISC recommends for compression members.`);
-  if (slenderC) notes.push('The section has slender elements in compression; the effective area of Section E7 is used.');
+  // These two remarks matter only when the member is actually in compression.
+  if ((o.Pr ?? 0) < 0 && slend > 200) notes.push(`The slenderness ${slend.toFixed(0)} is above 200, the limit AISC recommends for compression members.`);
+  if ((o.Pr ?? 0) < 0 && slenderC) notes.push('The section has slender elements in compression; the effective area of Section E7 is used.');
   // ---- flexure about the strong axis (F2 and F3)
   const Mp = Fy * s.Zx, Mr = 0.7 * Fy * s.Sx, lpF = 0.38 * rootEF, lrF = 1.0 * rootEF, lpW = 3.76 * rootEF, lrW = 5.70 * rootEF;
   const flange = lamF <= lpF ? 'compact' : lamF <= lrF ? 'noncompact' : 'slender', web = lamW <= lpW ? 'compact' : lamW <= lrW ? 'noncompact' : 'slender';

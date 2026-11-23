@@ -255,6 +255,55 @@ Choose **SI** (kN, m, MPa; section sizes and displacements in mm) or **US custom
 
 Switching the unit system changes how the numbers in the graph are read; it does not convert them.
 
+## Coming from Grasshopper
+
+If you know Grasshopper, most of what you know carries over: see [Coming from Grasshopper](grasshopper.md), or **Help → Coming from Grasshopper** in the app. In short: double-click the canvas to search (names used in Grasshopper find the Nodal component), type a number to get a slider, `0<5<10` for a slider with a range, `"text` for a panel and `// text` for a note; Ctrl+G groups; right-click a slider to animate it.
+
+## Realistic display, rendering and export
+
+**Options** in the 3D view toolbar holds the switches for the view:
+
+- **Grid**, **Shadows** (the shadows on the ground of the Realistic display; turn them off if they distract) and **Contact shading** (soft shading where surfaces meet, known as ambient occlusion; it is off by default on computers that draw graphics in software).
+- **Section plane**, with its axis and position.
+- **Save picture (PNG)** and **Save drawing (SVG)**.
+- **Record video (WebM)**: records the 3D view while you move sliders, play a mode shape or turn the view. Choose it again to stop and save.
+- **Export glTF (.glb)**: the solids shown in the view (members with their real sections, supports, shells, geometry) as one file that Blender, Unreal Engine and most renderers open. Use this when you want a cinematic picture or animation made elsewhere.
+
+In the Realistic display the model is lit by a neutral studio environment as well as by the sun, and steel, aluminum, concrete and timber each have their own surface.
+
+**Render** makes one high-quality picture of the current view by path tracing: light is followed as it bounces between surfaces, which gives soft shadows and reflections. The picture refines while you watch; stop and save it at any time. It shows the solids of the Realistic display without diagrams, labels and lines. On a computer without a graphics card it is slow.
+
+## Design aids: shapes, load combinations and code checks
+
+These components are in the Structure tab, under *Materials and sections*, *Loads* and *Code checks*.
+
+- **AISC Shape** gives a wide-flange (W) or rectangular HSS section by name: `W12x26`, the metric name `W310x38.7` (or `W310x39`), or `HSS8x4x1/4`. The tabulated properties of the AISC Shapes Database v15.0 are used.
+- **ASCE 7 Combinations** writes out the basic load combinations of ASCE 7-22 or 7-16, for strength design or allowable stress design, for the load cases you name (D, L, Lr, S, R, W, E). Wind and earthquake are taken in both directions. Special combinations (flood, ice, overstrength, self-straining) are not generated, and E stands for the whole seismic effect.
+- **AISC 360 Check** gives the available strengths of a W shape by AISC 360-16 and the demand over capacity ratios: tension yielding, flexural buckling (with slender elements), flexure about both axes (lateral-torsional and flange local buckling), shear, and combined axial force and bending (H1-1). It does not cover connections, tension rupture, torsion or second-order effects.
+- **ACI 318 Beam Check** gives the flexural and one-way shear strength of a rectangular reinforced concrete section by ACI 318-19.
+- **Truss Generator** and **Frame Grid** (under *Generators*) give the member lines of Pratt, Howe and Warren trusses and of regular building frames.
+
+The checks are tested against the AISC Design Examples and Manual tables and against hand calculations (see the tests in `tests/design.test.ts`). They report strengths and ratios; they do not design the member and they are not a substitute for an engineer's check against the code.
+
+## More modeling components
+
+- **Lists and trees**: Split List, Cull Nth, Delete Consecutive, Repeat Data, Jitter, Insert Items, Replace Items, Create Set; Entwine, Clean Tree, Tree Item, Split Tree, Relative Item.
+- **Curves**: Tween Curve, Tween Curves, Pipe.
+- **Surfaces**: Quad, Triangular, Diamond and Staggered Panels; Diagrid; Space Truss (a double-layer grid on a surface).
+- **Meshes**: Subdivide Mesh (Catmull-Clark), Smooth Mesh, Weld Mesh.
+- **Transform**: Twist, Taper, Bend.
+- **Sun** (Tools tab): Sun Position, Sun Path and Shadow, for a place, a date and a time.
+
+## Stiffness method, step by step
+
+**Help → Stiffness method, step by step** writes out the direct stiffness method for the model on the canvas: the nodes and unknowns, each member's stiffness matrix in its own axes, its transformation and its matrix in the structure's axes, the assembled structure matrix (with the terms of one member highlighted), the supports and loads, the solution and the reactions. It uses the solver's own member matrices and compares its answer with the solver's. It is meant for teaching and for small models: frames and trusses of up to 10 nodes and 14 members under a linear static analysis.
+
+## Sharing, embedding and offline use
+
+- **File → Share or embed** makes a link that carries the whole model after the “#”. Nothing is uploaded: that part of an address is not sent to any server. Whoever opens the link gets their own copy. Long links can be cut off by email and chat programs; for large models send the project file.
+- The same dialog gives the HTML for **embedding** a model in a course page or in documentation: a frame with the model, without the ribbon and the side panel, and a link that opens it in the full app.
+- Nodal can be **installed** from the browser's menu (Install app, or Add to Home Screen) and then opens without a connection. Everything except the optional AI assistant works offline.
+
 ## AI assistant (optional)
 
 Nodal has an optional chat panel in which Claude, Anthropic's AI model, builds and edits components for you. It is off until you open it and enter a key, and everything else in Nodal works without it.
@@ -278,13 +327,15 @@ Nodal has an optional chat panel in which Claude, Anthropic's AI model, builds a
 
 **What it does not do.** The assistant builds models; it does not produce results. Every result value comes from Nodal's solver, and when the assistant quotes a number it has read it from the solver. It cannot run scripts: formulas go through the same expression parser as your own, and the Script component is not available to it. It can still misread a sketch or make a poor assumption, so check the model and the results as you would check your own.
 
+**Cost.** Building a model takes several round trips, and each one sends the list of components again. Most of that is billed at Anthropic's lower rate for repeated (cached) text, but a model of twenty or so components still uses a few hundred thousand input tokens. The reply shows the count.
+
 **Limits.** One turn is limited to 25 round trips to the model and 150 tool calls; send "continue" if it stops there. Large images are scaled down to 1568 pixels on the longest side before they are sent.
 
 ## 10 Verification
 
 Each check in the Verification panel shows its reference formula typeset next to the computed and reference values. Opening a benchmark as an example gives the same comparison as a table in a panel.
 
-The **Verification** tab of the ribbon lists the 28 benchmarks. **Run all checks** solves them all in your browser and lists computed value, reference value, error and tolerance for each check, with convergence plots for the mesh studies.
+The **Verification** tab of the ribbon lists the 28 benchmarks. **Run all checks** solves them all in your browser and lists computed value, reference value, error and tolerance for each check, with convergence plots for the mesh studies. **Save report (PDF)** writes the same information as a report for the version you are running: the summary, and every benchmark with its reference, tolerance and outcome.
 
 Clicking a benchmark opens it as a project, in one of two ways, chosen with the switch at the left of the tab:
 

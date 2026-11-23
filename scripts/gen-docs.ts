@@ -5,6 +5,9 @@ import { join } from 'node:path';
 import '../src/components/basic';
 import '../src/components/geometry';
 import '../src/components/structure';
+import '../src/components/extra';
+import '../src/components/design';
+import { ALIASES } from '../src/core/aliases';
 import { registry } from '../src/core/graph';
 import { runBenchmark, fmtSci, BenchmarkDef, BenchmarkResult } from '../src/verify/runner';
 import { unitSystem } from '../src/fe/units';
@@ -70,3 +73,12 @@ for (const [cat, list] of cats) {
 ref += `\n## Verification Model\n\nListed under Structure in the app: one of the built-in verification benchmarks as a ready-made model, with its result and a table of computed and reference values. See the verification report.\n`;
 writeFileSync(join(docs, 'component-reference.md'), ref);
 console.log(`Wrote verification report (${passed}/${results.length} pass) and component reference (${registry.all().length + 1} components).`);
+
+// ---- Coming from Grasshopper: the table of names is generated from the same list the search uses.
+{
+  const byName = new Map(registry.all().map(d => [d.name, d]));
+  const rows = Object.entries(ALIASES).flatMap(([name, list]) => { const d = byName.get(name); return d ? list.filter(a => a.toLowerCase() !== name.toLowerCase()).map(a => [a, name, ['Form-Finding', 'Optimization', 'Script', 'Environment'].includes(d.category) ? 'Tools' : d.category]) : []; }).sort((a, b) => a[0].localeCompare(b[0]));
+  const head = readFileSync(join(docs, 'grasshopper.head.md'), 'utf8');
+  writeFileSync(join(docs, 'grasshopper.md'), head + '\n## Names that differ\n\nTyping either name in the search finds the component. Names of add-on components are listed where Nodal has a component for the same job. Nodal is not affiliated with those products and shares no code with them.\n\n| Name you may know | Nodal component | Ribbon tab |\n|---|---|---|\n' + rows.map(r => `| ${r[0].replace(/\|/g, '\\|')} | **${r[1].replace(/\|/g, '\\|')}** | ${r[2]} |`).join('\n') + '\n');
+  console.log(`grasshopper.md: ${rows.length} names`);
+}

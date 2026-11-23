@@ -25,7 +25,7 @@ import { cancelSolver } from './workers';
 import { TYPE_COLORS } from '../core/types';
 import { formatValue } from '../core/graph';
 
-const VERSION = '0.4.0';
+const VERSION = '0.5.0';
 const CREDIT = 'Built by Sam Smith at K-State (email me for feedback: samsmith@ksu.edu)';
 
 /** Geometry currently shown in the 3D view, for the export commands. */

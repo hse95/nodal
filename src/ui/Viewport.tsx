@@ -370,6 +370,21 @@ export function Viewport(): JSX.Element {
   createEffect(() => { void ui.display; void ui.sectionOn; void ui.sectionAxis; void ui.sectionPos; void ui.shadows; void ui.ao; if (renderer) { applyDisplay(); invalidate(); } });
 
   const [options, setOptions] = createSignal(false), [softwareGL, setSoftwareGL] = createSignal(false);
+  // Video: the canvas is recorded as it is drawn; frames are forced while recording so that nothing is skipped.
+  const [recording, setRecording] = createSignal(false);
+  let recorder: MediaRecorder | null = null, recTimer = 0;
+  const toggleRecording = () => {
+    if (recorder) { recorder.stop(); return; }
+    const canvas = host.querySelector('canvas');
+    if (!canvas || typeof MediaRecorder === 'undefined' || !canvas.captureStream) { toast('This browser cannot record the view.'); return; }
+    const chunks: Blob[] = [], type = ['video/webm;codecs=vp9', 'video/webm'].find(t => MediaRecorder.isTypeSupported(t)) ?? '';
+    try { recorder = new MediaRecorder(canvas.captureStream(30), type ? { mimeType: type, videoBitsPerSecond: 8_000_000 } : undefined); } catch { toast('This browser cannot record the view.'); return; }
+    recorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+    recorder.onstop = () => { clearInterval(recTimer); recorder = null; setRecording(false); if (chunks.length) download('nodal-view.webm', new Blob(chunks, { type: 'video/webm' }), 'video/webm'); };
+    recorder.start(250); setRecording(true); recTimer = window.setInterval(invalidate, 33);
+    toast('Recording the 3D view. Open Options and choose "Stop recording" to save the video.', 6000);
+  };
+  onCleanup(() => { clearInterval(recTimer); if (recorder && recorder.state !== 'inactive') recorder.stop(); });
   const keep = (k: string, v: string) => { try { localStorage.setItem(k, v); } catch { /* storage unavailable */ } };
   const closeOptions = (e: PointerEvent) => { if (options() && !(e.target as HTMLElement).closest('.v-menu')) setOptions(false); };
   window.addEventListener('pointerdown', closeOptions); onCleanup(() => window.removeEventListener('pointerdown', closeOptions));
@@ -385,7 +400,7 @@ export function Viewport(): JSX.Element {
             <Btn label="Auto" title="Keep everything in view: fit again whenever the model changes" on={ui.autoFit} onClick={() => { const on = !ui.autoFit; setUi('autoFit', on); try { localStorage.setItem('nodal.autoFit', on ? '1' : '0'); } catch { /* storage unavailable */ } if (on) fit(); }} /></div>
           <select value={ui.display} title="Realistic: members as solids with their cross-sections, with shadows. Lines: members as lines." aria-label="Display mode" onChange={e => setUi('display', e.currentTarget.value as 'shaded')}><option value="shaded">Realistic</option><option value="lines">Lines</option><option value="wireframe">Wireframe</option><option value="ghosted">See-through</option></select>
           <div class="v-menu">
-            <button classList={{ on: options() }} aria-expanded={options()} aria-label="View options" title="Grid, shadows, section plane, save and export" onClick={() => setOptions(!options())}>Options ▾</button>
+            <button classList={{ on: options(), rec: recording() }} aria-expanded={options()} aria-label="View options" title="Grid, shadows, section plane, save and export" onClick={() => setOptions(!options())}>Options ▾</button>
             <Show when={options()}><div class="v-pop" role="menu" aria-label="View options">
               <label><input type="checkbox" checked={ui.grid} onChange={e => setUi('grid', e.currentTarget.checked)} /> Grid</label>
               <label title="Shadows on the ground (Realistic display)"><input type="checkbox" checked={ui.shadows} onChange={e => { setUi('shadows', e.currentTarget.checked); keep('nodal.shadows', e.currentTarget.checked ? '1' : '0'); }} /> Shadows</label>
@@ -396,6 +411,7 @@ export function Viewport(): JSX.Element {
               <hr />
               <button role="menuitem" onClick={() => { setOptions(false); const url = viewportApi.png?.(); if (url) { const a = document.createElement('a'); a.href = url; a.download = 'nodal-view.png'; a.click(); } else toast('The 3D view is not available.'); }}>Save picture (PNG)</button>
               <button role="menuitem" onClick={() => { setOptions(false); const svg = viewportApi.svg?.(); if (svg) download('nodal-view.svg', svg, 'image/svg+xml'); }}>Save drawing (SVG, lines and values)</button>
+              <button role="menuitem" title="Record the 3D view as a video while you move sliders, play an animation or turn the view" onClick={() => { setOptions(false); toggleRecording(); }}>{recording() ? 'Stop recording and save the video' : 'Record video (WebM)'}</button>
               <button role="menuitem" title="The solids shown here as a binary glTF file, for Blender, Unreal Engine and other renderers" onClick={() => { setOptions(false); void viewportApi.glb?.().then(buf => download('nodal-model.glb', buf, 'model/gltf-binary'), e => toast((e as Error).message, 7000)); }}>Export glTF (.glb) for Blender or Unreal</button>
             </div></Show>
           </div>

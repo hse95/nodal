@@ -173,7 +173,7 @@ test('the ribbon has every component under its tab, can be searched and can be h
     expect(await page.locator('.rb-body .rb-btn svg.ico').count()).toBe(n);
     total += n;
   }
-  expect(total).toBe(254);                               // 255 components, less the Cluster itself (made from a selection)
+  expect(total).toBe(291);                               // 292 components, less the Cluster itself (made from a selection)
   // Hovering explains a component.
   await tab('Structure').click();
   await page.locator('.rb-btn[aria-label="Beam"]').hover();
@@ -246,6 +246,8 @@ test('view options: shadows can be hidden, the view exports glTF, and Render mak
   expect(buf.subarray(0, 4).toString('latin1')).toBe('glTF'); expect(buf.readUInt32LE(4)).toBe(2);
   const jsonLen = buf.readUInt32LE(12), gltf = JSON.parse(buf.subarray(20, 20 + jsonLen).toString('utf8'));
   expect(gltf.meshes.length).toBeGreaterThan(0); expect(gltf.materials.length).toBeGreaterThan(0);
+  // Render with the ground shadow on (the ground is part of the path-traced scene).
+  await page.locator('.v-menu > button').click(); await page.locator('.v-pop label', { hasText: 'Shadows' }).locator('input').check(); await page.locator('.v-menu > button').click();
   // Render: the picture appears and refines; it can be stopped and saved.
   await page.locator('.v-toolbar button.render').click();
   await expect(page.locator('.render-dialog')).toBeVisible();

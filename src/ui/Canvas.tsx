@@ -4,7 +4,7 @@
  * so panning and zooming only change a single CSS transform.
  */
 import { createMemo, createSignal, For, Show, onCleanup, onMount, JSX, batch } from 'solid-js';
-import { project, mutate, pushUndo, aiTouched, selection, setSelection, selectedWire, setSelectedWire, runTick, engine, ui, setUi, addNode, connect, deleteSelection, copySelection, paste, groupSelection, clusterSelection, alignSelection, solvingNode, registry, portsOf, unwrap, clusterLibrary, insertCluster, toast, deleteWire, insertFragment, freeSpot, nodeById } from './store';
+import { project, mutate, pushUndo, aiTouched, animated, toggleSliderAnimation, selection, setSelection, selectedWire, setSelectedWire, runTick, engine, ui, setUi, addNode, connect, deleteSelection, copySelection, paste, groupSelection, clusterSelection, alignSelection, solvingNode, registry, portsOf, unwrap, clusterLibrary, insertCluster, toast, deleteWire, insertFragment, freeSpot, nodeById } from './store';
 import { TYPE_COLORS } from '../core/types';
 import type { NodeData, PortSpec, ComponentDef, TableValue, DType } from '../core/types';
 import { formatValue, typesCompatible } from '../core/graph';
@@ -323,6 +323,7 @@ export function Canvas(): JSX.Element {
             {item('Delete wire', () => deleteWire(m().wire!), 'Del')}
             {item('Show its data in a panel', () => { const w = project.graph.wires.find(x => x.id === m().wire); if (!w) return; const id = addNode('param.panel', m().wx + 20, m().wy + 30); connect(w.from, w.out, id, 0); })}
           </Show>}>
+            <Show when={registry.get(nodeById(m().node!)?.type ?? '')?.widget === 'slider'}>{item(animated().has(m().node!) ? 'Stop animating' : 'Animate this slider', () => toggleSliderAnimation(m().node!))}</Show>
             {item('Toggle preview', togglePreview, 'P')}
             {item('Enable / disable', () => { const ids = new Set(selection()); mutate(p => { for (const n of p.graph.nodes) if (ids.has(n.id)) n.enabled = n.enabled === false; }); })}
             {item('Rename…', () => { const n = nodeMap().get(m().node!)!; const name = prompt('Label for this component', n.label ?? layouts().get(n.id)?.def?.name ?? ''); if (name !== null) mutate(p => { const x = p.graph.nodes.find(q => q.id === n.id); if (x) x.label = name || undefined; }, { run: false }); })}

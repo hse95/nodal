@@ -31,6 +31,12 @@ A plane model opens square-on. Members are drawn as solids with their real cross
 
 [![A fixed-fixed beam with its bending moment diagram and a table comparing computed values with the closed-form formulas](docs/media/beam.png)](docs/media/beam.png)
 
+### Describe it, and edit what you get (optional)
+
+The optional assistant builds ordinary components from a description or a sketch. It uses your own Anthropic API key and is off until you enter one. Results always come from Nodal's solver.
+
+[![The assistant builds a simply supported W12x26 beam from one sentence: sliders, points, an AISC shape, supports, a line load, the analysis, a moment diagram and an AISC 360 check appear on the canvas, and the 3D view shows the result](docs/media/assistant.gif)](docs/media/assistant.gif)
+
 ### See how a verification model is built
 
 Each of the 28 benchmarks can be opened written out with ordinary components, with a check at the end that compares the result with the reference values. Change a number and the check responds.
@@ -77,10 +83,16 @@ The evolutionary optimizer changes the width and depth of a beam to minimize its
 
 **Parametric canvas**
 
-- **250+ components** in 14 categories: parameters, math, lists, data trees, vectors and planes, curves, surfaces and solids, meshes, transforms, display, structure, form-finding, optimization and scripting.
+- **290+ components** in 15 categories: parameters, math, lists, data trees, vectors and planes, curves, surfaces and solids, meshes, transforms, display, structure, form-finding, optimization and scripting.
 - **Data trees** with longest-list, shortest-list and cross-reference matching, plus graft, flatten, simplify, reverse, path mapping and branch extraction.
 - **Canvas tools**: fuzzy search on double-click, command palette (Ctrl/Cmd+K), wires colored by type, groups, notes, reusable clusters, undo/redo, copy and paste between projects, minimap, snapping, and help for every component.
 - **AI assistant (optional)**: describe a structure, or paste a sketch, and Claude builds it from ordinary components. It uses your own Anthropic API key, is off until you enter one, and never produces results: those come from the solver.
+- **For Grasshopper users**: the same habits (double-click search, typing shortcuts, Ctrl+G, data trees), a search that knows Grasshopper's names, and a [guide](docs/grasshopper.md).
+- **Design aids**: AISC shapes, ASCE 7 load combinations, and member checks to AISC 360-16 and ACI 318-19, with benchmarks.
+- **Realistic view and rendering**: studio lighting, material surfaces, optional shadows and contact shading, a path-traced Render button, and glTF export for Blender or Unreal Engine.
+- **Teaching**: the stiffness method written out step by step for small models.
+- **Sharing**: a link that carries the model, an embed mode for course pages, and offline use as an installed app.
+- **Verification report**: a PDF of every benchmark, its reference, tolerance and outcome, for the version you are running.
 - **Ribbon**: every component has its own icon, grouped in tabs by family, with search and a hover description. Click or drag to add. The ribbon can be hidden.
 - **Templates**: ten ready-made groups of components (seven complete models and three building blocks) that drop into the open project, each with a thumbnail.
 - **Verification models as components**: any of the 28 benchmarks can be opened written out with ordinary components, so you can see how it is built and change it.

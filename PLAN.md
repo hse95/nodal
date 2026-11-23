@@ -97,3 +97,20 @@ The headless layers (engine, geometry, solver, benchmarks) were built and tested
 - [x] Tests with a scripted API: unit and browser, hand-formula checks for beam, cantilever and portal frame
 - [ ] Not verified: a live call to Anthropic (no key in the build environment)
 
+## 14 Version 0.5.0: Grasshopper familiarity, design aids, realism, teaching, sharing (requested)
+- [x] Search aliases for Grasshopper names, typing shortcuts, in-app guide and `docs/grasshopper.md`
+- [x] 37 new components (lists, trees, tween, pipe, panels, diagrid, space truss, generators, subdivision, deformations, sun)
+- [x] AISC shapes, ASCE 7 combinations, AISC 360 and ACI 318 checks with benchmarks
+- [x] Image-based lighting, material surfaces, ambient occlusion, shadow switch, Options menu
+- [x] Render (path tracing) and glTF export of the view
+- [x] Verification report as PDF
+- [x] Stiffness method step by step
+- [x] Share link, embed mode, offline use
+- [x] Slider animation and video recording
+- [x] Icon audit: every icon unique (tested), weak ones redrawn
+- [x] Live call of the assistant to the Anthropic API verified
+- [x] Solver in a worker (done in 0.1.0)
+- [ ] WebAssembly sparse solver (decision 69)
+- [ ] Modal and buckling were already there; code checks beyond W shapes and rectangular beams are not
+- [ ] Templates that use the new generators and panels
+

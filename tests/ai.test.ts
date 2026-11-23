@@ -256,6 +256,9 @@ describe('assistant: API client', () => {
     expect(h['x-api-key']).toBe(base.key); expect(h['anthropic-version']).toBe('2023-06-01'); expect(h['content-type']).toBe('application/json'); expect(h['anthropic-dangerous-direct-browser-access']).toBe('true');
     const body = JSON.parse(String(seen!.init.body));
     expect(body.stream).toBe(true); expect(body.model).toBe(DEFAULT_MODEL); expect(JSON.stringify(body)).not.toContain(base.key);
+    expect(body.messages[0].content[0].cache_control).toBeUndefined();          // a single message is sent as it is
+    await send({ ...base, messages: [...base.messages, { role: 'assistant', content: [{ type: 'text', text: 'a' }] }, { role: 'user', content: [{ type: 'text', text: 'b' }, { type: 'text', text: 'c' }] }] });
+    const later = JSON.parse(String(seen!.init.body)).messages; expect(later[2].content[1].cache_control).toEqual({ type: 'ephemeral' }); expect(later[2].content[0].cache_control).toBeUndefined(); expect(later[0].content[0].cache_control).toBeUndefined();
     expect(text).toBe('Hello'); expect(r.stop).toBe('tool_use'); expect(r.usage).toEqual({ input: 42, output: 9, cacheRead: 7, cacheWrite: 0 });
     expect(r.content).toEqual([{ type: 'text', text: 'Hello' }, { type: 'tool_use', id: 'tu1', name: 'add_component', input: { type: 'fe.beam' } }]);
   });

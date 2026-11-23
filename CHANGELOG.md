@@ -1,5 +1,56 @@
 # Changelog
 
+## 0.5.0 (2026-11-22)
+
+Familiar ground for Grasshopper users, design aids, a more realistic view with rendering, teaching and sharing tools. No change to the solver; all 28 benchmarks give the same values as before.
+
+**For Grasshopper users**
+
+- The search finds components by the names used in Grasshopper and in common add-ons (for example "IntCrv", "Galapagos", "Sweep1", "Catmull-Clark").
+- Typing shortcuts in the canvas search: a number makes a slider, `0<5<10` a slider with that range, `"text` a panel, `// text` a note.
+- A guide, *Coming from Grasshopper*, in the Help menu and in `docs/grasshopper.md`.
+- Right-click a slider to animate it; record the 3D view as a video.
+
+**37 new components**
+
+- Lists: Split List, Cull Nth, Delete Consecutive, Repeat Data, Jitter, Insert Items, Replace Items, Create Set.
+- Trees: Entwine, Clean Tree, Tree Item, Split Tree (with masks), Relative Item.
+- Curves: Tween Curve, Tween Curves, Pipe. Surfaces: Quad, Triangular, Diamond and Staggered Panels, Diagrid, Space Truss.
+- Meshes: Subdivide Mesh (Catmull-Clark), Smooth Mesh, Weld Mesh. Transform: Twist, Taper, Bend.
+- Structure: Truss Generator (Pratt, Howe, Warren), Frame Grid, AISC Shape, ASCE 7 Combinations, AISC 360 Check, ACI 318 Beam Check.
+- Sun: Sun Position, Sun Path, Shadow.
+
+**Design aids, with benchmarks**
+
+- AISC shapes table: 289 W shapes and 525 rectangular HSS, by US or metric name.
+- ASCE 7-22 and 7-16 basic load combinations, strength design and ASD.
+- AISC 360-16 member check for W shapes, tested against the AISC Design Examples (D.1, E.1A, F.1-1A, F.1-2A, F.1-3A, H.1A) and Manual Table 3-2 within 0.5 %.
+- ACI 318-19 rectangular beam check (flexure and one-way shear), tested against hand calculations.
+
+**3D view**
+
+- Image-based lighting from a studio environment; steel, aluminum, concrete and timber each have their own surface.
+- Optional contact shading (ambient occlusion).
+- **Shadows can be turned off** (Options → Shadows).
+- One *Options* menu replaces the grid, section and save controls.
+- **Render**: a path-traced still picture of the current view.
+- **Export glTF (.glb)** of the solids shown, for Blender or Unreal Engine.
+
+**Verification, teaching, sharing**
+
+- The verification report can be saved as a PDF for the version you are running.
+- *Stiffness method, step by step*: nodes, member matrices, assembly, supports, solution and reactions for small frames and trusses, compared with the solver's answer.
+- Share links that carry the model in the address, an embed mode for web pages, and offline use (installable app).
+
+**AI assistant**
+
+- The conversation so far is marked as cacheable, which cut the uncached input tokens of a typical build from about 135,000 to about 12,000.
+- Verified with a live call to the Anthropic API (a W12x26 beam with an AISC 360 check, built in one turn).
+
+**Tests**
+
+- 321 unit tests (new: design benchmarks, new components, step-by-step method, PDF writer, aliases, icon uniqueness) and 31 browser tests.
+
 ## 0.4.0 (2026-11-22)
 
 An optional AI assistant, and a side panel that can be hidden. No change to the solver.

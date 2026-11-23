@@ -5,6 +5,19 @@
  */
 import * as THREE from 'three';
 
+/**
+ * A geometry in the one layout every solid here uses: unindexed triangles with position, normal, a blank
+ * texture coordinate and an RGBA color. The path tracer merges all meshes into one buffer and needs the
+ * layouts to match exactly; a mesh that differs (for instance a plain ground plane) breaks the merge.
+ */
+function plainGeometry(position: Float32Array, color?: Float32Array, normal?: Float32Array): THREE.BufferGeometry {
+  const n = position.length / 3, g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(position, 3));
+  g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(n * 2), 2));
+  g.setAttribute('color', new THREE.BufferAttribute(color ?? new Float32Array(n * 4).fill(1), 4));
+  if (normal) g.setAttribute('normal', new THREE.BufferAttribute(normal, 3)); else g.computeVertexNormals();
+  return g;
+}
 /** The solids of the scene (members, supports, shells, geometry), without lines, overlays and helpers. */
 export function solidsOf(root: THREE.Object3D): THREE.Group {
   const out = new THREE.Group();
@@ -18,12 +31,12 @@ export function solidsOf(root: THREE.Object3D): THREE.Group {
     // path tracer and the glTF writer both handle without surprises.
     const src = m.geometry.index ? m.geometry.toNonIndexed() : m.geometry, pos = src.getAttribute('position');
     if (!pos || pos.count < 3) return;
-    const n = pos.count - (pos.count % 3), P = new Float32Array(n * 3), Cc = new Float32Array(n * 3).fill(1), col = mat.vertexColors ? src.getAttribute('color') : undefined, nor = mat.flatShading ? undefined : src.getAttribute('normal');
-    for (let i = 0; i < n; i++) { P[3 * i] = pos.getX(i); P[3 * i + 1] = pos.getY(i); P[3 * i + 2] = pos.getZ(i); if (col) { Cc[3 * i] = col.getX(i); Cc[3 * i + 1] = col.getY(i); Cc[3 * i + 2] = col.getZ(i); } }
+    const n = pos.count - (pos.count % 3), P = new Float32Array(n * 3), Cc = new Float32Array(n * 4).fill(1), col = mat.vertexColors ? src.getAttribute('color') : undefined, nor = mat.flatShading ? undefined : src.getAttribute('normal');
+    for (let i = 0; i < n; i++) { P[3 * i] = pos.getX(i); P[3 * i + 1] = pos.getY(i); P[3 * i + 2] = pos.getZ(i); if (col) { Cc[4 * i] = col.getX(i); Cc[4 * i + 1] = col.getY(i); Cc[4 * i + 2] = col.getZ(i); } }
     if (P.some(x => !Number.isFinite(x))) return;
-    const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.setAttribute('color', new THREE.BufferAttribute(Cc, 3));
-    if (nor && nor.count >= n) { const N = new Float32Array(n * 3); for (let i = 0; i < n; i++) { N[3 * i] = nor.getX(i); N[3 * i + 1] = nor.getY(i); N[3 * i + 2] = nor.getZ(i); } g.setAttribute('normal', new THREE.BufferAttribute(N, 3)); } else g.computeVertexNormals();
+    let N: Float32Array | undefined;
+    if (nor && nor.count >= n) { N = new Float32Array(n * 3); for (let i = 0; i < n; i++) { N[3 * i] = nor.getX(i); N[3 * i + 1] = nor.getY(i); N[3 * i + 2] = nor.getZ(i); } }
+    const g = plainGeometry(P, Cc, N);
     const std = new THREE.MeshStandardMaterial({ color: (mat.color ?? new THREE.Color(0xffffff)).clone(), vertexColors: true, roughness: mat.roughness ?? 0.7, metalness: mat.metalness ?? 0, side: THREE.DoubleSide, transparent: !!mat.transparent && mat.opacity < 1, opacity: mat.opacity ?? 1 });
     const c = new THREE.Mesh(g, std);
     c.applyMatrix4(o.matrixWorld); c.name = o.name || (o.userData.solid ? 'members' : 'solid');
@@ -60,8 +73,9 @@ export async function pathTrace(o: { root: THREE.Object3D; camera: THREE.Camera;
   sky.topColor.set(o.dark ? 0x3b4656 : 0xffffff); sky.bottomColor.set(o.dark ? 0x14181e : 0xe9edf2); sky.update();
   scene.environment = sky; scene.background = sky; (scene as any).environmentIntensity = o.dark ? 0.7 : 0.95;
   if (o.ground) {
-    const g = new THREE.Mesh(new THREE.PlaneGeometry(size * 60, size * 60), new THREE.MeshStandardMaterial({ color: o.dark ? 0x1b2027 : 0xeef0f3, roughness: 1, metalness: 0 }));
-    g.position.set((box.min.x + box.max.x) / 2, (box.min.y + box.max.y) / 2, box.min.z - size * 0.002); scene.add(g);
+    const h = size * 30, cx = (box.min.x + box.max.x) / 2, cy = (box.min.y + box.max.y) / 2, z = box.min.z - size * 0.002;
+    const quad = new Float32Array([cx - h, cy - h, z, cx + h, cy - h, z, cx + h, cy + h, z, cx - h, cy - h, z, cx + h, cy + h, z, cx - h, cy + h, z]);
+    scene.add(new THREE.Mesh(plainGeometry(quad), new THREE.MeshStandardMaterial({ color: o.dark ? 0x1b2027 : 0xeef0f3, vertexColors: true, roughness: 1, metalness: 0, side: THREE.DoubleSide })));
   }
   const sun = new THREE.DirectionalLight(0xfff4e6, 2.6); sun.position.copy(box.getCenter(new THREE.Vector3())).addScaledVector(o.sun.clone().normalize(), size * 3); sun.target.position.copy(box.getCenter(new THREE.Vector3())); scene.add(sun, sun.target);
   const camera = o.camera.clone() as THREE.PerspectiveCamera | THREE.OrthographicCamera;

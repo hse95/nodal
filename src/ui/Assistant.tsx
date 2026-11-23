@@ -94,7 +94,7 @@ export default function Assistant(): JSX.Element {
     onDragOver={e => { if (e.dataTransfer?.types.includes('Files')) { e.preventDefault(); setOver(true); } }} onDragLeave={() => setOver(false)}
     onDrop={e => { e.preventDefault(); setOver(false); if (e.dataTransfer?.files.length) void attach(e.dataTransfer.files); }}>
     <div class="as-head">
-      <span class="muted">Optional · your own key</span><span class="grow" />
+      <span class="muted">Optional</span><span class="grow" />
       <button class="link" onClick={newChat} title="Start a new conversation">New chat</button>
       <button class="link" classList={{ on: settings() }} onClick={() => setSettings(!settings())} aria-expanded={settings()}>Settings</button>
     </div>

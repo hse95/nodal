@@ -20,6 +20,15 @@ rhino3dm is the MIT-licensed JavaScript/WebAssembly build of the openNURBS toolk
 
 **None.** The build brief allowed OpenCascade (LGPL-2.1 with exception, through opencascade.js) for B-rep modeling. It is not included in this version (see `DECISIONS.md`), so no LGPL code is distributed with Nodal. If it is added later it must stay a separately loaded, replaceable WebAssembly module, and this file must say so.
 
+## Added in version 0.5.0
+
+| Package or data | Use | License |
+|---|---|---|
+| three-gpu-pathtracer 0.0.23 | The Render button (path tracing); loaded on demand | MIT |
+| three-mesh-bvh 0.7.8 | Used by the path tracer | MIT |
+| three.js example modules (RoomEnvironment, EffectComposer, GTAOPass, OutputPass, GLTFExporter) | Lighting, ambient occlusion, glTF export | MIT |
+| AISC shape dimensions and properties (W and rectangular HSS), values of the AISC Shapes Database v15.0 as distributed with the steelpy package | The AISC Shape component and the AISC 360 check | steelpy: Apache-2.0. The values are published by the American Institute of Steel Construction; check them against the current Steel Construction Manual. |
+
 ## Development and test tools (not shipped)
 
 | Package | License |
