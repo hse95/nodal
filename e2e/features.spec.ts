@@ -169,10 +169,10 @@ test('canvas stays responsive with 500 components', async ({ page }) => {
   const fps = await measure();
   const hide = await page.addStyleTag({ content: '.world { display: none !important; }' });
   const empty = await measure();
-  await hide.evaluate(el => el.remove());
+  await hide.evaluate(el => (el as Element).remove());
   const noView = await page.addStyleTag({ content: '.viewport { display: none !important; }' });
   const alone = await measure();
-  await noView.evaluate(el => el.remove());
+  await noView.evaluate(el => (el as Element).remove());
   console.log(`CANVAS_FPS 500 components while panning: median ${fps.median.toFixed(0)} fps, 95th percentile frame ${fps.p95.toFixed(0)} fps; empty canvas on this machine ${empty.median.toFixed(0)} fps; with the 3D view hidden ${alone.median.toFixed(0)} fps`);
   // Either plainly fast, or at least 60 % of what this machine manages with an empty canvas.
   expect(fps.median > 20 || fps.median >= 0.6 * empty.median, `${fps.median.toFixed(1)} fps with 500 components, ${empty.median.toFixed(1)} fps with none`).toBe(true);
