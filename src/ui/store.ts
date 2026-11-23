@@ -39,7 +39,7 @@ export const [ui, setUi] = createStore({
   shadows: localStorage.getItem('nodal.shadows') !== '0',
   /** Soft contact shading where surfaces meet (ambient occlusion). 'auto' = on unless the graphics are drawn in software. */
   ao: (localStorage.getItem('nodal.ao') ?? 'auto') as 'auto' | '1' | '0',
-  dialog: null as null | 'examples' | 'verification' | 'about' | 'shortcuts' | 'help' | 'render' | 'teach' | 'share',
+  dialog: null as null | 'examples' | 'verification' | 'about' | 'shortcuts' | 'help' | 'render' | 'teach' | 'share' | 'grasshopper',
   toast: '', tour: -1,
   pick: null as Pick | null,
   /** How the 3D view draws: realistic solids with shadows, simple lines, wireframe, or see-through. */
@@ -137,6 +137,7 @@ function idb(): Promise<IDBDatabase> {
   });
 }
 export async function autosave(): Promise<void> {
+  if (document.documentElement.classList.contains('embed')) return;      // a model shown inside another page never replaces the reader's own work
   try { const db = await idb(); db.transaction('projects', 'readwrite').objectStore('projects').put(snapshot(), 'autosave'); } catch { /* private mode: autosave is simply unavailable */ }
 }
 export async function loadAutosave(): Promise<ProjectFile | null> {

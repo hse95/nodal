@@ -182,7 +182,7 @@ const I: Record<string, string> = {
   'mesh.join': 'p M3 17l5-10 4 8|a M21 17l-5-10-5 10z',
   'mesh.explode': 'p M3 11l4-7 4 7zM8 21l4-7 4 7z|a M13 11l4-7 4 7z',
   'mesh.decon': 'p M4 18L12 5l8 13z|o 4 18 2|o 12 5 2|o 20 18 2',
-  'mesh.naked': 'a M4 5h16v14H4z|l 4 12 20 12|l 12 5 12 19',
+  'mesh.naked': 'p M12 4l-4 8h8zM8 12l4 8 4-8|a M12 4L4 20h16z',
   'mesh.edges': 'a M4 18L12 5l8 13zM8 11.5h8l-4 6.5z',
 
   // ---- Transform
@@ -266,6 +266,48 @@ const I: Record<string, string> = {
   'cluster': 'r 3 3 18 18 3|R 6.5 6.5 5 5 1|R 12.5 12.5 5 5 1|a M11.5 9h3.5v3.5',
   'cluster.in': 'r 8 4 13 16 2|a M2 12h10M9 9l3 3-3 3',
   'cluster.out': 'r 3 4 13 16 2|a M12 12h10M19 9l3 3-3 3',
+  // ---- lists and trees (part 4)
+  'list.split': 'l 5 6 19 6|l 5 10 19 10|L 5 16 19 16|L 5 20 19 20|p M3 13h2M7 13h2M11 13h2M15 13h2M19 13h2',
+  'list.cullnth': 'd 4 12|d 12 12|d 20 12|a M6 10l4 4M10 10l-4 4M14 10l4 4M18 10l-4 4',
+  'list.dedupe': 't 12 9.5 8 a a b|a M12 11.5v4M9.5 13.5l2.5 2.5 2.5-2.5|T 12 22.5 8 a b',
+  'list.repeat': 'd 6 8|C 12 8 1.6|d 18 8|a M4 16h13M14.5 13.5L17 16l-2.5 2.5|t 20.5 19 7 n',
+  'list.jitter': 'p M4 7h3c5 0 5 10 10 10h3M4 17h3c2 0 3-2 4-3.5|a M13 8.5c1-1 2-1.5 4-1.5h3M18 4.5L20.5 7 18 9.5M18 14.5l2.5 2.5-2.5 2.5',
+  'list.insert': 'l 9 6 20 6|l 9 18 20 18|L 9 12 20 12|a M3 12h4M5 10l2 2-2 2',
+  'list.replace': 'l 4 5 20 5|l 4 19 20 19|a M5 10.5h13M15.5 8L18 10.5M19 13.5H6M8.5 16L6 13.5',
+  'list.set': 'p M8 4c-3 0-2 4-2 5s0 3-2 3c2 0 2 2 2 3s-1 5 2 5M16 4c3 0 2 4 2 5s0 3 2 3c-2 0-2 2-2 3s1 5-2 5|C 10 12 1.5|d 14 12',
+  'tree.entwine': 'd 4 6|d 4 12|d 4 18|a M7 6h9M7 12h9M7 18h9|p M18 3h3v18h-3',
+  'tree.clean': 'p M12 20v-6M12 14l-6-6M12 14l6-6|d 6 7|a M15.5 4.5l5 5M20.5 4.5l-5 5',
+  'tree.item': 'p M12 20v-6M12 14l-6-6M12 14l6-6|d 6 7|C 18 7 2.3',
+  'tree.split': 'p M10 20v-6l-5-6|d 5 7|a M14 20v-6l5-6|C 19 7 1.8',
+  'tree.relative': 'd 6 16|C 17 8 1.8|a M8 14.5l6.5-4.7M11.5 9.2l3 .6-.6 3',
+  // ---- curves, panels and generators
+  'crv.tween': 'p M3 8c6-5 12-5 18 0M3 20c6-2 12-2 18 0|a M3 14c6-3.5 12-3.5 18 0',
+  'crv.tweens': 'p M3 6c6-4 12-4 18 0M3 21c6-1 12-1 18 0|a M3 11c6-3 12-3 18 0M3 16c6-2 12-2 18 0',
+  'crv.pipe': 'a M6 8a2 4 0 1 0 0 8a2 4 0 1 0 0-8|p M6 8h12a2 4 0 0 1 0 8H6',
+  'srf.panel.quad': 'p M3 18l5-12h13l-5 12z|a M5.5 12h13M12.3 6l-5 12M16.7 6l-5 12',
+  'srf.panel.tri': 'p M3 19L12 5l9 14z|a M7.5 12h9M7.5 12L12 19l4.5-7',
+  'srf.panel.diamond': 'p M12 3l8 9-8 9-8-9z|a M8 7.5l8 9M16 7.5l-8 9',
+  'srf.panel.stagger': 'r 3 5 18 14 1|a M3 9.7h18M3 14.3h18M12 5v4.7M7.5 9.7v4.6M16.5 9.7v4.6M12 14.3V19',
+  'srf.diagrid': 'r 4 4 16 16 1|a M4 12l8-8M4 20L20 4M12 20l8-8M12 4l8 8M4 4l16 16M4 12l8 8',
+  'srf.spacetruss': 'l 3 8 21 8|l 7 17 17 17|a M3 8l4 9 5-9 5 9 4-9',
+  'fe.gen.truss': 'p M3 18h18M7 8h10M3 18l4-10M21 18l-4-10|a M12 8v10M7 8l5 10 5-10',
+  'fe.gen.frame': 'p M5 20V5h14v15M5 12.5h14|a M12 5v15|l 3 20 21 20',
+  // ---- meshes and deformations
+  'mesh.subdivide': 'r 4 4 16 16 0|o 12 12 6.5|a M12 5.5v13M5.5 12h13',
+  'mesh.smooth': 'p M3 9l3-4 3 5 3-5 3 5 3-5 3 4|a M3 17c4-3 6 3 9 0s5-3 9 0',
+  'mesh.weld': 'p M3 17l5-10 4 10z|p M21 17l-5-10-4 10z|C 12 17 2.2',
+  'xform.twist': 'p M7 4h10M7 20h10|a M7 4c0 6 10 10 10 16M17 4c0 6-10 10-10 16',
+  'xform.taper': 'l 12 2 12 22|a M6 20L10 5h4l4 15z',
+  'xform.bend': 'l 3 20 21 20|a M4 16C7 7 17 7 20 16',
+  // ---- sun
+  'env.sun': 'o 12 12 4|a M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8',
+  'env.sunpath': 'l 3 19 21 19|a M4 19C6 5 18 5 20 19|C 9 9.3 2',
+  'env.shadow': 'r 5 5 7 11 1|f M12 16l9 3.5H9.5L5 16z',
+  // ---- design
+  'fe.sec.aisc': 'p M4 5h9M4 19h9M8.5 5v14|T 18 15.5 9 W',
+  'fe.load.asce7': 't 12 10.5 7.5 ASCE|T 12 20 9.5 7',
+  'fe.check.aisc': 'p M5 5h10M5 19h10M10 5v14|a M14.5 14.5l2.5 2.5 4.5-6',
+  'fe.check.aci': 'r 4 4 10 16 1|C 7 17 1.3|C 11 17 1.3|a M15.5 14.5l2.3 2.5 4.2-6',
 };
 
 /** Thumbnails (48 x 32) for templates, examples and benchmark types. */
@@ -298,7 +340,7 @@ const THUMBS: Record<string, string> = {
   'b:spaceFrame': 'a M8 27V12l12-6v15M20 6l18 4v15M8 12l18 4 12-6M26 16v12',
   'b:curvedBeam': 'p M6 5v24M6 10l-3 3M6 18l-3 3M6 26l-3 3|a M6 27a21 21 0 0 0 21-21|p M33 6h-5M30 4.5L28 6l2 1.5',
   'b:rigidOffset': 'p M6 5v22|a M6 12h8v8h28|C 14 20 1.8',
-  'b:column': 'p M18 28h12M24 1v4M22.5 3.5L24 5l1.5-1.5|l 24 28 24 6|a M24 28c-8-8-8-14 0-22',
+  'b:column': 'p M20 30h8M24 1v4M22.5 3.5L24 5l1.5-1.5M24 27l-3 3M24 27l3 3|l 24 27 24 6|a M24 27c-7-7-7-14 0-21|d 24 6',
   'b:vibration': 'l 4 16 44 16|a M4 16c7-16 13-16 20 0s13 16 20 0',
   'b:cable': 'd 5 7|d 43 7|a M5 7c8 22 30 22 38 0',
   'b:scordelisLo': 'F M6 22c10-16 26-16 36 0l-6 6c-8-12-16-12-24 0z',

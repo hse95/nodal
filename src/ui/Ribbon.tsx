@@ -13,7 +13,7 @@ import { EXAMPLES } from '../examples';
 import { BENCHMARKS } from '../verify/load';
 import type { ComponentDef } from '../core/types';
 
-const TOOLS = new Set(['Form-Finding', 'Optimization', 'Script']);
+const TOOLS = new Set(['Form-Finding', 'Optimization', 'Script', 'Environment']);
 const tabOf = (d: ComponentDef): string => (TOOLS.has(d.category) ? 'Tools' : d.category);
 export const COMPONENT_TABS = ['Params', 'Math', 'Lists', 'Trees', 'Vector', 'Curve', 'Surface', 'Mesh', 'Transform', 'Display', 'Structure', 'Tools'];
 const EXTRA_TABS = ['Templates', 'Examples', 'Verification'];
@@ -23,15 +23,15 @@ const GROUP_RULES: [RegExp, string][] = [
   [/^param\.(slider|toggle|valuelist|panel|graph|color|note|file)$/, 'Input'], [/^param\./, 'Data'],
   [/^math\.(add|sub|mul|div|neg|abs|sqrt|pow|mod|exp|ln|log10|round|clamp)$/, 'Arithmetic'], [/^math\.(sin|cos|tan|asin|acos|atan|atan2|deg|rad|pi)$/, 'Trigonometry'],
   [/^math\.(min|max|sum|avg|bounds|range|series|random|domain|dedomain|remap)$/, 'Numbers and ranges'], [/^math\.expr$/, 'Formula'], [/^math\./, 'Logic'],
-  [/^list\./, 'Lists'], [/^tree\./, 'Data trees'],
+  [/^list\.(split|cullnth|dedupe|repeat|jitter|insert|replace|set)$/, 'More list tools'], [/^list\./, 'Lists'], [/^tree\.(entwine|clean|item|split|relative)$/, 'Select and combine'], [/^tree\./, 'Data trees'],
   [/^vec\./, 'Points and vectors'], [/^plane\./, 'Planes'], [/^grid\./, 'Grids'],
   [/^crv\.(line|linesdl|polyline|arc|arc3|circle|rectangle|polygon|interp|nurbs)$/, 'Create'], [/^crv\.(divide|dividelength|eval|ends|closest|length|curvature|cps|ccx)$/, 'Analyze'], [/^crv\./, 'Edit'],
-  [/^srf\./, 'Surfaces'], [/^solid\./, 'Solids'],
-  [/^mesh\.(union|difference|intersection)$/, 'Booleans'], [/^mesh\./, 'Meshes'],
-  [/^xform\.array/, 'Arrays'], [/^xform\./, 'Move and shape'], [/^disp\./, 'Display'],
-  [/^fe\.(material|sec)/, 'Materials and sections'], [/^fe\.(beam|truss|cable|release|offset|shell)$/, 'Elements'], [/^fe\.support/, 'Supports'], [/^fe\.load/, 'Loads'],
+  [/^srf\.(panel|diagrid|spacetruss)/, 'Panels and grids'], [/^srf\./, 'Surfaces'], [/^solid\./, 'Solids'],
+  [/^mesh\.(union|difference|intersection)$/, 'Booleans'], [/^mesh\.(subdivide|smooth|weld)$/, 'Refine'], [/^mesh\./, 'Meshes'],
+  [/^xform\.array/, 'Arrays'], [/^xform\.(twist|taper|bend)$/, 'Deform'], [/^xform\./, 'Move and shape'], [/^disp\./, 'Display'],
+  [/^fe\.(material|sec)/, 'Materials and sections'], [/^fe\.gen/, 'Generators'], [/^fe\.check/, 'Code checks'], [/^fe\.(beam|truss|cable|release|offset|shell)$/, 'Elements'], [/^fe\.support/, 'Supports'], [/^fe\.load/, 'Loads'],
   [/^fe\.(assemble|static|second|buckling|modal|nonlinear|sizing)$/, 'Analysis'], [/^fe\.(view|res)/, 'Results'], [/^fe\.benchmark/, 'Verification'],
-  [/^ff\./, 'Form-finding'], [/^opt\./, 'Optimization'], [/^(script|cluster)/, 'Script and clusters'],
+  [/^ff\./, 'Form-finding'], [/^env\./, 'Sun'], [/^opt\./, 'Optimization'], [/^(script|cluster)/, 'Script and clusters'],
 ];
 const groupOf = (id: string): string => GROUP_RULES.find(([re]) => re.test(id))?.[1] ?? 'Other';
 

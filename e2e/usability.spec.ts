@@ -260,3 +260,73 @@ test('view options: shadows can be hidden, the view exports glTF, and Render mak
   await page.locator('.render-dialog .dialog-head button').click();
   expect(errors).toEqual([]);
 });
+
+test('Grasshopper habits: familiar names and typing shortcuts in the search, and the guide', async ({ page }) => {
+  const errors = watch(page);
+  await page.addInitScript(() => { localStorage.setItem('nodal.tourDone', '1'); });
+  await page.goto('/?new=1'); await ready(page);
+  const search = async (text: string) => { await page.locator('.canvas').dblclick({ position: { x: 300, y: 300 } }); await page.locator('.search input').fill(text); };
+  await search('galapagos'); await expect(page.locator('.search .result b').first()).toHaveText('Evolutionary Optimizer'); await page.keyboard.press('Escape');
+  await search('IntCrv'); await expect(page.locator('.search .result b').first()).toHaveText('Interpolate'); await page.keyboard.press('Escape');
+  await search('catmull'); await expect(page.locator('.search .result b').first()).toHaveText('Subdivide Mesh'); await page.keyboard.press('Escape');
+  // A number makes a slider, a < b < c a slider with that range, a quote a panel, // a note.
+  await search('2.5'); await expect(page.locator('.search .result b').first()).toHaveText('Number Slider = 2.5'); await page.keyboard.press('Enter');
+  await expect(page.locator('.node .widget .num, .node input.num').first()).toHaveValue('2.5');
+  await search('0<4<12'); await page.keyboard.press('Enter');
+  await search('"hello there'); await expect(page.locator('.search .result b').first()).toContainText('Panel'); await page.keyboard.press('Enter');
+  await search('// check this'); await page.keyboard.press('Enter');
+  await expect(page.locator('.node')).toHaveCount(4);
+  expect(await page.evaluate(() => [...document.querySelectorAll('.node textarea, .node input, .node .w-panel, .node')].map(e => ((e as HTMLTextAreaElement).value ?? '') + ' ' + (e.textContent ?? '')).join(' | '))).toContain('hello there');
+  await page.locator('.menu-btn', { hasText: 'Help' }).click(); await page.locator('.menu-drop button', { hasText: 'Coming from Grasshopper' }).click();
+  await expect(page.locator('.dialog')).toContainText('Names that differ');
+  await page.locator('.gh-find').fill('bake'); await page.locator('.gh-find').fill('sweep1');
+  await expect(page.locator('table.gh').nth(1).locator('tbody tr')).toHaveCount(1); await expect(page.locator('table.gh').nth(1)).toContainText('Sweep');
+  expect(errors).toEqual([]);
+});
+
+test('a model travels in a link, can be embedded, and the stiffness method is shown step by step', async ({ page, context }) => {
+  const errors = watch(page);
+  await page.addInitScript(() => { localStorage.setItem('nodal.tourDone', '1'); });
+  await page.goto('/?new=1'); await ready(page);
+  await page.locator('.rb-tabs button[role="tab"]', { hasText: 'Templates' }).click(); await page.locator('.rb-card', { hasText: 'Cantilever beam' }).click(); await ready(page);
+  const count = await page.locator('.node').count(); expect(count).toBeGreaterThan(5);
+  // Step by step.
+  await page.locator('.menu-btn', { hasText: 'Help' }).click(); await page.locator('.menu-drop button', { hasText: 'Stiffness method' }).click();
+  await expect(page.locator('.teach')).toBeVisible(); await expect(page.locator('.teach')).toContainText('degrees of freedom');
+  for (const s of ['Member stiffness', 'Assembly', 'Supports and loads', 'Solution']) { await page.locator('.teach-steps button', { hasText: s }).click(); await expect(page.locator('.mx').first()).toBeVisible(); }
+  await expect(page.locator('.teach-check')).toContainText('The two solutions agree');
+  await page.locator('.teach-steps button', { hasText: 'Reactions' }).click(); await expect(page.locator('.teach table.grid')).toContainText('uz1');
+  await page.locator('.dialog-head button').click();
+  // Share: the link carries the model.
+  await page.locator('.menu-btn', { hasText: 'File' }).click(); await page.locator('.menu-drop button', { hasText: 'Share or embed' }).click();
+  const box = page.locator('textarea[aria-label="Share link"]'); await expect(box).toHaveValue(/#m=[A-Za-z0-9_-]{200,}/);
+  const link = await box.inputValue(), embed = await page.locator('textarea[aria-label="Embed code"]').inputValue();
+  expect(embed).toContain('<iframe src="'); expect(embed).toContain('embed=1&layout=view#m=');
+  const other = await context.newPage(); const errors2 = watch(other);
+  await other.goto(link); await ready(other);
+  await expect(other.locator('.node')).toHaveCount(count); await expect(other.locator('.node.error')).toHaveCount(0);
+  expect(other.url()).not.toContain('#m=');                                    // the address is tidied once the model is open
+  // Embedded: only the model, with a link to the full app.
+  const src = /src="([^"]+)"/.exec(embed)![1].replace(/&amp;/g, '&');
+  const frame = await context.newPage(); await frame.goto(src); await ready(frame);
+  await expect(frame.locator('.ribbon')).toBeHidden(); await expect(frame.locator('.side')).toHaveCount(0); await expect(frame.locator('.embed-open')).toBeVisible(); await expect(frame.locator('.viewport canvas')).toBeVisible();
+  // A damaged link is reported, not fatal.
+  const bad = await context.newPage(); await bad.goto('/#m=AAAA'); await expect(bad.locator('.toast')).toContainText('could not be read');
+  expect(errors).toEqual([]); expect(errors2).toEqual([]);
+});
+
+test('the verification report is saved as a PDF, and the app can be installed for offline use', async ({ page }) => {
+  test.setTimeout(240_000);
+  const errors = watch(page);
+  await open(page, 'quick-truss');
+  await page.locator('.rb-tabs button[role="tab"]', { hasText: 'Verification' }).click(); await page.locator('.rb-body button', { hasText: 'Run all checks' }).click();
+  const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 200_000 }), page.locator('.dialog button.pdf').click({ timeout: 200_000 })]);
+  expect(dl.suggestedFilename()).toMatch(/^nodal-\d+\.\d+\.\d+-verification\.pdf$/);
+  const text = readFileSync(await dl.path()).toString('latin1');
+  expect(text.startsWith('%PDF-1.4')).toBe(true); expect(text).toContain('28 of 28 benchmarks pass'); expect(text).toContain('B28');
+  // Offline: a manifest with icons and a service worker that lists the built files.
+  const manifest = await (await page.request.get('/manifest.webmanifest')).json(); expect(manifest.name).toBe('Nodal'); expect(manifest.icons.length).toBeGreaterThan(1); expect(manifest.display).toBe('standalone');
+  expect((await page.request.get('/icon-512.png')).ok()).toBe(true);
+  const sw = await (await page.request.get('/sw.js')).text(); expect(sw).toContain("addEventListener('fetch'"); expect(sw).toMatch(/assets\/index-[\w-]+\.js/); expect(sw).toMatch(/assets\/index-[\w-]+\.css/);
+  expect(errors).toEqual([]);
+});

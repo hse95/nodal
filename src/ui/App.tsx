@@ -9,6 +9,8 @@ import type { ProjectFile } from '../core/types';
 import { Canvas, layouts, CATEGORY_COLORS } from './Canvas';
 import { SidePanel } from './SidePanel';
 import { RenderDialog } from './RenderDialog';
+import { TeachDialog, ShareDialog, GrasshopperDialog } from './Dialogs';
+import { sharedCode, decodeProject } from './share';
 import { Ribbon } from './Ribbon';
 import { benchmarkAsComponents } from '../verify/explode';
 
@@ -158,7 +160,14 @@ export function App(): JSX.Element {
     window.addEventListener('pointerdown', (e) => { if (!(e.target as HTMLElement).closest('.menubar')) setMenu(null); });
     window.addEventListener('beforeunload', (e) => { if (dirty() && project.graph.nodes.length && !localStorage.getItem('nodal.noUnloadPrompt')) e.preventDefault(); });
     const query = new URLSearchParams(location.search), example = query.get('example'), blank = query.has('new');
-    const saved = example || blank ? null : await loadAutosave();
+    const saved = example || blank || sharedCode() ? null : await loadAutosave();
+    const shared = sharedCode(), embedded = query.has('embed');
+    if (embedded) { document.documentElement.classList.add('embed'); const lay = query.get('layout'); setUi({ ribbon: false, side: 'hidden', layout: lay === 'split' || lay === 'canvas' ? lay : 'view' }); }
+    if (shared) {
+      // A model carried in the link. It is data from someone else: it goes through the same checks as an opened file.
+      try { openProject(migrate(await decodeProject(shared))); if (!embedded) history.replaceState(null, '', location.pathname + location.search); return; }
+      catch { toast('The model in this link could not be read. The link may have been cut short.', 8000); }
+    }
     if (blank) { /* ?new=1 starts with an empty canvas */ }
     else if (example && EXAMPLES.some(e => e.id === example)) openExample(example);
     else if (saved && saved.graph.nodes.length) openProject(saved);
@@ -188,7 +197,7 @@ export function App(): JSX.Element {
         <nav class="menubar" aria-label="Main menu">
           <Menu name="file" label="File">
             <Item label="New project" onClick={() => { if (!project.graph.nodes.length || confirm('Start a new project? Unsaved changes to the current one will be lost.')) openProject(emptyProject()); }} />
-            <Item label="Open…" key="Ctrl O" onClick={() => void openFile()} /><Item label="Save" key="Ctrl S" onClick={saveProjectFile} /><hr />
+            <Item label="Open…" key="Ctrl O" onClick={() => void openFile()} /><Item label="Save" key="Ctrl S" onClick={saveProjectFile} /><Item label="Share or embed…" onClick={() => setUi('dialog', 'share')} /><hr />
             <Item label="Import geometry…" onClick={() => void importGeometry()} title="STL, OBJ, DXF, 3DM, CSV" /><hr />
             <div class="menu-title">Export geometry in view</div>
             <Item label="STL (meshes)" onClick={() => void exportAs('stl')} /><Item label="OBJ" onClick={() => void exportAs('obj')} /><Item label="glTF" onClick={() => void exportAs('gltf')} /><Item label="3DM" onClick={() => void exportAs('3dm')} /><Item label="DXF" onClick={() => void exportAs('dxf')} />
@@ -209,9 +218,10 @@ export function App(): JSX.Element {
             <div class="menu-title">Text size</div>
             <For each={TEXT_SCALES}>{([val, name]) => <Item label={(ui.textScale === val ? '● ' : '○ ') + name} onClick={() => setTextScale(val)} />}</For>
           </Menu>
-          <Menu name="help" label="Help"><Item label="Take the tour" onClick={startTour} /><Item label="Examples…" onClick={() => setUi('dialog', 'examples')} /><Item label="Verification…" onClick={() => setUi('dialog', 'verification')} /><Item label="Keyboard shortcuts" onClick={() => setUi('dialog', 'shortcuts')} /><Item label="User guide" onClick={() => window.open('https://github.com/hse95/nodal/blob/main/docs/user-guide.md', '_blank', 'noopener')} /><Item label="Theory manual" onClick={() => window.open('https://github.com/hse95/nodal/blob/main/docs/theory-manual.md', '_blank', 'noopener')} /><Item label="About Nodal" onClick={() => setUi('dialog', 'about')} /></Menu>
+          <Menu name="help" label="Help"><Item label="Take the tour" onClick={startTour} /><Item label="Coming from Grasshopper…" onClick={() => setUi('dialog', 'grasshopper')} /><Item label="Stiffness method, step by step…" onClick={() => setUi('dialog', 'teach')} /><Item label="Examples…" onClick={() => setUi('dialog', 'examples')} /><Item label="Verification…" onClick={() => setUi('dialog', 'verification')} /><Item label="Keyboard shortcuts" onClick={() => setUi('dialog', 'shortcuts')} /><Item label="User guide" onClick={() => window.open('https://github.com/hse95/nodal/blob/main/docs/user-guide.md', '_blank', 'noopener')} /><Item label="Theory manual" onClick={() => window.open('https://github.com/hse95/nodal/blob/main/docs/theory-manual.md', '_blank', 'noopener')} /><Item label="About Nodal" onClick={() => setUi('dialog', 'about')} /></Menu>
         </nav>
         <div class="spacer" />
+        <a class="embed-open" href={location.href.replace(/[?&]embed=1(&layout=[a-z]+)?/, '').replace(/\?#/, '#')} target="_blank" rel="noopener">Open in Nodal ↗</a>
         <div class="status" role="status" aria-live="polite">
           <Show when={solvingNode()} fallback={<Show when={stats().err || stats().warn} fallback={<span class="ok">Ready</span>}><Show when={stats().err}><span class="bad">{stats().err} error{stats().err > 1 ? 's' : ''}</span></Show><Show when={stats().warn}><span class="warn">{stats().warn} warning{stats().warn > 1 ? 's' : ''}</span></Show></Show>}>
             <span class="busy">Solving {registry.get(project.graph.nodes.find(n => n.id === solvingNode())?.type ?? '')?.name ?? ''}…</span><button class="link" onClick={() => { cancelSolver(); engine.cancel(); }}>Cancel</button></Show>
@@ -240,6 +250,9 @@ export function App(): JSX.Element {
       </div>
       <Show when={ui.toast}><div class="toast" role="alert">{ui.toast}</div></Show>
       <Show when={ui.dialog === 'render'}><RenderDialog /></Show>
+      <Show when={ui.dialog === 'teach'}><TeachDialog /></Show>
+      <Show when={ui.dialog === 'share'}><ShareDialog /></Show>
+      <Show when={ui.dialog === 'grasshopper'}><GrasshopperDialog /></Show>
       <Show when={ui.dialog === 'examples'}><ExamplesDialog /></Show>
       <Show when={ui.dialog === 'verification'}><VerificationDialog /></Show>
       <Show when={ui.dialog === 'about'}><Dialog title="About Nodal"><div class="about">
@@ -260,7 +273,7 @@ export function App(): JSX.Element {
   );
 }
 
-function Dialog(props: { title: string; wide?: boolean; children: JSX.Element }): JSX.Element {
+export function Dialog(props: { title: string; wide?: boolean; children: JSX.Element }): JSX.Element {
   return <div class="backdrop" onPointerDown={e => { if (e.target === e.currentTarget) setUi('dialog', null); }}>
     <div class="dialog" classList={{ wide: props.wide }} role="dialog" aria-modal="true" aria-label={props.title}>
       <div class="dialog-head"><h2>{props.title}</h2><button class="link" onClick={() => setUi('dialog', null)} aria-label="Close">Close</button></div>
@@ -297,11 +310,12 @@ function VerificationDialog(): JSX.Element {
   };
   const summary = () => { const r = results(), checks = r.flatMap(x => x.rows); return `${r.filter(x => x.pass).length} of ${r.length} benchmarks pass (${checks.filter(c => c.pass).length} of ${checks.length} checks)`; };
   const csv = () => download('nodal-verification.csv', toCSV([['Benchmark', 'Check', 'Computed', 'Reference', 'Error', 'Tolerance', 'Unit', 'Pass'], ...results().flatMap(r => r.rows.map(c => [r.def.id + ' ' + r.def.title, c.label + (c.tex ? ` (${texToPlain(c.tex)})` : ''), c.computed, c.expected, c.absolute ? c.errorPct : c.errorPct + ' %', c.absolute ? c.tolerancePct : c.tolerancePct + ' %', c.unit, c.pass ? 'pass' : 'FAIL']))]), 'text/csv');
+  const pdf = async () => { const { verificationPdf } = await import('../verify/report'); download(`nodal-${VERSION}-verification.pdf`, verificationPdf(results(), { version: VERSION, date: new Date().toISOString().slice(0, 10), browser: navigator.userAgent }) as BlobPart, 'application/pdf'); };
   onMount(() => void run());
   onCleanup(() => { stop = true; });
   return <Dialog title="Verification" wide>
     <p class="muted">Every benchmark is solved here, in your browser, by the same solver the app uses, and compared with a closed-form solution, a published reference value, or the independent reference solver. The same suite runs in the automated tests.</p>
-    <div class="row"><button class="primary" disabled={running()} onClick={() => void run()}>Run all again</button><Show when={running()}><button onClick={() => { stop = true; }}>Stop</button></Show><Show when={results().length}><button onClick={csv}>Download CSV</button></Show><span class="muted">{progress() || (results().length ? summary() : '')}</span></div>
+    <div class="row"><button class="primary" disabled={running()} onClick={() => void run()}>Run all again</button><Show when={running()}><button onClick={() => { stop = true; }}>Stop</button></Show><Show when={results().length}><button onClick={csv}>Download CSV</button></Show><Show when={results().length === BENCHMARKS.length && !running()}><button class="pdf" title="A report of every benchmark, its reference, tolerance and outcome, for this version" onClick={() => void pdf()}>Save report (PDF)</button></Show><span class="muted">{progress() || (results().length ? summary() : '')}</span></div>
     <For each={results()}>{r => <section class="bench" classList={{ fail: !r.pass }}>
       <div class="bench-head"><span class="pill" classList={{ pass: r.pass, fail: !r.pass }}>{r.pass ? 'PASS' : 'FAIL'}</span><b>{r.def.id} {r.def.title}</b><span class="muted">{r.ms.toFixed(0)} ms</span><button class="link" onClick={() => openBenchmark(r.def.id, false)}>Open</button><button class="link" title="Open this model built from ordinary components" onClick={() => openBenchmark(r.def.id, true)}>Open as components</button></div>
       <p class="muted">{r.def.description} <i>Reference: {r.def.source}</i></p>

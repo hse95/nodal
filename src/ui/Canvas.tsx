@@ -13,12 +13,13 @@ import { Tex, RichText, hasMath } from './Tex';
 import { TEMPLATES, Template } from '../templates';
 import { thumbFor } from './icons';
 import { Icon, IconImg } from './Icon';
+import { ALIASES } from '../core/aliases';
 import { pathText } from '../core/tree';
 import { graphMap } from '../components/basic';
 import { unitSystem } from '../fe/units';
 
 const HEADER = 24, ROW = 20, PAD = 6, EXPR_TEX = 40;
-export const CATEGORY_COLORS: Record<string, string> = { Params: '#7a8699', Math: '#4f8ef7', Lists: '#9b7fd1', Trees: '#8a6fc0', Vector: '#d19a2a', Curve: '#3fae6b', Surface: '#2f9e8f', Mesh: '#58a65c', Transform: '#a06cd5', Display: '#d1589b', Structure: '#d4504c', 'Form-Finding': '#e0703a', Optimization: '#c2569b', Script: '#5f6b7a' };
+export const CATEGORY_COLORS: Record<string, string> = { Params: '#7a8699', Math: '#4f8ef7', Lists: '#9b7fd1', Trees: '#8a6fc0', Vector: '#d19a2a', Curve: '#3fae6b', Surface: '#2f9e8f', Mesh: '#58a65c', Transform: '#a06cd5', Display: '#d1589b', Structure: '#d4504c', 'Form-Finding': '#e0703a', Optimization: '#c2569b', Script: '#5f6b7a', Environment: '#d99a1e' };
 
 export interface Layout { w: number; h: number; ins: PortSpec[]; outs: PortSpec[]; def: ComponentDef | undefined; body: number }
 export function layoutOf(n: NodeData): Layout {
@@ -50,12 +51,26 @@ export function fuzzy(query: string, text: string): number {
   return Math.max(1, score);
 }
 export function searchComponents(q: string, limit = 12): ComponentDef[] {
-  return registry.all().filter(d => d.id !== 'cluster').map(d => ({ d, s: Math.max(fuzzy(q, d.name), fuzzy(q, d.nick) * 0.9, fuzzy(q, d.category + ' ' + d.name) * 0.5) })).filter(x => x.s > 0).sort((a, b) => b.s - a.s).slice(0, limit).map(x => x.d);
+  // A name familiar from Grasshopper finds the Nodal component too, ranked a little below a match on its own name.
+  return registry.all().filter(d => d.id !== 'cluster').map(d => ({ d, s: Math.max(fuzzy(q, d.name), fuzzy(q, d.nick) * 0.9, fuzzy(q, d.category + ' ' + d.name) * 0.5, ...(q.length > 1 ? (ALIASES[d.name] ?? []).map(a => fuzzy(q, a) * 0.85) : [])) })).filter(x => x.s > 0).sort((a, b) => b.s - a.s).slice(0, limit).map(x => x.d);
 }
 
 /** A wire end that is waiting for a component: the search then lists only components that can take it. */
 interface Link { node: string; port: number; out: boolean; type: DType }
-type Found = { kind: 'component'; d: ComponentDef } | { kind: 'template'; t: Template };
+type Found = { kind: 'component'; d: ComponentDef } | { kind: 'template'; t: Template } | { kind: 'quick'; type: string; title: string; hint: string; init: Partial<NodeData> };
+/**
+ * Typing shortcuts, as in Grasshopper: a number makes a slider with that value, "0<5<10" a slider with
+ * that range, text in double quotes a panel, and "//" followed by text a note.
+ */
+export function quickCreate(q: string): Found | null {
+  const t = q.trim(), range = /^(-?\d+(?:\.\d+)?)\s*<\s*(-?\d+(?:\.\d+)?)\s*<\s*(-?\d+(?:\.\d+)?)$/.exec(t);
+  const decimals = (x: string) => (x.split('.')[1] ?? '').length, slider = (min: number, value: number, max: number, dec: number): Found => ({ kind: 'quick', type: 'param.slider', title: `Number Slider = ${value}`, hint: `Range ${min} to ${max}`, init: { state: { min, max, value, step: dec ? Math.pow(10, -dec) : 1, integer: dec === 0 } } });
+  if (range) { const [a, b, c] = [Number(range[1]), Number(range[2]), Number(range[3])]; return a < c && b >= a && b <= c ? slider(a, b, c, Math.max(decimals(range[1]), decimals(range[2]), decimals(range[3]))) : null; }
+  if (/^-?\d+(\.\d+)?$/.test(t)) { const x = Number(t), dec = decimals(t); return slider(Math.min(0, x * 2), x, x > 0 ? (dec ? Math.max(1, Math.ceil(x * 2)) : Math.max(10, x * 2)) : x < 0 ? 0 : 10, dec); }
+  if (/^".+/.test(t)) { const text = t.replace(/^"|"$/g, ''); return { kind: 'quick', type: 'param.panel', title: `Panel "${text.length > 24 ? text.slice(0, 24) + '…' : text}"`, hint: 'A panel holding this text', init: { state: { text } } }; }
+  if (/^\/\/.+/.test(t)) { const text = t.slice(2).trim(); return { kind: 'quick', type: 'param.note', title: `Note: ${text.length > 24 ? text.slice(0, 24) + '…' : text}`, hint: 'A note on the canvas', init: { state: { text } } }; }
+  return null;
+}
 /** Index of the port of `def` that best fits data of the link's type: an exact type match first, then anything compatible. */
 function fittingPort(ports: PortSpec[], link: Link, used: Set<number> = new Set()): number {
   const ok = (p: PortSpec) => (link.out ? typesCompatible(link.type, p.type) : typesCompatible(p.type, link.type));
@@ -73,6 +88,8 @@ function searchAll(q: string, link: Link | undefined, limit = 10): Found[] {
     // With nothing typed yet, components made for exactly this kind of data come first.
     return (q ? all : [...all.filter(exact), ...all.filter(d => !exact(d))]).slice(0, limit).map(d => ({ kind: 'component', d }));
   }
+  const quick = quickCreate(q);
+  if (quick) return [quick];
   const comps: Found[] = searchComponents(q, limit).map(d => ({ kind: 'component', d }));
   if (!q) return comps;
   const tpls: Found[] = TEMPLATES.map(t => ({ t, s: Math.max(fuzzy(q, t.title), fuzzy(q, 'template ' + t.title) * 0.6) })).filter(x => x.s > 0).sort((a, b) => b.s - a.s).slice(0, 3).map(x => ({ kind: 'template', t: x.t }));
@@ -273,6 +290,7 @@ export function Canvas(): JSX.Element {
         const pick = (f: Found) => {
           const link = s().link;
           if (f.kind === 'template') insertTemplate(f.t, { x: s().wx, y: s().wy });
+          else if (f.kind === 'quick') { const def = registry.get(f.type); addNode(f.type, s().wx, s().wy, { ...f.init, state: { ...JSON.parse(JSON.stringify(def?.state ?? {})), ...f.init.state } }); }
           else if (!link) addNode(f.d.id, s().wx, s().wy);
           else {
             // Place the new component so that the port it is wired to sits near where the wire was released, then connect.
@@ -287,6 +305,7 @@ export function Canvas(): JSX.Element {
             onKeyDown={e => { e.stopPropagation(); const r = results(); if (e.key === 'Escape') { setSearch(null); root.focus(); } else if (e.key === 'ArrowDown') { setSearch(v => v && { ...v, i: Math.min(r.length - 1, v.i + 1) }); e.preventDefault(); } else if (e.key === 'ArrowUp') { setSearch(v => v && { ...v, i: Math.max(0, v.i - 1) }); e.preventDefault(); } else if (e.key === 'Enter' && r[s().i]) pick(r[s().i]); }} />
           <div class="results" role="listbox"><For each={results()}>{(f, i) => (f.kind === 'component'
             ? <div class="result" role="option" classList={{ on: i() === s().i }} onPointerDown={() => pick(f)}><Icon id={f.d.id} nick={f.d.nick} color={CATEGORY_COLORS[f.d.category]} size={18} /><b>{f.d.name}</b><span>{f.d.category}</span><small>{f.d.desc}</small></div>
+            : f.kind === 'quick' ? <div class="result" role="option" classList={{ on: i() === s().i }} onPointerDown={() => pick(f)}><Icon id={f.type} size={18} color={CATEGORY_COLORS.Params} /><b>{f.title}</b><span>Shortcut</span><small>{f.hint}</small></div>
             : <div class="result" role="option" classList={{ on: i() === s().i }} onPointerDown={() => pick(f)}><i class="tpl" /><b>{f.t.title}</b><span>Template</span><small>{f.t.summary}</small></div>)}</For>
             <Show when={!results().length}><div class="result none">{s().link ? 'No component takes this kind of data under that name.' : `Nothing matches “${s().q}”.`}</div></Show></div>
         </div>;

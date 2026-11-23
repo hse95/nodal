@@ -69,6 +69,13 @@ describe('icons', () => {
     const { hasIcon, iconIds, thumbIds, iconFor, thumbFor, hasThumb } = await import('../src/ui/icons');
     const missing = registry.all().filter(d => !hasIcon(d.id)).map(d => d.id);
     expect(missing).toEqual([]);
+    // No two components share a drawing, and no two thumbnails are the same.
+    const seen = new Map<string, string>(), twins: string[] = [];
+    for (const id of iconIds()) { const k = iconFor(id), other = seen.get(k); if (other) twins.push(`${other} = ${id}`); else seen.set(k, id); }
+    expect(twins).toEqual([]);
+    const seenT = new Map<string, string>(), twinsT: string[] = [];
+    for (const id of thumbIds()) { const k = thumbFor(id), other = seenT.get(k); if (other) twinsT.push(`${other} = ${id}`); else seenT.set(k, id); }
+    expect(twinsT).toEqual([]);
     for (const id of iconIds()) expect(iconFor(id), id).toMatch(/^(<(path|circle|rect|text)[^>]*(\/>|>[^<]*<\/text>))+$/);
     for (const id of thumbIds()) expect(thumbFor(id), id).toMatch(/^(<(path|circle|rect|text)[^>]*(\/>|>[^<]*<\/text>))+$/);
     const { TEMPLATES } = await import('../src/templates');

@@ -2,5 +2,7 @@
 import './basic';
 import './geometry';
 import './structure';
+import './extra';
+import './design';
 import '../verify/component';
 export { registry } from '../core/graph';
