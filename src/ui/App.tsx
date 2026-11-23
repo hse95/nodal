@@ -8,6 +8,7 @@ import { emptyProject } from '../core/graph';
 import type { ProjectFile } from '../core/types';
 import { Canvas, layouts, CATEGORY_COLORS } from './Canvas';
 import { SidePanel } from './SidePanel';
+import { RenderDialog } from './RenderDialog';
 import { Ribbon } from './Ribbon';
 import { benchmarkAsComponents } from '../verify/explode';
 
@@ -238,6 +239,7 @@ export function App(): JSX.Element {
         <SidePanel />
       </div>
       <Show when={ui.toast}><div class="toast" role="alert">{ui.toast}</div></Show>
+      <Show when={ui.dialog === 'render'}><RenderDialog /></Show>
       <Show when={ui.dialog === 'examples'}><ExamplesDialog /></Show>
       <Show when={ui.dialog === 'verification'}><VerificationDialog /></Show>
       <Show when={ui.dialog === 'about'}><Dialog title="About Nodal"><div class="about">

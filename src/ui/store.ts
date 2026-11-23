@@ -37,7 +37,9 @@ export const [ui, setUi] = createStore({
   sideWidth: Math.min(640, Math.max(240, Number(localStorage.getItem('nodal.sideWidth')) || 0)) || 0,
   /** Shadows on the ground in the realistic display. */
   shadows: localStorage.getItem('nodal.shadows') !== '0',
-  dialog: null as null | 'examples' | 'verification' | 'about' | 'shortcuts' | 'help',
+  /** Soft contact shading where surfaces meet (ambient occlusion). 'auto' = on unless the graphics are drawn in software. */
+  ao: (localStorage.getItem('nodal.ao') ?? 'auto') as 'auto' | '1' | '0',
+  dialog: null as null | 'examples' | 'verification' | 'about' | 'shortcuts' | 'help' | 'render' | 'teach' | 'share',
   toast: '', tour: -1,
   pick: null as Pick | null,
   /** How the 3D view draws: realistic solids with shadows, simple lines, wireframe, or see-through. */

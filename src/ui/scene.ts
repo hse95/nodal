@@ -82,15 +82,20 @@ class Batch {
   }
 }
 
-/** A plausible surface color for a material, judged by its density and stiffness. */
-function materialColor(mat: { rho: number; E: number } | undefined): number {
-  if (!mat) return 0x8b98ab;
-  if (mat.rho > 7000) return 0x93a1b5;                       // steel
-  if (mat.rho > 2600 && mat.E > 5e10) return 0xc2c8d0;       // aluminum
-  if (mat.rho > 1500) return 0xbcb8ae;                       // concrete, masonry
-  if (mat.rho > 0) return 0xb98d5a;                          // timber
-  return 0x8b98ab;
+/**
+ * A plausible surface for a material, judged by its density and stiffness: color, and how metallic and
+ * how rough it looks under the lighting (steel is semi-gloss, concrete matte, timber satin).
+ */
+export interface Look { color: number; metalness: number; roughness: number; kind: 'steel' | 'aluminum' | 'concrete' | 'timber' | 'other' }
+export function materialLook(mat: { rho: number; E: number } | undefined): Look {
+  if (!mat) return { color: 0x8b98ab, metalness: 0.2, roughness: 0.6, kind: 'other' };
+  if (mat.rho > 7000) return { color: 0x8e9db3, metalness: 0.55, roughness: 0.42, kind: 'steel' };
+  if (mat.rho > 2600 && mat.E > 5e10) return { color: 0xc9ced6, metalness: 0.7, roughness: 0.34, kind: 'aluminum' };
+  if (mat.rho > 1500) return { color: 0xbdb9b0, metalness: 0, roughness: 0.92, kind: 'concrete' };
+  if (mat.rho > 0) return { color: 0xb98d5a, metalness: 0, roughness: 0.68, kind: 'timber' };
+  return { color: 0x8b98ab, metalness: 0.2, roughness: 0.6, kind: 'other' };
 }
+const materialColor = (mat: { rho: number; E: number } | undefined): number => materialLook(mat).color;
 
 export class SceneBuilder {
   group = new THREE.Group();
@@ -106,13 +111,15 @@ export class SceneBuilder {
   /** `solid` = draw members with their cross-sections as solids (the realistic display); false = lines only. */
   constructor(private u: UnitSystem, private dark: boolean, private solid = true) {}
   /** Support symbols and arrow heads of everything drawn; built into one mesh by finish(). */
-  private glyphs = new Batch();
+  private heads = new Batch(); private glyphs = new Batch();
   private shafts = new Map<number, number[]>();
   /** Call once after the last draw: builds the batched symbols. */
   finish(): void {
     for (const [color, seg] of this.shafts) { const g = new LineSegmentsGeometry(); g.setPositions(seg); this.group.add(new LineSegments2(g, new LineMaterial({ color, linewidth: 1.7 }))); }
     this.shafts.clear();
-    if (!this.glyphs.empty) { const o = this.glyphs.build(); o.userData.shaded = true; this.group.add(o); this.glyphs = new Batch(); }
+    if (!this.glyphs.empty) { const o = this.glyphs.build({ roughness: 0.85, metalness: 0 }); o.userData.shaded = true; o.name = 'supports'; this.group.add(o); this.glyphs = new Batch(); }
+    // Arrowheads are annotation, not structure: they stay out of renders and glTF exports.
+    if (!this.heads.empty) { const o = this.heads.build(); o.userData.shaded = true; o.userData.annotation = true; o.castShadow = false; this.group.add(o); this.heads = new Batch(); }
   }
 
   /** Bounds of the geometry and structure only, without arrows, support symbols, diagrams and other annotation. */
@@ -164,7 +171,7 @@ export class SceneBuilder {
     const n = unit(d), side = unit(cross(n, Math.abs(n.z) < 0.9 ? v(0, 0, 1) : v(1, 0, 0))), side2 = cross(n, side), h = L * head, b = add(to, mul(n, -h));
     const seg = this.shafts.get(color) ?? []; if (!seg.length) this.shafts.set(color, seg);
     seg.push(from.x, from.y, from.z, b.x, b.y, b.z);
-    this.glyphs.color(color).cone(to, b, mul(side, h * 0.34), mul(side2, h * 0.34), 8);
+    this.heads.color(color).cone(to, b, mul(side, h * 0.34), mul(side2, h * 0.34), 8);
     this.track(from); this.track(to);
   }
   /**
@@ -178,7 +185,7 @@ export class SceneBuilder {
     const list = this.shafts.get(color) ?? []; if (!list.length) this.shafts.set(color, list);
     list.push(...seg);
     const end = at(t1), tan = add(mul(a, -Math.sin(t1)), mul(b, Math.cos(t1))), h = r * 0.55;
-    this.glyphs.color(color).cone(add(end, mul(tan, h)), end, mul(n, h * 0.36), mul(unit(sub(end, p)), h * 0.36), 8);
+    this.heads.color(color).cone(add(end, mul(tan, h)), end, mul(n, h * 0.36), mul(unit(sub(end, p)), h * 0.36), 8);
     return at(0.5 * Math.PI);
   }
   /** Add a label; an identical label at the same place is added only once (members meeting at a node report the same value). */
@@ -307,7 +314,9 @@ export class SceneBuilder {
   }
   private sectionSolids(m: FEModel, hi: boolean, nodeId: string, colors?: (number | string)[]): void {
     if (!this.solid || !m.beams.length || m.beams.length > 4000) return;
-    const f = 1 / this.u.len.f, batch = new Batch(), edges: number[] = [];
+    const f = 1 / this.u.len.f, edges: number[] = [];
+    // One mesh per kind of material, so that steel, concrete and timber each get their own surface.
+    const batches = new Map<string, { batch: Batch; look: Look }>();
     const caps = new Map<number, number[][]>();
     // A member split into several elements is drawn as one piece: the outline is drawn at an element end
     // only where the member really ends or changes direction or section.
@@ -319,7 +328,10 @@ export class SceneBuilder {
       if (!shape?.outer || b.type === 'cable') return;
       const [a, c] = beamEnds(m, b), R = memberAxes(a, c, b.ref, b.angle), y = v(R[3], R[4], R[5]), z = v(R[6], R[7], R[8]);
       const dir = unit(sub(c, a)), ring0 = !runsOn(b.n[0], e, b.sec, dir), ring1 = !runsOn(b.n[1], e, b.sec, dir);
-      batch.color(hi ? C.hi : colors ? colors[e] : materialColor(m.materials[b.mat]));
+      const look = materialLook(m.materials[b.mat]);
+      let entry = batches.get(look.kind); if (!entry) { entry = { batch: new Batch(), look }; batches.set(look.kind, entry); }
+      const batch = entry.batch;
+      batch.color(hi ? C.hi : colors ? colors[e] : look.color);
       const rings = [shape.outer, ...(shape.inner ? [shape.inner] : [])], first: number[][] = [];
       for (const ring of rings) {
         const n = ring.length, i0: number[] = [], i1: number[] = [], p0: V3[] = [], p1: V3[] = [];
@@ -341,11 +353,17 @@ export class SceneBuilder {
       const nOut = shape.outer.length, idx = (end: 0 | 1, k: number) => (k < nOut ? first[end][k] : first[2 + end][k - nOut]);
       for (const t of tris) { batch.tri(idx(0, t[0]), idx(0, t[1]), idx(0, t[2]), e); batch.tri(idx(1, t[0]), idx(1, t[2]), idx(1, t[1]), e); }
     });
-    if (batch.empty) return;
+    let any = false;
+    for (const { batch, look } of batches.values()) {
+      if (batch.empty) continue;
+      any = true;
+      // Result colors (utilization) are read more easily on a matte surface.
+      const o = batch.build(colors || hi ? { metalness: 0.05, roughness: 0.7 } : { metalness: look.metalness, roughness: look.roughness });
+      o.userData.shaded = true; o.userData.solid = true; o.userData.pick = { kind: 'beam', tri: batch.owner, nodeId }; this.pickables.push(o);
+      this.group.add(o);
+    }
+    if (!any) return;
     this.skin = true;
-    const o = batch.build({ metalness: 0.05, roughness: 0.6 });
-    o.userData.shaded = true; o.userData.pick = { kind: 'beam', tri: batch.owner, nodeId }; this.pickables.push(o);
-    this.group.add(o);
     if (edges.length) { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(edges, 3)); this.group.add(new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: this.dark ? 0x0d1116 : 0x2b3440, transparent: true, opacity: 0.55 }))); }
   }
   /**

@@ -7,6 +7,11 @@
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show, JSX } from 'solid-js';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { project, setSide, selection, setSelection, runTick, openTick, engine, ui, setUi, registry, portsOf, unwrap, download, toast, mutate, addNode, connect } from './store';
 import { SceneBuilder, Label, Legend, CONTOUR_NAMES } from './scene';
 import { previewPlan, PREVIEW_TYPES, firstResult } from './preview';
@@ -18,7 +23,7 @@ import { rampColor } from '../components/geometry';
 
 type ViewName = 'perspective' | 'top' | 'front' | 'right';
 /** Handle used by export commands elsewhere in the app. */
-export const viewportApi: { png?: () => string; svg?: () => string; fit?: () => void } = {};
+export const viewportApi: { png?: () => string; svg?: () => string; fit?: () => void; glb?: () => Promise<ArrayBuffer>; render?: (o: { width: number; samples: number; onProgress(done: number, of: number): void }) => Promise<import('./render').RenderJob> } = {};
 
 export function Viewport(): JSX.Element {
   let host!: HTMLDivElement, labelLayer!: HTMLDivElement;
@@ -33,6 +38,30 @@ export function Viewport(): JSX.Element {
   let builder: SceneBuilder | null = null, grid: THREE.GridHelper | null = null, labels: Label[] = [], labelEls: HTMLDivElement[] = [];
   let labelSize: { w: number; h: number }[] = [], labelOrder: number[] = [];
   let needsRender = true, raf = 0, firstFit = true;
+  // Ambient occlusion runs as a second pass over the picture; it is created the first time it is needed.
+  let composer: EffectComposer | null = null, renderPass: RenderPass | null = null, aoPass: GTAOPass | null = null, software = false;
+  const aoOn = () => ui.display === 'shaded' && (ui.ao === '1' || (ui.ao === 'auto' && !software));
+  const draw = () => {
+    if (!aoOn()) { renderer.render(scene, camera); return; }
+    if (!composer) {
+      const size = renderer.getDrawingBufferSize(new THREE.Vector2());
+      composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(size.x, size.y, { samples: 4, type: THREE.HalfFloatType }));
+      renderPass = new RenderPass(scene, camera); composer.addPass(renderPass);
+      aoPass = new GTAOPass(scene, camera, size.x, size.y); aoPass.output = GTAOPass.OUTPUT.Default;
+      aoPass.blendIntensity = 0.8;
+      // The solids are flat-shaded and carry no normals of their own, so the normal picture is taken from the surface slopes too.
+      const nm = (aoPass as unknown as { normalMaterial: THREE.MeshNormalMaterial }).normalMaterial; nm.flatShading = true; nm.side = THREE.DoubleSide;
+      // Lines, overlays and helpers have no place in the depth and normal picture the shading is computed from.
+      const hidden: THREE.Object3D[] = [], base = aoPass as unknown as { overrideVisibility(): void; restoreVisibility(): void }, ov = base.overrideVisibility.bind(aoPass), rv = base.restoreVisibility.bind(aoPass);
+      base.overrideVisibility = () => { ov(); scene.traverse(o => { const m = (o as THREE.Mesh).material as THREE.Material | undefined; if (o.visible && ((o as any).isLineSegments2 || (o as any).isLine2 || (o as any).isGridHelper || (m && !Array.isArray(m) && (m.depthTest === false || m.transparent || (m as any).isShadowMaterial)))) { o.visible = false; hidden.push(o); } }); };
+      base.restoreVisibility = () => { for (const o of hidden) o.visible = true; hidden.length = 0; rv(); };
+      composer.addPass(aoPass); composer.addPass(new OutputPass());
+    }
+    renderPass!.camera = camera; aoPass!.camera = camera;
+    const r = builder && !builder.bounds().isEmpty() ? builder.bounds().getSize(new THREE.Vector3()).length() : 10;
+    aoPass!.updateGtaoMaterial({ radius: r * 0.012, distanceExponent: 1.5, thickness: 1.2, scale: 1.1, samples: 12, screenSpaceRadius: false });
+    composer.render();
+  };
   /** After a zoom to fit, the view keeps following the model as it changes, until the user moves the view. */
   let follow = false;
   const fitted = new THREE.Box3();
@@ -43,6 +72,7 @@ export function Viewport(): JSX.Element {
     if (!renderer) return;
     const w = Math.max(1, host.clientWidth), h = Math.max(1, host.clientHeight);
     renderer.setSize(w, h, false);
+    composer?.setSize(w, h);
     persp.aspect = w / h; persp.updateProjectionMatrix();
     const half = ortho.userData.half ?? 10;
     ortho.left = -half * w / h; ortho.right = half * w / h; ortho.top = half; ortho.bottom = -half; ortho.updateProjectionMatrix();
@@ -191,12 +221,13 @@ export function Viewport(): JSX.Element {
     sun.target.position.copy(c); sun.position.copy(c).add(new THREE.Vector3(0.45, -0.6, 1).normalize().multiplyScalar(r * 3));
     const cam = sun.shadow.camera; cam.left = cam.bottom = -r * 1.5; cam.right = cam.top = r * 1.5; cam.near = r * 0.2; cam.far = r * 6; cam.updateProjectionMatrix();
     ground.scale.set(r * 8, r * 8, 1); ground.position.set(c.x, c.y, b.min.z - r * 0.002);
-    ground.visible = ui.display === 'shaded';
+    ground.visible = ui.display === 'shaded' && ui.shadows;
     renderer.shadowMap.needsUpdate = true;
   };
   const applyDisplay = () => {
     if (!builder) return;
-    if (ground) ground.visible = ui.display === 'shaded' && !builder.bounds().isEmpty();
+    if (ground) ground.visible = ui.display === 'shaded' && ui.shadows && !builder.bounds().isEmpty();
+    if (sun) { sun.castShadow = ui.shadows; renderer.shadowMap.needsUpdate = true; }
     builder.group.traverse(o => {
       const m = (o as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined;
       if (!m || !o.userData.shaded) return;
@@ -219,13 +250,18 @@ export function Viewport(): JSX.Element {
     renderer.setPixelRatio(Math.min(2, window.devicePixelRatio));
     host.prepend(renderer.domElement);
     scene = new THREE.Scene();
+    try { const info = renderer.getContext().getExtension('WEBGL_debug_renderer_info'); software = /swiftshader|llvmpipe|software/i.test(String(info ? renderer.getContext().getParameter(info.UNMASKED_RENDERER_WEBGL) : '')); } catch { /* unknown: treat as hardware */ }
+    setSoftwareGL(software);
+    // Image-based lighting: a neutral studio room, blurred, lights every surface from all around and gives metal something to reflect.
+    const pmrem = new THREE.PMREMGenerator(renderer); scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture; pmrem.dispose();
+    scene.environmentIntensity = 0.55;
     persp = new THREE.PerspectiveCamera(40, 1, 0.05, 5000); persp.up.set(0, 0, 1); persp.position.set(14, -18, 11);
     ortho = new THREE.OrthographicCamera(-10, 10, 10, -10, -1000, 1000); ortho.up.set(0, 0, 1);
     camera = persp;
-    scene.add(new THREE.HemisphereLight(0xffffff, 0xa3a9b3, 2.1));
-    sun = new THREE.DirectionalLight(0xffffff, 2.3); sun.position.set(6, -9, 14); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0004;
+    scene.add(new THREE.HemisphereLight(0xffffff, 0xa3a9b3, 1.15));
+    sun = new THREE.DirectionalLight(0xfff6ea, 2.2); sun.position.set(6, -9, 14); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0004;
     scene.add(sun); scene.add(sun.target);
-    const fill = new THREE.DirectionalLight(0xdfe8ff, 0.8); fill.position.set(-8, 6, 5); scene.add(fill);
+    const fill = new THREE.DirectionalLight(0xdfe8ff, 0.45); fill.position.set(-8, 6, 5); scene.add(fill);
     // A ground that only shows shadows: it gives solids a footing without hiding the grid.
     ground = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.ShadowMaterial({ opacity: 0.2 })); ground.receiveShadow = true; ground.visible = false; scene.add(ground);
     renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -265,7 +301,7 @@ export function Viewport(): JSX.Element {
       if (builder?.animated) { builder.setFactor(Math.sin(t / 380)); needsRender = true; }
       if (!needsRender) return;
       needsRender = false;
-      renderer.render(scene, camera);
+      draw();
       placeLabels();
     };
     raf = requestAnimationFrame(loop);
@@ -290,7 +326,9 @@ export function Viewport(): JSX.Element {
       const index = pk.kind === 'node' ? hit.index ?? 0 : pk.kind === 'beam' && !pk.tri ? pk.ids[(hit.object as any).isLineSegments2 ? hit.faceIndex ?? 0 : Math.floor((hit.index ?? 0) / 2)] : pk.tri[hit.faceIndex ?? 0];
       setUi('pick', { kind: pk.kind, index, nodeId: pk.nodeId }); setSide('inspector');
     });
-    viewportApi.png = () => { renderer.render(scene, camera); return renderer.domElement.toDataURL('image/png'); };
+    viewportApi.png = () => { draw(); return renderer.domElement.toDataURL('image/png'); };
+    viewportApi.glb = async () => { const { exportGLB } = await import('./render'); return exportGLB(builder?.group ?? scene); };
+    viewportApi.render = async (o) => { const { pathTrace } = await import('./render'); const size = renderer.getSize(new THREE.Vector2()), k = o.width / Math.max(1, size.x); return pathTrace({ root: builder?.group ?? scene, camera, width: o.width, height: Math.max(2, Math.round(size.y * k)), samples: o.samples, dark: ui.theme === 'dark', ground: ui.shadows, sun: sun.position.clone().sub(sun.target.position), onProgress: o.onProgress }); };
     viewportApi.fit = () => fit();
     viewportApi.svg = () => {
       // Vector export of every line object, projected with the current camera.
@@ -329,8 +367,12 @@ export function Viewport(): JSX.Element {
   // A newly opened project is fitted to the view once its first results are drawn.
   createEffect(() => { openTick(); firstFit = true; });
   createEffect(() => { runTick(); selection(); void ui.theme; void ui.textScale; void (ui.display === 'lines'); void ui.grid; void project.units; void project.graph.nodes.length; project.graph.nodes.forEach(n => { void n.preview; void n.enabled; }); rebuild(); });
-  createEffect(() => { void ui.display; void ui.sectionOn; void ui.sectionAxis; void ui.sectionPos; if (renderer) applyDisplay(); });
+  createEffect(() => { void ui.display; void ui.sectionOn; void ui.sectionAxis; void ui.sectionPos; void ui.shadows; void ui.ao; if (renderer) { applyDisplay(); invalidate(); } });
 
+  const [options, setOptions] = createSignal(false), [softwareGL, setSoftwareGL] = createSignal(false);
+  const keep = (k: string, v: string) => { try { localStorage.setItem(k, v); } catch { /* storage unavailable */ } };
+  const closeOptions = (e: PointerEvent) => { if (options() && !(e.target as HTMLElement).closest('.v-menu')) setOptions(false); };
+  window.addEventListener('pointerdown', closeOptions); onCleanup(() => window.removeEventListener('pointerdown', closeOptions));
   const Btn = (p: { label: string; title: string; on?: boolean; onClick: () => void }) => <button classList={{ on: !!p.on }} title={p.title} aria-label={p.title} aria-pressed={p.on} onClick={p.onClick}>{p.label}</button>;
   return (
     <div class="viewport" ref={host} tabIndex={0} aria-label="3D view">
@@ -342,12 +384,22 @@ export function Viewport(): JSX.Element {
           <div class="seg"><button class="fit" title="Zoom so that everything fits the view (F, or double-click the background)" onClick={() => fit()}>⤢ Fit all</button>
             <Btn label="Auto" title="Keep everything in view: fit again whenever the model changes" on={ui.autoFit} onClick={() => { const on = !ui.autoFit; setUi('autoFit', on); try { localStorage.setItem('nodal.autoFit', on ? '1' : '0'); } catch { /* storage unavailable */ } if (on) fit(); }} /></div>
           <select value={ui.display} title="Realistic: members as solids with their cross-sections, with shadows. Lines: members as lines." aria-label="Display mode" onChange={e => setUi('display', e.currentTarget.value as 'shaded')}><option value="shaded">Realistic</option><option value="lines">Lines</option><option value="wireframe">Wireframe</option><option value="ghosted">See-through</option></select>
-          <Btn label="Grid" title="Show or hide the ground grid" on={ui.grid} onClick={() => setUi('grid', !ui.grid)} />
-          <Btn label="Section" title="Cut the view with a section plane" on={ui.sectionOn} onClick={() => setUi('sectionOn', !ui.sectionOn)} />
-          <Show when={ui.sectionOn}><select value={ui.sectionAxis} onChange={e => setUi('sectionAxis', e.currentTarget.value as 'x')} aria-label="Section axis"><option value="x">X</option><option value="y">Y</option><option value="z">Z</option></select>
-            <input type="range" min="0" max="1" step="0.005" value={ui.sectionPos} onInput={e => setUi('sectionPos', Number(e.currentTarget.value))} aria-label="Section position" /></Show>
-          <select title="Save the view as an image" aria-label="Save image" onChange={e => { const kind = e.currentTarget.value; e.currentTarget.value = ''; if (kind === 'png') { const url = viewportApi.png?.(); if (url) { const a = document.createElement('a'); a.href = url; a.download = 'nodal-view.png'; a.click(); } else toast('The 3D view is not available.'); } else if (kind === 'svg') { const svg = viewportApi.svg?.(); if (svg) download('nodal-view.svg', svg, 'image/svg+xml'); } }}>
-            <option value="">Save image…</option><option value="png">PNG picture</option><option value="svg">SVG drawing (lines and values)</option></select>
+          <div class="v-menu">
+            <button classList={{ on: options() }} aria-expanded={options()} aria-label="View options" title="Grid, shadows, section plane, save and export" onClick={() => setOptions(!options())}>Options ▾</button>
+            <Show when={options()}><div class="v-pop" role="menu" aria-label="View options">
+              <label><input type="checkbox" checked={ui.grid} onChange={e => setUi('grid', e.currentTarget.checked)} /> Grid</label>
+              <label title="Shadows on the ground (Realistic display)"><input type="checkbox" checked={ui.shadows} onChange={e => { setUi('shadows', e.currentTarget.checked); keep('nodal.shadows', e.currentTarget.checked ? '1' : '0'); }} /> Shadows</label>
+              <label title="Soft shading where surfaces meet (ambient occlusion). Costs some speed on large models."><input type="checkbox" checked={ui.ao === '1' || (ui.ao === 'auto' && !softwareGL())} onChange={e => { const v = e.currentTarget.checked ? '1' : '0'; setUi('ao', v); keep('nodal.ao', v); }} /> Contact shading</label>
+              <label><input type="checkbox" checked={ui.sectionOn} onChange={e => setUi('sectionOn', e.currentTarget.checked)} /> Section plane</label>
+              <Show when={ui.sectionOn}><div class="row"><select value={ui.sectionAxis} onChange={e => setUi('sectionAxis', e.currentTarget.value as 'x')} aria-label="Section axis"><option value="x">X</option><option value="y">Y</option><option value="z">Z</option></select>
+                <input type="range" min="0" max="1" step="0.005" value={ui.sectionPos} onInput={e => setUi('sectionPos', Number(e.currentTarget.value))} aria-label="Section position" /></div></Show>
+              <hr />
+              <button role="menuitem" onClick={() => { setOptions(false); const url = viewportApi.png?.(); if (url) { const a = document.createElement('a'); a.href = url; a.download = 'nodal-view.png'; a.click(); } else toast('The 3D view is not available.'); }}>Save picture (PNG)</button>
+              <button role="menuitem" onClick={() => { setOptions(false); const svg = viewportApi.svg?.(); if (svg) download('nodal-view.svg', svg, 'image/svg+xml'); }}>Save drawing (SVG, lines and values)</button>
+              <button role="menuitem" title="The solids shown here as a binary glTF file, for Blender, Unreal Engine and other renderers" onClick={() => { setOptions(false); void viewportApi.glb?.().then(buf => download('nodal-model.glb', buf, 'model/gltf-binary'), e => toast((e as Error).message, 7000)); }}>Export glTF (.glb) for Blender or Unreal</button>
+            </div></Show>
+          </div>
+          <button class="render" title="Make one high-quality picture of this view by path tracing (for papers and slides). The live view stays as it is." onClick={() => setUi('dialog', 'render')}>Render</button>
         </div>
         <ResultBar />
       </div>

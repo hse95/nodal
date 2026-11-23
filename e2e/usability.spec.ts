@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { test, expect, Page } from '@playwright/test';
 
 function watch(page: Page): string[] {
@@ -223,5 +224,39 @@ test('the 3D view fits on request and offers the display styles', async ({ page 
   await auto.click();
   await expect(auto).toHaveAttribute('aria-pressed', 'false');
   await auto.click();
+  expect(errors).toEqual([]);
+});
+
+test('view options: shadows can be hidden, the view exports glTF, and Render makes a path-traced picture', async ({ page }) => {
+  test.setTimeout(240_000);
+  const errors = watch(page);
+  await open(page, 'bench-b02');
+  await page.locator('.v-menu > button').click();
+  const shadows = page.locator('.v-pop label', { hasText: 'Shadows' }).locator('input');
+  await expect(shadows).toBeChecked();
+  await shadows.uncheck();
+  expect(await page.evaluate(() => localStorage.getItem('nodal.shadows'))).toBe('0');
+  await page.locator('.v-pop label', { hasText: 'Contact shading' }).locator('input').check();     // ambient occlusion on (it is off by default on software graphics)
+  await page.locator('.v-pop label', { hasText: 'Grid' }).locator('input').uncheck();
+  await page.waitForTimeout(400);
+  // glTF: a binary file with the "glTF" magic number and at least one mesh.
+  const [dl] = await Promise.all([page.waitForEvent('download'), page.locator('.v-pop button', { hasText: 'Export glTF' }).click()]);
+  expect(dl.suggestedFilename()).toBe('nodal-model.glb');
+  const buf = readFileSync(await dl.path());
+  expect(buf.subarray(0, 4).toString('latin1')).toBe('glTF'); expect(buf.readUInt32LE(4)).toBe(2);
+  const jsonLen = buf.readUInt32LE(12), gltf = JSON.parse(buf.subarray(20, 20 + jsonLen).toString('utf8'));
+  expect(gltf.meshes.length).toBeGreaterThan(0); expect(gltf.materials.length).toBeGreaterThan(0);
+  // Render: the picture appears and refines; it can be stopped and saved.
+  await page.locator('.v-toolbar button.render').click();
+  await expect(page.locator('.render-dialog')).toBeVisible();
+  await page.locator('.render-bar select[aria-label="Picture width"]').selectOption('1200');
+  await expect(page.locator('.render-canvas')).toBeVisible({ timeout: 120_000 });
+  await expect(page.locator('.render-bar .muted')).toContainText(/[1-9]\d* of \d+ samples|Finished/, { timeout: 180_000 });
+  await expect(page.locator('.render-dialog [role="alert"]')).toHaveCount(0);
+  const lit = await page.evaluate(() => { const c = document.querySelector('.render-canvas') as HTMLCanvasElement, t = document.createElement('canvas'); t.width = 64; t.height = 40; const g = t.getContext('2d')!; g.drawImage(c, 0, 0, 64, 40); const d = g.getImageData(0, 0, 64, 40).data; let min = 255, max = 0; for (let i = 0; i < d.length; i += 4) { min = Math.min(min, d[i]); max = Math.max(max, d[i]); } return max - min; });
+  expect(lit).toBeGreaterThan(20);                                 // not a blank picture
+  const stop = page.locator('.render-bar button', { hasText: 'Stop' }); if (await stop.count()) await stop.click();
+  await expect(page.locator('.render-bar .primary')).toBeEnabled();
+  await page.locator('.render-dialog .dialog-head button').click();
   expect(errors).toEqual([]);
 });

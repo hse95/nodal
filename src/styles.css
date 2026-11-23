@@ -284,3 +284,17 @@ table { border-collapse: collapse; width: 100%; font-size: calc(11.5px * var(--t
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 .node.ai-new { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 75%, transparent), 0 0 14px color-mix(in srgb, var(--accent) 45%, transparent); transition: box-shadow .5s; }
 .rb-ai { border: 0; background: none; padding: 5px; color: var(--muted); display: flex; flex: none; cursor: pointer; border-radius: 7px; margin: 0 6px 0 0; } .rb-ai:hover { color: var(--ink); background: var(--line-soft); } .rb-ai.on { color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+
+/* ---- View options menu and Render ------------------------------------------------------------ */
+.v-menu { position: relative; display: flex; } .v-toolbar .v-menu > button { height: 100%; }
+.v-pop { position: absolute; top: calc(100% + 4px); left: 0; z-index: 30; min-width: 250px; display: grid; gap: 2px; padding: 8px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); font-size: calc(12.5px * var(--ts)); }
+.v-pop label { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 6px; cursor: pointer; } .v-pop label:hover, .v-pop button:hover { background: var(--line-soft); }
+.v-pop .row { display: flex; gap: 8px; padding: 2px 6px 4px 28px; } .v-pop .row input { flex: 1; min-width: 0; }
+.v-pop hr { border: 0; border-top: 1px solid var(--line-soft); margin: 4px 0; width: 100%; }
+.v-toolbar .v-pop button { border: 0; background: none; text-align: left; padding: 5px 6px; border-radius: 6px; font: inherit; color: var(--ink); cursor: pointer; box-shadow: none; height: auto; }
+.v-toolbar button.render { font-weight: 600; }
+.render-dialog { width: min(1100px, 94vw); max-height: 92vh; display: flex; flex-direction: column; }
+.render-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 8px 16px; border-bottom: 1px solid var(--line-soft); font-size: calc(12.5px * var(--ts)); }
+.render-bar select, .render-bar button { font: inherit; padding: 4px 9px; border: 1px solid var(--line); border-radius: 6px; background: var(--card); color: var(--ink); cursor: pointer; }
+.render-bar button.primary { background: var(--accent); border-color: var(--accent); color: #fff; } .render-bar button:disabled { opacity: .45; cursor: default; }
+.render-holder { flex: 1; min-height: 200px; overflow: auto; background: var(--bg); display: grid; place-items: center; padding: 10px; } .render-canvas { max-width: 100%; height: auto; border-radius: 6px; box-shadow: var(--shadow); }
