@@ -173,7 +173,20 @@ test('canvas stays responsive with 500 components', async ({ page }) => {
   const noView = await page.addStyleTag({ content: '.viewport { display: none !important; }' });
   const alone = await measure();
   await noView.evaluate(el => (el as Element).remove());
-  console.log(`CANVAS_FPS 500 components while panning: median ${fps.median.toFixed(0)} fps, 95th percentile frame ${fps.p95.toFixed(0)} fps; empty canvas on this machine ${empty.median.toFixed(0)} fps; with the 3D view hidden ${alone.median.toFixed(0)} fps`);
+  const again = await measure();
+  if (fps.median < 30 || process.env.NODAL_DIAG) {
+    // Slow here: record where the time goes, so the log of a slow machine says what was slow.
+    const browser = page.context().browser()!;
+    await browser.startTracing(page, { categories: ['devtools.timeline', 'disabled-by-default-devtools.timeline', 'cc', 'gpu', 'viz', 'blink'] });
+    const traced = await measure();
+    const events: any[] = JSON.parse((await browser.stopTracing()).toString()).traceEvents;
+    const threads = new Map<string, string>(), totals = new Map<string, number>();
+    for (const e of events) if (e.ph === 'M' && e.name === 'thread_name') threads.set(`${e.pid}:${e.tid}`, e.args?.name ?? '');
+    for (const e of events) if (e.ph === 'X' && e.dur) { const k = `${(threads.get(`${e.pid}:${e.tid}`) ?? '?').replace(/\d+$/, '')} / ${e.name}`; totals.set(k, (totals.get(k) ?? 0) + e.dur / 1000); }
+    const top = [...totals].sort((a, b) => b[1] - a[1]).slice(0, 28).map(([k, v]) => `${v.toFixed(0)} ms ${k}`);
+    console.log(`CANVAS_DIAG traced pan at ${traced.median.toFixed(0)} fps\n  ` + top.join('\n  '));
+  }
+  console.log(`CANVAS_FPS 500 components while panning: median ${fps.median.toFixed(0)} fps, 95th percentile frame ${fps.p95.toFixed(0)} fps; empty canvas on this machine ${empty.median.toFixed(0)} fps; with the 3D view hidden ${alone.median.toFixed(0)} fps; everything shown again ${again.median.toFixed(0)} fps`);
   // Either plainly fast, or at least 60 % of what this machine manages with an empty canvas.
   expect(fps.median > 20 || fps.median >= 0.6 * empty.median, `${fps.median.toFixed(1)} fps with 500 components, ${empty.median.toFixed(1)} fps with none`).toBe(true);
   expect(fps.median).toBeGreaterThan(5);
