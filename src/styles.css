@@ -67,6 +67,7 @@ p { margin: 6px 0; } .muted { color: var(--muted); } .spacer { flex: 1; } hr { b
 /* Canvas */
 .canvas { position: absolute; inset: 0; overflow: hidden; outline: none; background-color: var(--bg); background-image: radial-gradient(var(--dots) 1px, transparent 1px); touch-action: none; user-select: none; }
 .world { position: absolute; left: 0; top: 0; transform-origin: 0 0; --ts: 1; --z: 1; --tsz: 1; }
+.world.panning { will-change: transform; }
 /* Legible zoom: when the canvas is zoomed out, titles, port names and slider values are enlarged so that they stay
    readable on screen (about 9.6 px times the text size), up to what fits in a component. --z is the current zoom and
    --tsz the chosen text size, both set from Canvas.tsx. */

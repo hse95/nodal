@@ -163,6 +163,7 @@ export function Canvas(): JSX.Element {
     setUi({ panX: mx - (mx - ui.panX) * z / ui.zoom, panY: my - (my - ui.panY) * z / ui.zoom, zoom: z });
   };
   /** Generic pointer-drag helper. */
+  const [panning, setPanning] = createSignal(false);
   const track = (e: PointerEvent, move: (ev: PointerEvent, dx: number, dy: number) => void, up?: (ev: PointerEvent, moved: boolean) => void) => {
     const x0 = e.clientX, y0 = e.clientY;
     let moved = false;
@@ -172,7 +173,10 @@ export function Canvas(): JSX.Element {
   };
   const startPan = (e: PointerEvent, onClick?: (ev: PointerEvent) => void) => {
     const px = ui.panX, py = ui.panY;
-    track(e, (_ev, dx, dy) => setUi({ panX: px + dx, panY: py + dy }), (ev, moved) => { if (!moved) onClick?.(ev); });
+    // While the canvas is dragged it is handed to the compositor as one layer, so each frame only moves a
+    // picture that is already drawn instead of drawing every component again. The hint is removed on release
+    // because a layer kept that way would go soft when zoomed.
+    track(e, (_ev, dx, dy) => { setPanning(true); setUi({ panX: px + dx, panY: py + dy }); }, (ev, moved) => { setPanning(false); if (!moved) onClick?.(ev); });
   };
   const onBackgroundDown = (e: PointerEvent) => {
     if ((e.target as HTMLElement).closest('.node, .popup, .minimap, .wire-hit')) return;
@@ -262,7 +266,7 @@ export function Canvas(): JSX.Element {
     <div class="canvas" ref={root} tabindex="0" onWheel={onWheel} onPointerDown={onBackgroundDown} onKeyDown={onKey} onKeyUp={onKeyUp} onContextMenu={e => e.preventDefault()}
       onDblClick={e => { if (!(e.target as HTMLElement).closest('.node, .popup, .minimap')) openSearch(e.clientX, e.clientY); }}
       style={{ 'background-position': `${ui.panX}px ${ui.panY}px`, 'background-size': `${20 * ui.zoom}px ${20 * ui.zoom}px`, cursor: spaceDown() ? 'grab' : 'default' }}>
-      <div class="world" style={{ transform: `translate(${ui.panX}px, ${ui.panY}px) scale(${ui.zoom})`, '--z': String(ui.zoom), '--tsz': String(ui.textScale) }}>
+      <div class="world" classList={{ panning: panning() }} style={{ transform: `translate(${ui.panX}px, ${ui.panY}px) scale(${ui.zoom})`, '--z': String(ui.zoom), '--tsz': String(ui.textScale) }}>
         <For each={project.graph.groups}>{g => {
           const box = createMemo(() => { const L = layouts(), ns = g.nodes.map(id => nodeMap().get(id)).filter(Boolean) as NodeData[]; if (!ns.length) return null; const x0 = Math.min(...ns.map(n => n.x)) - 14, y0 = Math.min(...ns.map(n => n.y)) - 30; return { x: x0, y: y0, w: Math.max(...ns.map(n => n.x + (L.get(n.id)?.w ?? 150))) + 14 - x0, h: Math.max(...ns.map(n => n.y + (L.get(n.id)?.h ?? 60))) + 14 - y0 }; });
           return <Show when={box()}>{b => <div class="group" style={{ left: b().x + 'px', top: b().y + 'px', width: b().w + 'px', height: b().h + 'px', 'border-color': g.color, background: g.color + '14' }}>
