@@ -5,7 +5,7 @@
  * should go. The ribbon can be collapsed to its row of tabs.
  */
 import { createMemo, createSignal, For, JSX, Show } from 'solid-js';
-import { ui, setUi, registry, addNode, clusterLibrary, insertCluster } from './store';
+import { ui, setUi, setSide, registry, addNode, clusterLibrary, insertCluster } from './store';
 import { CATEGORY_COLORS, dragToCanvas, insertTemplate, canvasCenter, searchComponents } from './Canvas';
 import { Icon, Thumb } from './Icon';
 import { TEMPLATES } from '../templates';
@@ -75,6 +75,7 @@ export function Ribbon(props: { onExample: (id: string) => void; onAllExamples: 
       <i class="rb-sep" />
       <For each={EXTRA_TABS}>{t => <button role="tab" class="extra" aria-selected={ui.ribbon && tab() === t && !q()} classList={{ on: ui.ribbon && tab() === t && !q() }} onClick={() => select(t)}>{t}</button>}</For>
       <span class="grow" />
+      <button class="rb-ai" classList={{ on: ui.side === 'assistant' }} title="Assistant (optional AI): describe a model or paste a sketch" aria-label="Assistant" onClick={() => setSide(ui.side === 'assistant' ? 'inspector' : 'assistant')}><svg viewBox="0 0 24 24" class="ico" width="20" height="20" aria-hidden="true"><path d="M5 6h14v9H11l-4 3.5V15H5z" /><path class="ia" d="M9.5 10.5h.01M12 10.5h.01M14.5 10.5h.01" /></svg></button>
       <input class="rb-search" type="search" placeholder="Search components" value={q()} aria-label="Search components" onInput={e => { setQ(e.currentTarget.value); if (!ui.ribbon) setUi('ribbon', true); }} onKeyDown={e => { if (e.key === 'Escape') { setQ(''); e.currentTarget.blur(); } else if (e.key === 'Enter' && found()[0]) { add(found()[0]); setQ(''); } }} />
       <button class="rb-toggle" title={ui.ribbon ? 'Hide the ribbon' : 'Show the ribbon'} aria-label={ui.ribbon ? 'Hide the ribbon' : 'Show the ribbon'} aria-expanded={ui.ribbon} onClick={() => { const open = !ui.ribbon; setUi('ribbon', open); remember(open); }}>
         <svg class="ico" viewBox="0 0 24 24" style={{ width: '16px', height: '16px' }}><path d={ui.ribbon ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6'} /></svg></button>

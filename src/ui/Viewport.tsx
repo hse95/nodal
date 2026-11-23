@@ -7,7 +7,7 @@
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show, JSX } from 'solid-js';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { project, selection, setSelection, runTick, openTick, engine, ui, setUi, registry, portsOf, unwrap, download, toast, mutate, addNode, connect } from './store';
+import { project, setSide, selection, setSelection, runTick, openTick, engine, ui, setUi, registry, portsOf, unwrap, download, toast, mutate, addNode, connect } from './store';
 import { SceneBuilder, Label, Legend, CONTOUR_NAMES } from './scene';
 import { previewPlan, PREVIEW_TYPES, firstResult } from './preview';
 import { layouts } from './Canvas';
@@ -288,7 +288,7 @@ export function Viewport(): JSX.Element {
       const pk = hit.object.userData.pick;
       // Members can be hit on their line (one entry per segment) or on their solid (one entry per triangle).
       const index = pk.kind === 'node' ? hit.index ?? 0 : pk.kind === 'beam' && !pk.tri ? pk.ids[(hit.object as any).isLineSegments2 ? hit.faceIndex ?? 0 : Math.floor((hit.index ?? 0) / 2)] : pk.tri[hit.faceIndex ?? 0];
-      setUi('pick', { kind: pk.kind, index, nodeId: pk.nodeId }); setUi('inspector', true);
+      setUi('pick', { kind: pk.kind, index, nodeId: pk.nodeId }); setSide('inspector');
     });
     viewportApi.png = () => { renderer.render(scene, camera); return renderer.domElement.toDataURL('image/png'); };
     viewportApi.fit = () => fit();

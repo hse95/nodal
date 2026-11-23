@@ -32,7 +32,11 @@ export const [ui, setUi] = createStore({
   textScale: readTextScale(),
   /** The ribbon (components, templates, examples) is open, and which of its tabs is shown. */
   ribbon: localStorage.getItem('nodal.ribbon') !== '0', ribbonTab: 'Structure',
-  inspector: true,
+  /** The panel on the right: the inspector, the optional AI assistant, or hidden (a slim rail remains). */
+  side: (['inspector', 'assistant', 'hidden'].includes(localStorage.getItem('nodal.side') ?? '') ? localStorage.getItem('nodal.side') : 'inspector') as 'inspector' | 'assistant' | 'hidden',
+  sideWidth: Math.min(640, Math.max(240, Number(localStorage.getItem('nodal.sideWidth')) || 0)) || 0,
+  /** Shadows on the ground in the realistic display. */
+  shadows: localStorage.getItem('nodal.shadows') !== '0',
   dialog: null as null | 'examples' | 'verification' | 'about' | 'shortcuts' | 'help',
   toast: '', tour: -1,
   pick: null as Pick | null,
@@ -79,7 +83,21 @@ export async function settled(): Promise<void> {
 // ---- undo / redo -----------------------------------------------------------------
 const undoStack: string[] = [], redoStack: string[] = [];
 const snapshot = (): string => JSON.stringify(unwrap(project));
-export function pushUndo(): void { undoStack.push(snapshot()); if (undoStack.length > 100) undoStack.shift(); redoStack.length = 0; }
+let groupDepth = 0, groupPushed = false;
+export function pushUndo(): void {
+  if (groupDepth > 0) { if (groupPushed) return; groupPushed = true; }
+  undoStack.push(snapshot()); if (undoStack.length > 100) undoStack.shift(); redoStack.length = 0;
+}
+/** Between these two calls every change is folded into one undo step (used for one assistant turn). */
+export function beginUndoGroup(): void { if (groupDepth++ === 0) groupPushed = false; }
+export function endUndoGroup(): void { groupDepth = Math.max(0, groupDepth - 1); }
+/** How many undo steps exist; with undoTo this lets a caller revert exactly what it did. */
+export const undoDepth = (): number => undoStack.length;
+export function undoTo(depth: number): void { while (undoStack.length > Math.max(0, depth)) undo(); }
+/** Show the right-hand panel as the inspector or the assistant, or hide it. */
+export function setSide(side: 'inspector' | 'assistant' | 'hidden'): void { setUi('side', side); try { localStorage.setItem('nodal.side', side); } catch { /* storage unavailable */ } }
+/** Components the assistant has just added or changed (briefly highlighted on the canvas). */
+export const [aiTouched, setAiTouched] = createSignal<ReadonlySet<string>>(new Set());
 function restore(json: string): void { setProject(reconcile(JSON.parse(json))); setSelection(s => s.filter(id => project.graph.nodes.some(n => n.id === id))); afterChange(); }
 export function undo(): void { const s = undoStack.pop(); if (!s) return; redoStack.push(snapshot()); restore(s); }
 export function redo(): void { const s = redoStack.pop(); if (!s) return; undoStack.push(snapshot()); restore(s); }

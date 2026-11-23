@@ -80,6 +80,7 @@ The evolutionary optimizer changes the width and depth of a beam to minimize its
 - **250+ components** in 14 categories: parameters, math, lists, data trees, vectors and planes, curves, surfaces and solids, meshes, transforms, display, structure, form-finding, optimization and scripting.
 - **Data trees** with longest-list, shortest-list and cross-reference matching, plus graft, flatten, simplify, reverse, path mapping and branch extraction.
 - **Canvas tools**: fuzzy search on double-click, command palette (Ctrl/Cmd+K), wires colored by type, groups, notes, reusable clusters, undo/redo, copy and paste between projects, minimap, snapping, and help for every component.
+- **AI assistant (optional)**: describe a structure, or paste a sketch, and Claude builds it from ordinary components. It uses your own Anthropic API key, is off until you enter one, and never produces results: those come from the solver.
 - **Ribbon**: every component has its own icon, grouped in tabs by family, with search and a hover description. Click or drag to add. The ribbon can be hidden.
 - **Templates**: ten ready-made groups of components (seven complete models and three building blocks) that drop into the open project, each with a thumbnail.
 - **Verification models as components**: any of the 28 benchmarks can be opened written out with ordinary components, so you can see how it is built and change it.

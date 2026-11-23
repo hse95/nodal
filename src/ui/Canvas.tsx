@@ -4,7 +4,7 @@
  * so panning and zooming only change a single CSS transform.
  */
 import { createMemo, createSignal, For, Show, onCleanup, onMount, JSX, batch } from 'solid-js';
-import { project, mutate, pushUndo, selection, setSelection, selectedWire, setSelectedWire, runTick, engine, ui, setUi, addNode, connect, deleteSelection, copySelection, paste, groupSelection, clusterSelection, alignSelection, solvingNode, registry, portsOf, unwrap, clusterLibrary, insertCluster, toast, deleteWire, insertFragment, freeSpot, nodeById } from './store';
+import { project, mutate, pushUndo, aiTouched, selection, setSelection, selectedWire, setSelectedWire, runTick, engine, ui, setUi, addNode, connect, deleteSelection, copySelection, paste, groupSelection, clusterSelection, alignSelection, solvingNode, registry, portsOf, unwrap, clusterLibrary, insertCluster, toast, deleteWire, insertFragment, freeSpot, nodeById } from './store';
 import { TYPE_COLORS } from '../core/types';
 import type { NodeData, PortSpec, ComponentDef, TableValue, DType } from '../core/types';
 import { formatValue, typesCompatible } from '../core/graph';
@@ -334,7 +334,7 @@ function NodeView(props: { n: NodeData; onDown: (e: PointerEvent, n: NodeData) =
   // A note that contains $...$ mathematics is shown typeset; double-click it to edit the text.
   const [editingNote, setEditingNote] = createSignal(false);
   return (
-    <div class="node" classList={{ sel: sel(), [status().state]: true, busy: solvingNode() === n.id, hidden: n.preview === false, ['w-' + (def()?.widget ?? 'none')]: true }} data-node={n.id}
+    <div class="node" classList={{ sel: sel(), [status().state]: true, busy: solvingNode() === n.id, hidden: n.preview === false, 'ai-new': aiTouched().has(n.id), ['w-' + (def()?.widget ?? 'none')]: true }} data-node={n.id}
       style={{ left: n.x + 'px', top: n.y + 'px', width: l().w + 'px', height: l().h + 'px', '--cat': CATEGORY_COLORS[def()?.category ?? ''] ?? '#888' }}
       onPointerDown={e => props.onDown(e, n)}>
       <Show when={def()?.widget !== 'note'}>

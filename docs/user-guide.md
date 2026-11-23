@@ -8,7 +8,7 @@ Contents: [Getting started](#1-getting-started) · [The canvas](#2-the-canvas) �
 
 ## 1 Getting started
 
-The window has four parts: the **ribbon** across the top, the **canvas** where you build the graph, the **3D view**, and the **inspector** on the right. The top bar above the ribbon holds the menus, the solve status and the layout buttons.
+The window has four parts: the **ribbon** across the top, the **canvas** where you build the graph, the **3D view**, and the **side panel** on the right, which holds the inspector and the optional AI assistant. The side panel can be made wider by dragging its left edge, and hidden with the » button at its top (a slim rail stays, from which it opens again). The top bar above the ribbon holds the menus, the solve status and the layout buttons.
 
 The ribbon has one tab for each family of components (Params, Math, Lists, Trees, Vector, Curve, Surface, Mesh, Transform, Display, Structure, Tools) and three more for **Templates**, **Examples** and **Verification**. Every component has its own icon; hover over one to see its name and what it does. Click an icon to add the component to the middle of the canvas, or drag it to where you want it. The search field at the right end of the ribbon looks through all tabs. The small arrow next to it hides the ribbon to leave more room (also **View → Hide ribbon**); click any tab to bring it back. The choice is remembered.
 
@@ -254,6 +254,31 @@ Both output the relaxed lines, the node positions and the line forces. Feed the 
 Choose **SI** (kN, m, MPa; section sizes and displacements in mm) or **US customary** (kip, ft, ksi; section sizes and displacements in inches) in the top bar. Geometry on the canvas is unitless: one unit is one meter in SI projects and one foot in US projects. Every numeric port that carries a physical quantity shows its unit in the tooltip and in the inspector.
 
 Switching the unit system changes how the numbers in the graph are read; it does not convert them.
+
+## AI assistant (optional)
+
+Nodal has an optional chat panel in which Claude, Anthropic's AI model, builds and edits components for you. It is off until you open it and enter a key, and everything else in Nodal works without it.
+
+**Opening it.** Click the speech-bubble button at the right end of the ribbon, or **View → Assistant**, or the *Assistant* tab of the side panel.
+
+**The key.** The assistant uses your own Anthropic API key. Get one at [console.anthropic.com](https://console.anthropic.com), then paste it under *Settings* in the panel and pick a model (Claude Sonnet 5.5 is the default; the larger models cost more).
+
+- Your messages, images and the current model are sent to Anthropic using your own API key. Usage is billed to your Anthropic account.
+- Nodal has no server. The request goes straight from your browser to Anthropic. Without a key, Nodal never contacts Anthropic.
+- By default the key is kept only until you close the tab. Tick *Remember key on this device* to store it in this browser; *Forget key* removes it. The key is never written into project files, links or logs.
+
+**Using it.** Type what you want, for example "Simply supported steel beam, 6 m, 20 kN/m, show moment and deflection", and press Enter (Shift+Enter starts a new line). You can also attach, paste or drop an image: a sketch, a handwritten problem or a textbook figure. The assistant says what it read from the image and then builds it.
+
+**What it does.** The assistant adds ordinary components and wires through the same commands the editor uses, so the result is a normal graph that you can read and change. It states the assumptions it made (section, material, supports) in its reply.
+
+- Each reply that changed the canvas lists its actions (click the line to expand it) and has an **Undo AI changes** button. One Ctrl/Cmd+Z also undoes the whole turn.
+- Components it added or changed are outlined for a few seconds.
+- **Stop** interrupts a reply. **New chat** starts over. The canvas stays usable while it works.
+- Each reply shows the number of tokens it used.
+
+**What it does not do.** The assistant builds models; it does not produce results. Every result value comes from Nodal's solver, and when the assistant quotes a number it has read it from the solver. It cannot run scripts: formulas go through the same expression parser as your own, and the Script component is not available to it. It can still misread a sketch or make a poor assumption, so check the model and the results as you would check your own.
+
+**Limits.** One turn is limited to 25 round trips to the model and 150 tool calls; send "continue" if it stops there. Large images are scaled down to 1568 pixels on the longest side before they are sent.
 
 ## 10 Verification
 

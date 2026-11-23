@@ -87,3 +87,13 @@ The headless layers (engine, geometry, solver, benchmarks) were built and tested
 - [x] Verification models opened as ordinary components, with a Verification Check component; all 28 tested
 - [ ] Not done: icons have no text labels under them (hover shows the name); touch devices have no hover, so the search field is the fallback there
 
+## 13 Version 0.4.0: optional AI assistant (requested)
+- [x] Chat panel in the side panel, opened from the ribbon and the View menu; resizable, hideable
+- [x] Bring-your-own Anthropic key, session-only by default; model choice; Forget key; privacy note
+- [x] Streaming client with plain fetch; 401, 429/529 with retry, network failure, Stop
+- [x] Tool layer on the editor's command layer with validation; one undo step per turn; action list; highlight
+- [x] System prompt: hand-written rules plus a catalogue generated from the registry
+- [x] Images by file, paste and drop, scaled down in the browser
+- [x] Tests with a scripted API: unit and browser, hand-formula checks for beam, cantilever and portal frame
+- [ ] Not verified: a live call to Anthropic (no key in the build environment)
+

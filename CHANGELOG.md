@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.4.0 (2026-11-22)
+
+An optional AI assistant, and a side panel that can be hidden. No change to the solver.
+
+**AI assistant (optional, off by default)**
+
+- A chat panel in which Claude builds and edits components from a description, a sketch or a photo of a problem. The result is an ordinary graph.
+- Bring your own Anthropic API key. Nodal has no server: requests go from the browser straight to Anthropic, and nothing is sent unless the assistant is open and has a key.
+- The key is kept for the session only unless you tick *Remember key on this device*; *Forget key* removes it. It is never written to project files, links or logs.
+- The assistant edits the canvas only through validated tools that use the editor's own commands. Unknown components, unknown ports, incompatible types, out-of-range values and loops are rejected with a message that it can act on.
+- One undo step per assistant turn, an *Undo AI changes* button on each reply, a list of the actions taken, and a brief outline around what was added or changed.
+- The assistant never produces results: values it quotes are read from Nodal's solver. Formulas go through the existing expression parser; the Script component is not available to it. Its text is drawn as plain text, never as markup.
+- Streaming replies, token use per reply, a Stop button, and plain messages for a rejected key, rate limits (with retry) and network failures.
+- The component list in its instructions is generated from the component registry, so it cannot drift from the real components.
+
+**Side panel**
+
+- The inspector and the assistant share the panel on the right. It can be resized by its left edge and hidden with the » button; a slim rail remains for opening it again.
+
+**Tests**
+
+- 273 unit tests (26 new for the assistant: tool validation, undo grouping, key storage, safe text, prompt generation, the API client with a replaced `fetch`) and 27 browser tests (7 new, with a scripted stand-in for the API: beam, cantilever and portal frame checked against hand formulas, a truss from an image, a corrected invalid call, 401, 429 and Stop). No test contacts Anthropic.
+
 ## 0.3.0 (2026-11-21)
 
 A ribbon with icons, a more realistic 3D view, and verification models built from ordinary components. No change to the solver; all 28 benchmarks give the same values as before.

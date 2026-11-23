@@ -3,10 +3,11 @@
  * (examples, verification, help, about), the first-run tour and file commands.
  */
 import { createMemo, createSignal, For, onCleanup, onMount, Show, JSX } from 'solid-js';
-import { project, mutate, ui, setUi, openProject, saveProjectFile, pickFile, migrate, toast, download, engine, runTick, dirty, solvingNode, selection, setSelection, undo, redo, unwrap, registry, portsOf, loadAutosave, addNode, TEXT_SCALES, setTextScale, stepTextScale } from './store';
+import { project, mutate, ui, setUi, setSide, openProject, saveProjectFile, pickFile, migrate, toast, download, engine, runTick, dirty, solvingNode, selection, setSelection, undo, redo, unwrap, registry, portsOf, loadAutosave, addNode, TEXT_SCALES, setTextScale, stepTextScale } from './store';
 import { emptyProject } from '../core/graph';
 import type { ProjectFile } from '../core/types';
 import { Canvas, layouts, CATEGORY_COLORS } from './Canvas';
+import { SidePanel } from './SidePanel';
 import { Ribbon } from './Ribbon';
 import { benchmarkAsComponents } from '../verify/explode';
 
@@ -21,7 +22,7 @@ import { cancelSolver } from './workers';
 import { TYPE_COLORS } from '../core/types';
 import { formatValue } from '../core/graph';
 
-const VERSION = '0.3.0';
+const VERSION = '0.4.0';
 const CREDIT = 'Built by Sam Smith at K-State (email me for feedback: samsmith@ksu.edu)';
 
 /** Geometry currently shown in the 3D view, for the export commands. */
@@ -155,9 +156,10 @@ export function App(): JSX.Element {
     window.addEventListener('keydown', onKey);
     window.addEventListener('pointerdown', (e) => { if (!(e.target as HTMLElement).closest('.menubar')) setMenu(null); });
     window.addEventListener('beforeunload', (e) => { if (dirty() && project.graph.nodes.length && !localStorage.getItem('nodal.noUnloadPrompt')) e.preventDefault(); });
-    const example = new URLSearchParams(location.search).get('example');
-    const saved = example ? null : await loadAutosave();
-    if (example && EXAMPLES.some(e => e.id === example)) openExample(example);
+    const query = new URLSearchParams(location.search), example = query.get('example'), blank = query.has('new');
+    const saved = example || blank ? null : await loadAutosave();
+    if (blank) { /* ?new=1 starts with an empty canvas */ }
+    else if (example && EXAMPLES.some(e => e.id === example)) openExample(example);
     else if (saved && saved.graph.nodes.length) openProject(saved);
     else if (!localStorage.getItem('nodal.tourDone')) startTour();
     else openExample('quick-truss');
@@ -201,7 +203,7 @@ export function App(): JSX.Element {
           </Menu>
           <Menu name="view" label="View">
             <Item label="Canvas and 3D view side by side" onClick={() => setUi('layout', 'split')} /><Item label="Stacked" onClick={() => setUi('layout', 'stack')} /><Item label="Canvas only" onClick={() => setUi('layout', 'canvas')} /><Item label="3D view only" onClick={() => setUi('layout', 'view')} /><Item label="Swap sides" onClick={() => setUi('swap', !ui.swap)} /><hr />
-            <Item label={(ui.ribbon ? 'Hide' : 'Show') + ' ribbon'} onClick={() => { const open = !ui.ribbon; setUi('ribbon', open); try { localStorage.setItem('nodal.ribbon', open ? '1' : '0'); } catch { /* storage unavailable */ } }} /><Item label={(ui.inspector ? 'Hide' : 'Show') + ' inspector'} onClick={() => setUi('inspector', !ui.inspector)} /><hr />
+            <Item label={(ui.ribbon ? 'Hide' : 'Show') + ' ribbon'} onClick={() => { const open = !ui.ribbon; setUi('ribbon', open); try { localStorage.setItem('nodal.ribbon', open ? '1' : '0'); } catch { /* storage unavailable */ } }} /><Item label={(ui.side === 'hidden' ? 'Show' : 'Hide') + ' side panel'} onClick={() => setSide(ui.side === 'hidden' ? 'inspector' : 'hidden')} /><Item label="Assistant (optional AI)" onClick={() => setSide('assistant')} /><hr />
             <Item label={ui.theme === 'dark' ? 'Light theme' : 'Dark theme'} onClick={() => setTheme(ui.theme === 'dark' ? 'light' : 'dark')} /><hr />
             <div class="menu-title">Text size</div>
             <For each={TEXT_SCALES}>{([val, name]) => <Item label={(ui.textScale === val ? '● ' : '○ ') + name} onClick={() => setTextScale(val)} />}</For>
@@ -233,7 +235,7 @@ export function App(): JSX.Element {
           <Show when={ui.layout === 'split' || ui.layout === 'stack'}><div class="divider" style={{ order: 1 }} role="separator" aria-label="Resize panes" onPointerDown={startSplit} /></Show>
           <div class="pane" style={paneStyle('view')}><Viewport /></div>
         </main>
-        <Show when={ui.inspector}><Inspector /></Show>
+        <SidePanel />
       </div>
       <Show when={ui.toast}><div class="toast" role="alert">{ui.toast}</div></Show>
       <Show when={ui.dialog === 'examples'}><ExamplesDialog /></Show>
